@@ -17,7 +17,7 @@ class CustomerMasterApiController extends Controller
     }
     public function create(Request $r)
     {
-        $data = $r->validate(['full_name' => 'required|max:50', 'company_name' => 'required|max:100', 'desg' => 'nullable|integer', 'mobile_no' => 'required|max:15', 'website' => 'nullable|max:150', 'email' => 'required|email|max:50', 'address' => 'required|max:100', 'date' => 'required|date', 'front_image_url' => 'nullable|max:150', 'back_image_url' => 'nullable|max:150', 'cat_id' => 'nullable|integer', 'notes' => 'nullable|string',]);
+        $data = $r->validate(['full_name' => 'required|max:50', 'company_name' => 'required|max:100', 'desg' => 'nullable|string', 'mobile_no' => 'required|max:15', 'website' => 'nullable|max:150', 'email' => 'required|email|max:50', 'address' => 'required|max:100', 'date' => 'required|date', 'front_image_url' => 'nullable|max:150', 'back_image_url' => 'nullable|max:150', 'cat_id' => 'nullable|integer', 'notes' => 'nullable|string',]);
         $data['user_id'] = Auth::id();
         $data['assign_to'] = Auth::id();
         $data['source'] = 1;
@@ -29,7 +29,7 @@ class CustomerMasterApiController extends Controller
     }
     public function update(Request $r, $id)
     {
-        $data = $r->validate(['full_name' => 'required|max:50', 'company_name' => 'required|max:100', 'desg' => 'nullable|integer', 'mobile_no' => 'required|max:15', 'website' => 'nullable|max:150', 'email' => 'required|email|max:50', 'address' => 'required|max:100', 'date' => 'required|date', 'front_image_url' => 'nullable|max:150', 'back_image_url' => 'nullable|max:150', 'cat_id' => 'nullable|integer', 'notes' => 'nullable|string',]);
+        $data = $r->validate(['full_name' => 'required|max:50', 'company_name' => 'required|max:100', 'desg' => 'nullable|string', 'mobile_no' => 'required|max:15', 'website' => 'nullable|max:150', 'email' => 'required|email|max:50', 'address' => 'required|max:100', 'date' => 'required|date', 'front_image_url' => 'nullable|max:150', 'back_image_url' => 'nullable|max:150', 'cat_id' => 'nullable|integer', 'notes' => 'nullable|string',]);
         $customer = CustomerMaster::findOrFail($id);
         $customer->update($data);
         return response()->json(['status' => true, 'message' => 'Customer updated successfully', 'data' => $customer], 200);

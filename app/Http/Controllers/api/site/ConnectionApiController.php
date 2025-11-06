@@ -30,9 +30,7 @@ class ConnectionApiController extends Controller
     {
         $user = Auth::user();
         $received = ConnectionRequest::where('receiver_id', $user->id)->where('status', 0)->with(['senderDetail:user_id,fname,desg'])->orderBy('requested_at', 'desc')->get();
-
         $sent = ConnectionRequest::where('sender_id', $user->id)->where('status', 0)->with(['receiverDetail:user_id,fname,desg'])->orderBy('requested_at', 'desc')->get();
-
         return response()->json(['status' => true, 'message' => 'Connection requests fetched successfully', 'data' => ['received_requests' => $received, 'sent_requests' => $sent]], 200);
     }
     public function connectionCreate(Request $r)
@@ -115,4 +113,35 @@ class ConnectionApiController extends Controller
         $connection->delete();
         return response()->json(['status' => true, 'message' => 'Connection removed successfully'], 200);
     }
+    // public function connectionToggle(Request $r)
+    // {
+    //     $data = $r->validate([
+    //         'receiver_id' => 'required|exists:users,id'
+    //     ]);
+    //     $sender_id = Auth::id();
+    //     if ($sender_id == $data['receiver_id']) {
+    //         return response()->json(['status' => false, 'message' => 'You cannot send a request to yourself'], 400);
+    //     }
+    //     $connected = Connection::where(function ($q) use ($sender_id, $data) {
+    //         $q->where('user_id', $sender_id)->where('friend_id', $data['receiver_id'])
+    //             ->orWhere(function ($q2) use ($sender_id, $data) {
+    //                 $q2->where('user_id', $data['receiver_id'])->where('friend_id', $sender_id);
+    //             });
+    //     })->first();
+    //     if ($connected) {
+    //         return response()->json(['status' => false, 'message' => 'You are already connected'], 409);
+    //     }
+    //     $pending = ConnectionRequest::where(function ($q) use ($sender_id, $data) {
+    //         $q->where('sender_id', $sender_id)->where('receiver_id', $data['receiver_id'])
+    //             ->orWhere(function ($q2) use ($sender_id, $data) {
+    //                 $q2->where('sender_id', $data['receiver_id'])->where('receiver_id', $sender_id);
+    //             });
+    //     })->where('status', 0)->first();
+    //     if ($pending) {
+    //         $pending->delete();
+    //         return response()->json(['status' => true, 'message' => 'Connection request cancelled successfully'], 200);
+    //     }
+    //     $newRequest = ConnectionRequest::create(['sender_id' => $sender_id, 'receiver_id' => $data['receiver_id'], 'request_type' => 'friend_request', 'status' => 0, 'requested_at' => now(),]);
+    //     return response()->json(['status' => true, 'message' => 'Connection request sent successfully', 'data' => $newRequest], 201);
+    // }
 }

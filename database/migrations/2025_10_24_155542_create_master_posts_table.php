@@ -19,6 +19,8 @@ return new class extends Migration
             $table->text('content');
             $table->tinyInteger('is_audience')->default(0)->comment('0 is public or 1 is connection');
             $table->tinyInteger('status')->default(0)->comment('0 is in-active or 1 is active');
+            $table->unsignedBigInteger('like')->default(0);
+            $table->unsignedBigInteger('comments')->default(0);
             $table->unsignedBigInteger('created_by')->nullable();
             $table->timestamps();
         });

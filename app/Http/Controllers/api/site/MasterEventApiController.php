@@ -31,14 +31,14 @@ class MasterEventApiController extends Controller
                 $file->move($path, $fileName);
                 $mimeType = $file->getMimeType();
                 $type = str_contains($mimeType, 'video') ? 1 : 0;
-                MasterEventImage::create(['event_id' => $event_id,'event_img' => $fileName,'type' => $type]);
+                MasterEventImage::create(['event_id' => $event_id, 'event_img' => $fileName, 'type' => $type]);
             }
         }
     }
     public function createEvent(Request $r)
     {
         $user = Auth::user();
-        $data = $r->validate(['indus_type' => 'required', 'title' => 'required|string|max:100', 'description' => 'nullable|string', 'link' => 'nullable|url|max:255', 'event_img' => 'nullable', 'start_date' => 'required|date', 'end_date' => 'nullable|date|after_or_equal:start_date', 'timing' => 'nullable|date_format:H:i', 'country_id' => 'nullable', 'state_id' => 'nullable', 'district_id' => 'nullable', 'location' => 'nullable|string|max:255', 'event_type' => 'nullable|string|max:100', 'max_attendees' => 'nullable|integer|min:1', 'is_audience' => 'nullable', 'is_online' => 'nullable', 'status' => 'nullable|integer|in:0,1', 'created_by' => 'nullable|exists:users,id']);
+        $data = $r->validate(['indus_type' => 'required', 'title' => 'required|string|max:100', 'description' => 'nullable|string', 'link' => 'nullable|url|max:255', 'event_img' => 'nullable', 'start_date' => 'required', 'end_date' => 'nullable|after_or_equal:start_date', 'timing' => 'nullable|date_format:H:i:s', 'country_id' => 'nullable', 'state_id' => 'nullable', 'district_id' => 'nullable', 'location' => 'nullable|string|max:255', 'event_type' => 'nullable|string|max:100', 'max_attendees' => 'nullable|integer|min:1', 'is_audience' => 'nullable', 'is_online' => 'nullable', 'status' => 'nullable|integer|in:0,1', 'created_by' => 'nullable|exists:users,id']);
         $data['created_by'] = $user->id;
         $event = MasterEvent::create($data);
         $event_id = $event->id;

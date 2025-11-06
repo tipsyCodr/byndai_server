@@ -110,24 +110,17 @@ class SubscriptionApiController extends Controller
     public function createSubscription(Request $r)
     {
         try {
-            $data = $r->validate([
-                'plan_id' => 'required|exists:plans,id',
-                'start_date' => 'required|date',
-                'status' => 'required|in:0,1',
-                'renewal_status' => 'nullable',
-                'cancelled_at' => 'nullable|date',
-                'cancel_reason' => 'nullable|string'
-            ]);
+            $data = $r->validate(['plan_id' => 'required|exists:plans,id', 'start_date' => 'required|date', 'status' => 'required|in:0,1', 'renewal_status' => 'nullable', 'cancelled_at' => 'nullable|date', 'cancel_reason' => 'nullable|string']);
 
             $user = Auth::id();
             $plan = Plan::findOrFail($data['plan_id']);
             $interval = trim($plan->interval);
-            $expload_interval = explode(' ', $interval);
-            if (count($expload_interval) != 2) {
+            $exploded_interval = explode(' ', $interval);
+            if (count($exploded_interval) != 2) {
                 return response()->json(['status' => false, 'message' => 'Invalid interval format. Use like "3 months" or "1 year".'], 422);
             }
-            $quantity = (int) $expload_interval[0];
-            $unit = strtolower($expload_interval[1]);
+            $quantity = (int) $exploded_interval[0];
+            $unit = strtolower($exploded_interval[1]);
             $startDate = Carbon::parse($data['start_date']);
             if (in_array($unit, ['month', 'months'])) {
                 $endDate = $startDate->copy()->addMonths($quantity);
@@ -136,8 +129,9 @@ class SubscriptionApiController extends Controller
             } else {
                 return response()->json(['status' => false, 'message' => 'Invalid interval unit. Only "months" or "years" allowed.'], 422);
             }
-            $check_subscription = Subscription::where('user_id', $user)->count();
-            $data['renewal_status'] = $check_subscription > 1 ? 9 : 10;
+            Subscription::where('user_id', $user)->where('end_date', '<', now())->update(['status' => 0]);
+            $activeSubscriptionExists = Subscription::where('user_id', $user)->exists();
+            $data['renewal_status'] = $activeSubscriptionExists ? 9 : 10;
             $data['user_id'] = $user;
             $data['end_date'] = $endDate->format('Y-m-d H:i:s');
             $data['amount'] = $plan->price;
@@ -152,13 +146,22 @@ class SubscriptionApiController extends Controller
             return response()->json(['status' => false, 'message' => 'Subscription creation failed: ' . $e->getMessage()], 500);
         }
     }
+
     public function checkPaidPlans(Request $r)
     {
         $user = Auth::id();
-        $users_subscription = Subscription::where('user_id',$user)
-        $slugs = $r->slugs;
-        foreach ($slugs as $value) {
-            $plans = Restriction::with('plan as p')->where('slug', $value)->get();
+        // $slugs = $r->slugs;
+        $subscription = Subscription::where('user_id', $user)->where('status', 1)->orderBy('id', 'DESC')->first();
+        if (!$subscription) {
+            return response()->json(['status' => false, 'message' => 'User does not have any active subscription.'], 401);
+        }
+        if ($subscription->start_date <= now() && $subscription->end_date >= now()) {
+            $plan_id = $subscription->plan_id;
+            // $restriction = Restriction::whereIn('slug', $slugs)->where('plan_id', $plan_id)->get();
+            $restriction = Restriction::with('plan')->where('plan_id', $plan_id)->get();
+            return response()->json(['status' => true, 'message' => 'Active subscription. Access granted.', 'features' => $restriction]);
+        } else {
+            return response()->json(['status' => false, 'message' => 'Subscription is expired or not yet started.'], 403);
         }
     }
 }

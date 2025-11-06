@@ -4,7 +4,6 @@ namespace App\Http\Controllers\api\site;
 
 use App\Http\Controllers\Controller;
 use App\Models\BusinessInfo;
-use App\Models\MasterKeyword;
 use App\Models\MasterUserDetail;
 use App\Models\UserLink;
 use Illuminate\Http\Request;
@@ -12,10 +11,13 @@ use Illuminate\Support\Facades\Auth;
 
 class ProfileApiController extends Controller
 {
-    public function Updateprofile(Request $r)
+    public function getOrUpdateProfile(Request $r)
     {
-        $users = Auth::user();
-        $users_detail = MasterUserDetail::where('user_id', $users->id)->first();
+        $users = Auth::id();
+        $users_detail = MasterUserDetail::with(['user', 'country', 'state', 'district'])
+            ->whereHas('user', function ($q) use ($users) {
+                $q->where('id', $users);
+            })->first();
         if (!$users_detail) {
             return response()->json(['message' => 'Users not found'], 404);
         }
@@ -24,8 +26,10 @@ class ProfileApiController extends Controller
             $users_detail->profile_video = $users_detail->profile_video ? asset('assets/uploads/profile_videos/' . $users_detail->profile_video) : null;
             $users_detail->profile_logo = $users_detail->profile_logo ? asset('assets/uploads/profile_logos/' . $users_detail->profile_logo) : null;
             $users_detail->profile_banner = $users_detail->profile_banner ? asset('assets/uploads/profile_banners/' . $users_detail->profile_banner) : null;
-
-            $busi_info = BusinessInfo::where('user_id', $users->id)->first();
+            $busi_info = BusinessInfo::with('user')
+                ->whereHas('user', function ($q) use ($users) {
+                    $q->where('id', $users);
+                })->first();
             return response()->json(['users_detail' => $users_detail, 'business' => $busi_info]);
         }
         if ($r->isMethod('post')) {
@@ -57,7 +61,7 @@ class ProfileApiController extends Controller
             $users_detail->save();
 
             $busi_info = BusinessInfo::updateOrCreate(
-                ['user_id' => $users->id],
+                ['user_id' => $users],
                 ['legal_name' => $r->company_name ?? '', 'description' => $r->description ?? '']
             );
             return response()->json(['message' => 'Profile updated successfully', 'data' => ['users_detail' => $users_detail, 'business' => $busi_info]]);
@@ -125,6 +129,19 @@ class ProfileApiController extends Controller
             $userLinks = UserLink::with('links')->where('user_id', $users->id)->get();
             return response()->json(['status' => true, 'message' => 'Link updated successfully', 'data' => $userLinks], 200);
         }
+
+        if ($r->isMethod('delete')) {
+            $r->validate([
+                'id' => 'required|integer',
+            ]);
+            $link = UserLink::where('user_id', $users->id)->where('id', $r->id)->first();
+            if (!$link) {
+                return response()->json(['status' => false, 'message' => 'Link not found'], 404);
+            }
+            $link->delete();
+            $userLinks = UserLink::with('links')->where('user_id', $users->id)->get();
+            return response()->json(['status' => true, 'message' => 'Link deleted successfully', 'data' => $userLinks], 200);
+        }
         return response()->json(['status' => false, 'message' => 'Invalid request method'], 405);
     }
     public function BusinessInfo(Request $r)
@@ -142,12 +159,12 @@ class ProfileApiController extends Controller
         }
         if ($r->isMethod('post')) {
             $r->validate([
-                'company_name' => 'nullable|string|max:255',
+                'company_name' => 'nullable|string|max:100',
                 'gst_no' => 'nullable|string|max:50',
-                'address' => 'nullable|string|max:255',
+                'address' => 'nullable|string|max:150',
                 'bank_acc_no' => 'nullable|string|max:50',
                 'ifsc_code' => 'nullable|string|max:50',
-                'branch_name' => 'nullable|string|max:255',
+                'branch_name' => 'nullable|string|max:100',
                 'payment_qr' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
             ]);
             $busi_info = BusinessInfo::updateOrCreate(['user_id' => $users->id], ['legal_name' => $r->company_name ?? '', 'gst_no' => $r->gst_no ?? '', 'address' => $r->address ?? '', 'bank_acc_no' => $r->bank_acc_no ?? '', 'ifsc_code' => $r->ifsc_code ?? '', 'branch_name' => $r->branch_name ?? '']);
@@ -164,7 +181,9 @@ class ProfileApiController extends Controller
     }
     public function usersProfileCard()
     {
-        $data = MasterUserDetail::orderByDesc('id')->limit(10)->get();
-        return response()->json(['status' => true, 'message' => 'User profile cards fetched successfully', 'data' => $data], 200);
+        $data = MasterUserDetail::with('user')->whereHas('user', function ($q) {
+            $q->where('status', 'active');
+        })->orderByDesc('emp_id')->limit(10)->get();
+        return response()->json(['status' => true, 'message' => 'Active user profile cards fetched successfully', 'data' => $data], 200);
     }
 }

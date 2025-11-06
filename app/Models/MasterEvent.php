@@ -10,11 +10,26 @@ use Illuminate\Support\Facades\DB;
 class MasterEvent extends Model
 {
     protected $fillable = ['indus_type', 'title', 'description', 'link', 'start_date', 'end_date', 'timing', 'country_id', 'state_id', 'district_id', 'location', 'event_type', 'max_attendees', 'is_audience', 'is_online', 'status', 'created_by',];
-
+    public function country()
+    {
+        return $this->belongsTo(MasterCountry::class, 'country_id', 'id');
+    }
+    public function state()
+    {
+        return $this->belongsTo(MasterState::class, 'state_id', 'id');
+    }
+    public function district()
+    {
+        return $this->belongsTo(MasterDistrict::class, 'district_id', 'id');
+    }
+    public function Industry()
+    {
+        return $this->belongsTo(MasterIndustry::class, 'indus_type', 'id');
+    }
     public static function getData(Request $r)
     {
         $user_id = Auth::id();
-        $query = self::query();
+        $query = self::with(['Industry', 'country', 'state', 'district']);
         if ($r->is_audience == 1) {
             $connections = Connection::where('user_id', $user_id)->pluck('friend_id')->toArray();
             $query->where(function ($q) use ($connections, $user_id) {

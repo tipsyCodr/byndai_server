@@ -14,7 +14,7 @@ class ProductApiController extends Controller
     public function product()
     {
         $users = Auth::user();
-        $product = Product::where('user_id', $users->id)->orderBy('id', 'DESC')->get();
+        $product = Product::with(['productImage', 'productLink'])->where('user_id', $users->id)->orderBy('id', 'DESC')->get();
         if (!$product) {
             return response()->json(['status' => false, 'message' => 'No product found for this users!'], 404);
         }
@@ -65,5 +65,61 @@ class ProductApiController extends Controller
             $this->productImage($r, $r->product_name, $r->file_name, $p_id);
         }
         return response()->json(['status' => true, 'message' => 'Product created successfully', 'product' => $product], 201);
+    }
+    public function getProductforUpdate($prod_id)
+    {
+        $user = Auth::id();
+        $product = Product::with(['productImage', 'productLink'])->where('user_id', $user)->find($prod_id);
+        if (!$product) {
+            return response()->json(['status' => false, 'message' => 'Product not found!'], 404);
+        }
+        return response()->json(['status' => true, 'product' => $product], 200);
+    }
+    public function updateProduct(Request $r, $prod_id)
+    {
+        $user = Auth::id();
+        $product = Product::where('user_id', $user)->find($prod_id);
+        if (!$product) {
+            return response()->json(['status' => false, 'message' => 'Product not found!'], 404);
+        }
+        $validate = $r->validate([
+            'product_name' => 'required|string|max:255',
+            'product_price' => 'required|numeric',
+            'description' => 'required|string',
+            'title_links' => 'nullable|array',
+            'links' => 'nullable|array',
+            'file_name' => 'nullable|array'
+        ]);
+        $product->update([
+            'product_name' => $validate['product_name'],
+            'product_price' => $validate['product_price'],
+            'description' => $validate['description']
+        ]);
+        if (!empty($r->title_links) && !empty($r->links)) {
+            $this->productLinks($r->title_links, $r->links, $product->id);
+        }
+
+        if (!empty($r->file_name)) {
+            $this->productImage($r, $product->product_name, $r->file_name, $product->id);
+        }
+        return response()->json(['status' => true, 'message' => 'Product updated successfully!', 'product' => $product->load(['productImage', 'productLink'])], 200);
+    }
+    public function deleteProductImage($img_id)
+    {
+        $image = ProductImage::find($img_id);
+        if (!$image) {
+            return response()->json(['status' => false, 'message' => 'No product image found!'], 404);
+        }
+        $image->delete();
+        return response()->json(['status' => true, 'message' => 'Product image deleted successfully!'], 200);
+    }
+    public function deleteProductLinks($link_id)
+    {
+        $link = ProductLink::find($link_id);
+        if (!$link) {
+            return response()->json(['status' => false, 'message' => 'No product link found!'], 404);
+        }
+        $link->delete();
+        return response()->json(['status' => true, 'message' => 'Product link deleted successfully!'], 200);
     }
 }

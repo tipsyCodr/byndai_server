@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\api\site;
 
 use App\Http\Controllers\Controller;
-use App\Models\Connection;
+use App\Models\MasterLike;
 use App\Models\MasterPost;
 use App\Models\MasterPostImage;
 use App\Models\MasterSave;
@@ -16,6 +16,17 @@ class MasterPostApiController extends Controller
     {
         $data_provider = MasterPost::getData($r);
         return response()->json(['status' => true, 'data' => $data_provider]);
+    }
+    public function showSavePostList()
+    {
+        $user = Auth::id();
+        $post_save = MasterSave::with(['post.industry', 'post.createdBy'])->where('user_id', $user)->orderBy('id', 'DESC')->get();
+        return response()->json(['status' => true, 'message' => 'Saved posts fetched successfully', 'data' => $post_save]);
+    }
+    public function showSavedPost($post_id)
+    {
+        $post_data = MasterPost::with(['industry', 'createdBy'])->where('id', $post_id)->get();
+        return response()->json(['status' => true, 'data' => $post_data]);
     }
     public function showPostByIndustry($indus_type)
     {
@@ -44,9 +55,9 @@ class MasterPostApiController extends Controller
     }
     public function createPost(Request $r)
     {
-        $user = Auth::user();
+        $user = Auth::id();
         $data = $r->validate(['indus_type' => 'required', 'title' => 'required|string|max:100', 'content' => 'nullable|string', 'slug' => 'nullable', 'post_img' => 'nullable', 'is_audience' => 'nullable', 'status' => 'nullable|integer|in:0,1', 'created_by' => 'nullable|exists:users,id']);
-        $data['created_by'] = $user->id;
+        $data['created_by'] = $user;
         $post = MasterPost::create($data);
         $post_id = $post->id;
         if ($r->hasFile('post_img')) {
@@ -71,6 +82,23 @@ class MasterPostApiController extends Controller
         } else {
             $save = MasterSave::create(['user_id' => $user->id, 'post_id' => $post_id]);
             return response()->json(['status' => true, 'message' => 'Post saved successfully!', 'data' => $save]);
+        }
+    }
+    public function likeOrUnlike($post_id)
+    {
+        $user_id = Auth::id();
+        $like = MasterLike::where('user_id', $user_id)->where('post_id', $post_id)->first();
+        $post = MasterPost::find($post_id);
+        if ($like) {
+            if ($post->like > 0) {
+                $post->decrement('like');
+            }
+            $like->delete();
+            return response()->json(['status' => true, 'message' => 'Post unliked successfully!', 'liked' => false]);
+        } else {
+            MasterLike::create(['user_id' => $user_id, 'post_id' => $post_id]);
+            $post->increment('like');
+            return response()->json(['status' => true, 'message' => 'Post liked successfully!', 'liked' => true]);
         }
     }
 }

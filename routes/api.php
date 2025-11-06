@@ -8,9 +8,7 @@ use App\Http\Controllers\api\site\MasterApiController;
 use App\Http\Controllers\api\site\MasterCommentApiController;
 use App\Http\Controllers\api\site\MasterEventApiController;
 use App\Http\Controllers\api\site\MasterKeywordApiController;
-use App\Http\Controllers\api\site\MasterLikeApiController;
 use App\Http\Controllers\api\site\MasterPostApiController;
-use App\Http\Controllers\api\site\MasterSaveApiController;
 use App\Http\Controllers\api\site\ProductApiController;
 use App\Http\Controllers\api\site\ProfileApiController;
 use App\Http\Controllers\api\site\RestrictionApiController;
@@ -18,31 +16,36 @@ use App\Http\Controllers\api\site\SubscriptionApiController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/check-mobile', [AuthApiController::class, 'checkMobile']);
-Route::post('/login/{phone}', [AuthApiController::class, 'login']);
-Route::post('/verify-otp/{phone_no}/{token}', [AuthApiController::class, 'verifyOtp']);
 Route::post('/regenerate-otp/{phone}', [AuthApiController::class, 'regenerateOtp']);
+Route::post('/verify-otp/{phone_no}/{token}', [AuthApiController::class, 'verifyOtp']);
 Route::post('/registration/{phone_no}/{token}', [AuthApiController::class, 'registration']);
+Route::post('/login/{phone}', [AuthApiController::class, 'login']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/master-links', [MasterApiController::class, 'getMasterLinks']);
     Route::get('/master-country', [MasterApiController::class, 'getCountry']);
+    Route::get('/master-indus-type', [MasterApiController::class, 'getIndustryTypeList']);
     Route::post('/master-state', [MasterApiController::class, 'getState']);
     Route::post('/master-district', [MasterApiController::class, 'getDistrict']);
 
     Route::get('/profile-card', [ProfileApiController::class, 'usersProfileCard']);
-    Route::match(['get', 'post'], '/profile', [ProfileApiController::class, 'Updateprofile']);
-    Route::match(['get', 'post', 'put', 'patch'], '/links', [ProfileApiController::class, 'UserLinks']);
+    Route::match(['get', 'post'], '/profile', [ProfileApiController::class, 'getOrUpdateProfile']);
+    Route::match(['get', 'post', 'put', 'patch', 'delete'], '/links', [ProfileApiController::class, 'UserLinks']);
     Route::match(['get', 'post'], '/business-info', [ProfileApiController::class, 'BusinessInfo']);
 
     Route::get('/product', [ProductApiController::class, 'product']);
-    Route::post('/create-product', [ProductApiController::class, 'createProduct']);
+    Route::get('/product/update/{prod_id}', [ProductApiController::class, 'getProductforUpdate']);
+    Route::post('/product/create', [ProductApiController::class, 'createProduct']);
+    Route::post('/product/update/{prod_id}', [ProductApiController::class, 'updateProduct']);
+    Route::delete('/product/image/{img_id}', [ProductApiController::class, 'deleteProductImage']);
+    Route::delete('/product/link/{link_id}', [ProductApiController::class, 'deleteProductLinks']);
 
     Route::post('/customer-master/index', [CustomerMasterApiController::class, 'index']);
     Route::post('/customer-master/create', [CustomerMasterApiController::class, 'create']);
     Route::post('/customer-master/update/{id}', [CustomerMasterApiController::class, 'update']);
 
     Route::match(['get', 'post'], '/master-keywords', [MasterKeywordApiController::class, 'index']);
-    Route::post('/delete-keywords/{id}', [MasterKeywordApiController::class, 'deleteKeyword']);
+    Route::delete('/master-keywords/{id}', [MasterKeywordApiController::class, 'deleteKeyword']);
     Route::post('/search-users', [MasterKeywordApiController::class, 'getUsersByKeywords']);
 
     Route::get('/connection-show', [ConnectionApiController::class, 'connectionShow']);
@@ -55,16 +58,16 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::post('/show-event', [MasterEventApiController::class, 'showEvent']);
     Route::post('/create-event', [MasterEventApiController::class, 'createEvent']);
-    Route::post('/delete-event/{eid}', [MasterEventApiController::class, 'deleteEevent']);
+    Route::delete('/delete-event/{eid}', [MasterEventApiController::class, 'deleteEevent']);
 
     Route::get('/show-postby-industry/{indus_type}', [MasterPostApiController::class, 'showPostByIndustry']);
+    Route::get('/show-save-postlist', [MasterPostApiController::class, 'showSavePostList']);
+    Route::get('/show-saved-post/{post_id}', [MasterPostApiController::class, 'showSavedPost']);
     Route::post('/show-post', [MasterPostApiController::class, 'showPost']);
     Route::post('/create-post', [MasterPostApiController::class, 'createPost']);
-    Route::post('/delete-post/{pid}', [MasterPostApiController::class, 'deletePost']);
     Route::post('/save-post/{post_id}', [MasterPostApiController::class, 'toggleSavePost']);
-
-    Route::post('/toggle-like', [MasterLikeApiController::class, 'likeOrUnlike']);
-    Route::post('/toggle-saved', [MasterSaveApiController::class, 'saveOrUnsave']);
+    Route::post('/toggle-like/{post_id}', [MasterPostApiController::class, 'likeOrUnlike']);
+    Route::delete('/delete-post/{pid}', [MasterPostApiController::class, 'deletePost']);
 
     Route::get('/get-comments/{post_id}', [MasterCommentApiController::class, 'getComments']);
     Route::post('/create-comment', [MasterCommentApiController::class, 'createComments']);
@@ -89,6 +92,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('/plans/{plan_id}', [SubscriptionApiController::class, 'getUpdatePlans']);
     Route::delete('/plans/{plan_id}', [SubscriptionApiController::class, 'deletePlans']);
     Route::post('/create-subscription', [SubscriptionApiController::class, 'createSubscription']);
+    Route::post('/features', [SubscriptionApiController::class, 'checkPaidPlans']);
 
     Route::post('/logout', [AuthApiController::class, 'logout']);
 });
