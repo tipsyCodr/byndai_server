@@ -69,10 +69,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/toggle-like/{post_id}', [MasterPostApiController::class, 'likeOrUnlike']);
     Route::delete('/delete-post/{pid}', [MasterPostApiController::class, 'deletePost']);
 
-    Route::get('/get-comments/{post_id}', [MasterCommentApiController::class, 'getComments']);
-    Route::post('/create-comment', [MasterCommentApiController::class, 'createComments']);
-    Route::post('/reply-comment', [MasterCommentApiController::class, 'replyComment']);
-    Route::post('/toggle-comment-like', [MasterCommentApiController::class, 'likeOrUnlikeComment']);
+    Route::get('/comment/{post_id}', [MasterCommentApiController::class, 'getComments']);
+    Route::post('/comment', [MasterCommentApiController::class, 'createComments']);
+    Route::post('/comment/reply', [MasterCommentApiController::class, 'replyComment']);
+    Route::post('/comment/toggle-like', [MasterCommentApiController::class, 'likeOrUnlikeComment']);
+    Route::delete('/comment/delete/{c_id}', [MasterCommentApiController::class, 'deleteComments']);
 
     Route::get('/chat/get-message/{chatId}', [ChatApiController::class, 'getMessages']);
     Route::post('/chat/create-chat/{other_Id}', [ChatApiController::class, 'createChat']);

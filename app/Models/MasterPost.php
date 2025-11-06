@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 
 class MasterPost extends Model
 {
-    protected $fillable = ['indus_type', 'title', 'content', 'slug', 'is_audience', 'status', 'created_by'];
+    protected $fillable = ['indus_type', 'title', 'content', 'slug', 'is_audience', 'like', 'comments', 'status', 'created_by'];
     public function industry()
     {
         return $this->belongsTo(MasterIndustry::class, 'indus_type', 'id');
