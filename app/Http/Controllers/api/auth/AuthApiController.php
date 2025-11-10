@@ -18,14 +18,14 @@ class AuthApiController extends Controller
     {
         $otp = rand(1000, 9999);
         $token = Str::random(40);
-        $exp = now()->addMinutes(2);
-        $p = PhoneVerification::firstOrNew(['user_mobile' => decrypt($phone)]);
+        $exp = now()->addMinutes(5);
+        $p = PhoneVerification::firstOrNew(['mobile' => decrypt($phone)]);
         if (!$p->updated_at || !$p->updated_at->isSameDay(now())) {
             $p->no_of_attempt = 0;
         }
-        if ($p->no_of_attempt >= 3) {
-            return response()->json(['status' => false, 'message' => 'OTP limit exceeded. Try after 24 hours.'], 429);
-        }
+        // if ($p->no_of_attempt >= 3) {
+        //     return response()->json(['status' => false, 'message' => 'OTP limit exceeded. Try after 24 hours.'], 429);
+        // }
         $p->fill(['otp' => $otp, 'token' => $token, 'expires_at' => $exp, 'no_of_attempt' => $p->no_of_attempt + 1, 'ip_address' => '', 'created_at' => $p->created_at ?? now(), 'updated_at' => now()])->save();
         $p->refresh();
         return $p;
@@ -87,10 +87,10 @@ class AuthApiController extends Controller
         }
         $r->validate([
             'name' => 'required',
-            'email' => 'required|email|unique:users,email',
+            'email' => 'nullable|email|unique:users,email',
             'password' => 'required|string'
         ]);
-        $otp = rand(1000, 9999);
+        // $otp = rand(1000, 9999);
         $tokenString = Str::random(40);
         DB::beginTransaction();
         try {
@@ -98,7 +98,7 @@ class AuthApiController extends Controller
             $user->user_mobile = $phone_no;
             $user->email = $r->email;
             $user->password = bcrypt($r->password);
-            $user->otp = $otp;
+            // $user->otp = $otp;
             $user->remember_token = $tokenString;
             $user->save();
 
