@@ -19,7 +19,7 @@ class AuthApiController extends Controller
         $otp = rand(1000, 9999);
         $token = Str::random(40);
         $exp = now()->addMinutes(5);
-        $p = PhoneVerification::firstOrNew(['mobile' => decrypt($phone)]);
+        $p = PhoneVerification::firstOrNew(['user_mobile' => decrypt($phone)]);
         if (!$p->updated_at || !$p->updated_at->isSameDay(now())) {
             $p->no_of_attempt = 0;
         }
