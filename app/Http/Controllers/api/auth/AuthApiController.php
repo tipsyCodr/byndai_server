@@ -23,7 +23,7 @@ class AuthApiController extends Controller
         if (!$p->updated_at || !$p->updated_at->isSameDay(now())) {
             $p->no_of_attempt = 0;
         }
-        if ($p->no_of_attempt >= 3) {
+        if ($p->no_of_attempt >= 100) {
             return response()->json(['status' => false, 'message' => 'OTP limit exceeded. Try after 24 hours.'], 429);
         }
         $p->fill(['otp' => $otp, 'token' => $token, 'expires_at' => $exp, 'no_of_attempt' => $p->no_of_attempt + 1, 'ip_address' => '', 'created_at' => $p->created_at ?? now(), 'updated_at' => now()])->save();
