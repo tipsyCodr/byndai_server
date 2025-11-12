@@ -36,9 +36,9 @@ class AuthApiController extends Controller
         $user = User::where('user_mobile', $r->phone_no)->first();
         if (!$user) {
             $otpData = $this->sendOtp(encrypt($r->phone_no));
-            return response()->json(['status' => true, 'message' => 'User not found. OTP sent for verification.', 'data' => $otpData], 200);
+            return response()->json(['status' => true, 'process'=>'register', 'message' => 'User not found. OTP sent for verification.', 'data' => $otpData], 200);
         }
-        return response()->json(['status' => true, 'user' => $user], 200);
+        return response()->json(['status' => true,'process'=>'login', 'user' => $user], 200);
     }
     public function login($phone, Request $r)
     {
