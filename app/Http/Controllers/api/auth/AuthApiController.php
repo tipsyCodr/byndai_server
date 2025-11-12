@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Exception;
 
 class AuthApiController extends Controller
 {
@@ -30,6 +31,16 @@ class AuthApiController extends Controller
         $p->refresh();
         return $p;
     }
+    public function listUsers(){
+       try{
+         $users = User::all();
+        return response()->json(['status' => true,'message' => `Successfully fetched $users->count()`, 'data' => $users], 200);
+
+       }catch(Exception $e ){
+            return response()->json(['status'=> false, 'message'=>`Failed to fetch users $e->getMessage()`]);
+       }
+    }
+
     public function checkMobile(Request $r)
     {
         $r->validate(['phone_no' => 'required|digits:10']);

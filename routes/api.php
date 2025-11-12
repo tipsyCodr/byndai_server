@@ -16,6 +16,7 @@ use App\Http\Controllers\api\site\SubscriptionApiController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/check-mobile', [AuthApiController::class, 'checkMobile']);
+Route::post('/users/list', [AuthApiController::class, 'listUsers']);
 Route::post('/regenerate-otp/{phone}', [AuthApiController::class, 'regenerateOtp']);
 Route::post('/verify-otp/{phone_no}/{token}', [AuthApiController::class, 'verifyOtp']);
 Route::post('/registration/{phone_no}/{token}', [AuthApiController::class, 'registration']);
