@@ -34,10 +34,10 @@ class AuthApiController extends Controller
     public function listUsers(){
        try{
          $users = User::all();
-        return response()->json(['status' => true,'message' => `Successfully fetched $users->count()`, 'data' => $users], 200);
+        return response()->json(['status' => true,'message' => 'Successfully fetched '.$users->count(), 'data' => $users], 200);
 
        }catch(Exception $e ){
-            return response()->json(['status'=> false, 'message'=>`Failed to fetch users $e->getMessage()`]);
+            return response()->json(['status'=> false, 'message'=>'Failed to fetch users: '.$e->getMessage()]);
        }
     }
 
