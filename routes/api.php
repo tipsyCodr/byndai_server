@@ -29,6 +29,7 @@ Route::post("/registration/{phone_no}/{token}", [
     AuthApiController::class,
     "registration",
 ]);
+Route::post("/login/phone/check", [AuthApiController::class, "checkPhone"]);
 Route::post("/login/pin/check", [AuthApiController::class, "checkPin"]);
 Route::post("/login/pin/set", [AuthApiController::class, "setPin"]);
 Route::post("/login/pin", [AuthApiController::class, "loginWithPin"]);

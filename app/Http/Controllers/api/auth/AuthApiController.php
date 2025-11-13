@@ -86,7 +86,7 @@ class AuthApiController extends Controller
             200,
         );
     }
-    public function checkUser(Request $r)
+    public function checkPhone(Request $r)
     {
         $r->validate([
             "phone_no" => "required|digits:10",
