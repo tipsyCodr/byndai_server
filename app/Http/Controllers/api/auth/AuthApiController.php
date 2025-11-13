@@ -65,6 +65,29 @@ class AuthApiController extends Controller
         }
     }
 
+    public function resetPinOtp(Request $r)
+    {
+        try {
+            $otpData = $this->sendOtp(encrypt($r->phone_no));
+            return response()->json(
+                [
+                    "status" => true,
+                    "process" => "register",
+                    "message" => "User not found. OTP sent for verification.",
+                    "data" => $otpData,
+                ],
+                200,
+            );
+        } catch (Exception $e) {
+            return response()->json(
+                [
+                    "status" => false,
+                    "message" => "Failed to send OTP: " . $e->getMessage(),
+                ],
+                500,
+            );
+        }
+    }
     public function checkMobile(Request $r)
     {
         $r->validate(["phone_no" => "required|digits:10"]);

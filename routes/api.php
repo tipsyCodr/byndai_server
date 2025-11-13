@@ -16,6 +16,7 @@ use App\Http\Controllers\api\site\SubscriptionApiController;
 use Illuminate\Support\Facades\Route;
 
 Route::post("/check-mobile", [AuthApiController::class, "checkMobile"]);
+Route::post("/reset-pin-otp", [AuthApiController::class, "resetPinOtp"]);
 Route::get("/users/list", [AuthApiController::class, "listUsers"]);
 Route::post("/regenerate-otp/{phone}", [
     AuthApiController::class,
