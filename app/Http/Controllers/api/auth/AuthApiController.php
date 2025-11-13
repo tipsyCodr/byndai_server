@@ -142,15 +142,15 @@ class AuthApiController extends Controller
             );
         }
 
-        if ($user->pin !== null || $user->pin !== "" || $user->pin !== 0) {
-            return response()->json(
-                [
-                    "status" => false,
-                    "message" => "PIN already set. Please login instead.",
-                ],
-                400,
-            );
-        }
+        // if ($user->pin !== null || $user->pin !== "" || $user->pin !== 0) {
+        //     return response()->json(
+        //         [
+        //             "status" => false,
+        //             "message" => "PIN already set. Please login instead.",
+        //         ],
+        //         400,
+        //     );
+        // }
 
         // ✅ Automatically hashed because of model casting
         $user->pin = $r->pin;
