@@ -86,6 +86,32 @@ class AuthApiController extends Controller
             200,
         );
     }
+    public function checkUser(Request $r)
+    {
+        $r->validate([
+            "phone_no" => "required|digits:10",
+        ]);
+
+        $user = User::where("user_mobile", $r->phone_no)->first();
+
+        if (!$user) {
+            return response()->json(
+                [
+                    "status" => false,
+                    "message" => "User not found.",
+                ],
+                404,
+            );
+        }
+
+        return response()->json(
+            [
+                "status" => true,
+                "message" => "User found.",
+            ],
+            200,
+        );
+    }
     public function checkPin(Request $r)
     {
         $r->validate([
@@ -141,16 +167,6 @@ class AuthApiController extends Controller
                 404,
             );
         }
-
-        // if ($user->pin !== null || $user->pin !== "" || $user->pin !== 0) {
-        //     return response()->json(
-        //         [
-        //             "status" => false,
-        //             "message" => "PIN already set. Please login instead.",
-        //         ],
-        //         400,
-        //     );
-        // }
 
         // ✅ Automatically hashed because of model casting
         $user->pin = $r->pin;
