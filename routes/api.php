@@ -29,10 +29,10 @@ Route::post("/registration/{phone_no}/{token}", [
     AuthApiController::class,
     "registration",
 ]);
-Route::post("/login/{phone}", [AuthApiController::class, "login"]);
 Route::post("/login/pin/check", [AuthApiController::class, "checkPin"]);
 Route::post("/login/pin/set", [AuthApiController::class, "setPin"]);
 Route::post("/login/pin", [AuthApiController::class, "loginWithPin"]);
+Route::post("/login/{phone}", [AuthApiController::class, "login"]);
 
 Route::middleware(["auth:sanctum"])->group(function () {
     Route::get("/master-links", [MasterApiController::class, "getMasterLinks"]);
