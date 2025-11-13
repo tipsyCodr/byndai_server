@@ -186,7 +186,7 @@ class AuthApiController extends Controller
             );
         }
 
-        if (is_null($user->pin)) {
+        if ($user->pin === null || $user->pin == "" || $user->pin == 0) {
             return response()->json(
                 [
                     "status" => false,
