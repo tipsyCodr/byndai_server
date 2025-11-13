@@ -18,17 +18,22 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-    protected $fillable = ['user_mobile', 'email', 'password', 'otp', 'created_ip', 'status', 'remember_token'];
+    protected $fillable = [
+        "user_mobile",
+        "email",
+        "password",
+        "otp",
+        "created_ip",
+        "status",
+        "remember_token",
+    ];
 
     /**
      * The attributes that should be hidden for serialization.
      *
      * @var list<string>
      */
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+    protected $hidden = ["password", "remember_token"];
 
     /**
      * Get the attributes that should be cast.
@@ -38,8 +43,13 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            "email_verified_at" => "datetime",
+            "password" => "hashed",
+            "pin" => "hashed",
         ];
+    }
+    public function masterUser()
+    {
+        return $this->hasOne(MasterUserDetail::class, "user_id", "id");
     }
 }

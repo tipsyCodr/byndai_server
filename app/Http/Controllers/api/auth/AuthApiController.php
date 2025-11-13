@@ -20,86 +20,300 @@ class AuthApiController extends Controller
         $otp = rand(1000, 9999);
         $token = Str::random(40);
         $exp = now()->addMinutes(5);
-        $p = PhoneVerification::firstOrNew(['user_mobile' => decrypt($phone)]);
+        $p = PhoneVerification::firstOrNew(["user_mobile" => decrypt($phone)]);
         if (!$p->updated_at || !$p->updated_at->isSameDay(now())) {
             $p->no_of_attempt = 0;
         }
         if ($p->no_of_attempt >= 100) {
-            return response()->json(['status' => false, 'message' => 'OTP limit exceeded. Try after 24 hours.'], 429);
+            return response()->json(
+                [
+                    "status" => false,
+                    "message" => "OTP limit exceeded. Try after 24 hours.",
+                ],
+                429,
+            );
         }
-        $p->fill(['otp' => $otp, 'token' => $token, 'expires_at' => $exp, 'no_of_attempt' => $p->no_of_attempt + 1, 'ip_address' => '', 'created_at' => $p->created_at ?? now(), 'updated_at' => now()])->save();
+        $p->fill([
+            "otp" => $otp,
+            "token" => $token,
+            "expires_at" => $exp,
+            "no_of_attempt" => $p->no_of_attempt + 1,
+            "ip_address" => "",
+            "created_at" => $p->created_at ?? now(),
+            "updated_at" => now(),
+        ])->save();
         $p->refresh();
         return $p;
     }
-    public function listUsers(){
-       try{
-         $users = User::all();
-        return response()->json(['status' => true,'message' => 'Successfully fetched '.$users->count(), 'data' => $users], 200);
-
-       }catch(Exception $e ){
-            return response()->json(['status'=> false, 'message'=>'Failed to fetch users: '.$e->getMessage()]);
-       }
+    public function listUsers()
+    {
+        try {
+            $users = User::all();
+            return response()->json(
+                [
+                    "status" => true,
+                    "message" => "Successfully fetched " . $users->count(),
+                    "data" => $users,
+                ],
+                200,
+            );
+        } catch (Exception $e) {
+            return response()->json([
+                "status" => false,
+                "message" => "Failed to fetch users: " . $e->getMessage(),
+            ]);
+        }
     }
 
     public function checkMobile(Request $r)
     {
-        $r->validate(['phone_no' => 'required|digits:10']);
-        $user = User::where('user_mobile', $r->phone_no)->first();
+        $r->validate(["phone_no" => "required|digits:10"]);
+        $user = User::where("user_mobile", $r->phone_no)->first();
         if (!$user) {
             $otpData = $this->sendOtp(encrypt($r->phone_no));
-            return response()->json(['status' => true, 'process'=>'register', 'message' => 'User not found. OTP sent for verification.', 'data' => $otpData], 200);
+            return response()->json(
+                [
+                    "status" => true,
+                    "process" => "register",
+                    "message" => "User not found. OTP sent for verification.",
+                    "data" => $otpData,
+                ],
+                200,
+            );
         }
-        return response()->json(['status' => true,'process'=>'login', 'user' => $user], 200);
+        return response()->json(
+            ["status" => true, "process" => "login", "user" => $user],
+            200,
+        );
     }
+    public function checkPin(Request $r)
+    {
+        $r->validate([
+            "phone_no" => "required|digits:10",
+        ]);
+
+        $user = User::where("user_mobile", $r->phone_no)->first();
+
+        if (!$user) {
+            return response()->json(
+                [
+                    "status" => false,
+                    "message" => "User not found.",
+                ],
+                404,
+            );
+        }
+
+        if (is_null($user->pin)) {
+            return response()->json(
+                [
+                    "status" => false,
+                    "message" => "PIN not set.",
+                ],
+                200,
+            );
+        }
+
+        return response()->json(
+            [
+                "status" => true,
+                "message" => "PIN is set.",
+            ],
+            200,
+        );
+    }
+
+    public function setPin(Request $r)
+    {
+        $r->validate([
+            "phone_no" => "required|digits:10",
+            "pin" => "required|min:4|max:6",
+        ]);
+
+        $user = User::where("user_mobile", $r->phone_no)->first();
+
+        if (!$user) {
+            return response()->json(
+                [
+                    "status" => false,
+                    "message" => "User not found.",
+                ],
+                404,
+            );
+        }
+
+        if (!is_null($user->pin)) {
+            return response()->json(
+                [
+                    "status" => false,
+                    "message" => "PIN already set. Please login instead.",
+                ],
+                400,
+            );
+        }
+
+        // ✅ Automatically hashed because of model casting
+        $user->pin = $r->pin;
+        $user->save();
+
+        return response()->json(
+            [
+                "status" => true,
+                "message" => "PIN set successfully.",
+            ],
+            200,
+        );
+    }
+
+    public function loginWithPin(Request $r)
+    {
+        $r->validate([
+            "phone_no" => "required|digits:10",
+            "pin" => "required",
+        ]);
+
+        $user = User::where("user_mobile", $r->phone_no)
+            ->with("masterUser")
+            ->first();
+
+        if (!$user) {
+            return response()->json(
+                [
+                    "status" => false,
+                    "message" => "User not found.",
+                ],
+                404,
+            );
+        }
+
+        if (is_null($user->pin)) {
+            return response()->json(
+                [
+                    "status" => false,
+                    "message" => "PIN not set. Please create one first.",
+                ],
+                400,
+            );
+        }
+
+        // ✅ `hashed` cast automatically supports Hash::check()
+        if (!Hash::check($r->pin, $user->pin)) {
+            return response()->json(
+                [
+                    "status" => false,
+                    "message" => "Invalid PIN.",
+                ],
+                401,
+            );
+        }
+
+        $token = $user->createToken("auth_token")->plainTextToken;
+
+        return response()->json(
+            [
+                "status" => true,
+                "message" => "Successfully logged in!",
+                "token" => $token,
+                "user" => $user,
+            ],
+            200,
+        );
+    }
+
     public function login($phone, Request $r)
     {
-        $r->validate(['password' => 'nullable|string']);
-        $user = User::where('user_mobile', $phone)->first();
+        $r->validate(["password" => "nullable|string"]);
+        $user = User::where("user_mobile", $phone)->first();
         if (!$user) {
-            return response()->json(['status' => false, 'message' => 'This number is not exists in our database!'], 401);
+            return response()->json(
+                [
+                    "status" => false,
+                    "message" => "This number is not exists in our database!",
+                ],
+                401,
+            );
         }
-        if ($r->filled('password')) {
+        if ($r->filled("password")) {
             if (!Hash::check($r->password, $user->password)) {
-                return response()->json(['status' => false, 'message' => 'Incorrect password!'], 401);
+                return response()->json(
+                    ["status" => false, "message" => "Incorrect password!"],
+                    401,
+                );
             }
         }
-        $token = $user->createToken('Api Token')->plainTextToken;
-        return response()->json(['status' => true, 'message' => 'Successfully logged in.', 'user' => $user, 'token' => $token], 200);
+        $token = $user->createToken("Api Token")->plainTextToken;
+        return response()->json(
+            [
+                "status" => true,
+                "message" => "Successfully logged in.",
+                "user" => $user,
+                "token" => $token,
+            ],
+            200,
+        );
     }
     public function verifyOtp(Request $r, $phone_no, $token)
     {
-        $r->validate(['otp' => 'required|digits:4']);
-        $p = PhoneVerification::where('user_mobile', $phone_no)->where('token', $token)->where('otp', $r->otp)->first();
+        $r->validate(["otp" => "required|digits:4"]);
+        $p = PhoneVerification::where("user_mobile", $phone_no)
+            ->where("token", $token)
+            ->where("otp", $r->otp)
+            ->first();
         if (!$p) {
-            return response()->json(['status' => false, 'message' => 'Invalid OTP!'], 422);
+            return response()->json(
+                ["status" => false, "message" => "Invalid OTP!"],
+                422,
+            );
         }
         if (now()->greaterThan($p->expires_at)) {
-            return response()->json(['status' => false, 'message' => 'OTP expired!'], 422);
+            return response()->json(
+                ["status" => false, "message" => "OTP expired!"],
+                422,
+            );
         }
         $p->verified_at = now();
         $p->token = Str::random(40);
         $p->save();
-        return response()->json(['status' => true, 'message' => 'OTP verified successfully!', 'data' => $p], 200);
+        return response()->json(
+            [
+                "status" => true,
+                "message" => "OTP verified successfully!",
+                "data" => $p,
+            ],
+            200,
+        );
     }
     public function regenerateOtp($phone_no)
     {
         $otpData = $this->sendOtp(encrypt($phone_no));
-        return response()->json(['status' => true, 'message' => 'OTP sent!', 'data' => $otpData], 200);
+        return response()->json(
+            ["status" => true, "message" => "OTP sent!", "data" => $otpData],
+            200,
+        );
     }
     public function registration(Request $r, $phone_no, $token)
     {
-        $check_no = PhoneVerification::where('user_mobile', $phone_no)->where('token', $token)->whereNotNull('verified_at')->first();
+        $check_no = PhoneVerification::where("user_mobile", $phone_no)
+            ->where("token", $token)
+            ->whereNotNull("verified_at")
+            ->first();
         if (!$check_no) {
-            return response()->json(['status' => false, 'message' => 'Verified first your number!'], 422);
+            return response()->json(
+                ["status" => false, "message" => "Verified first your number!"],
+                422,
+            );
         }
-        $phone_check = User::where('user_mobile', $phone_no)->exists();
+        $phone_check = User::where("user_mobile", $phone_no)->exists();
         if ($phone_check) {
-            return response()->json(['status' => false, 'message' => 'Your number already exists!'], 422);
+            return response()->json(
+                ["status" => false, "message" => "Your number already exists!"],
+                422,
+            );
         }
         $r->validate([
-            'name' => 'required',
-            'email' => 'nullable|email|unique:users,email',
-            'password' => 'required|string'
+            "name" => "required",
+            "email" => "nullable|email|unique:users,email",
+            "password" => "required|string",
         ]);
         // $otp = rand(1000, 9999);
         $tokenString = Str::random(40);
@@ -122,16 +336,33 @@ class AuthApiController extends Controller
 
             DB::commit();
             Auth::login($user);
-            $apiToken = $user->createToken('API Token')->plainTextToken;
-            return response()->json(['status' => true, 'message' => 'User registered and logged in successfully', 'token' => $apiToken, 'user' => $user], 200);
+            $apiToken = $user->createToken("API Token")->plainTextToken;
+            return response()->json(
+                [
+                    "status" => true,
+                    "message" => "User registered and logged in successfully",
+                    "token" => $apiToken,
+                    "user" => $user,
+                ],
+                200,
+            );
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['status' => false, 'message' => 'Something went wrong: ' . $e->getMessage()], 500);
+            return response()->json(
+                [
+                    "status" => false,
+                    "message" => "Something went wrong: " . $e->getMessage(),
+                ],
+                500,
+            );
         }
     }
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
-        return response()->json(['status' => 'success', 'message' => 'successfully logout.']);
+        return response()->json([
+            "status" => "success",
+            "message" => "successfully logout.",
+        ]);
     }
 }

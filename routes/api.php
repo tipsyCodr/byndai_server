@@ -21,6 +21,7 @@ Route::post('/regenerate-otp/{phone}', [AuthApiController::class, 'regenerateOtp
 Route::post('/verify-otp/{phone_no}/{token}', [AuthApiController::class, 'verifyOtp']);
 Route::post('/registration/{phone_no}/{token}', [AuthApiController::class, 'registration']);
 Route::post('/login/{phone}', [AuthApiController::class, 'login']);
+Route::post('/login/pin', [AuthApiController::class, 'loginWithPin']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/master-links', [MasterApiController::class, 'getMasterLinks']);
