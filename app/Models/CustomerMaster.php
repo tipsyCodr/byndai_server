@@ -9,6 +9,18 @@ class CustomerMaster extends Model
 {
     protected $fillable = ['full_name', 'company_name', 'desg', 'mobile_no', 'website', 'email', 'address', 'user_id', 'date', 'front_image_url', 'back_image_url', 'assign_to', 'notes', 'source', 'lead_status', 'cat_id', 'created_by', 'updated_by'];
 
+    protected $appends = ['designation', 'phone'];
+
+    public function getDesignationAttribute()
+    {
+        return $this->desg;
+    }
+
+    public function getPhoneAttribute()
+    {
+        return $this->mobile_no;
+    }
+
     public static function getData(Request $r, $user_id)
     {
         $name = $r->name;

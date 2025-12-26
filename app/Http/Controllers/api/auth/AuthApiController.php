@@ -120,6 +120,7 @@ class AuthApiController extends Controller
         if (!$user) {
             return response()->json(
                 [
+                    "exists" => false,
                     "status" => false,
                     "message" => "User not found.",
                 ],
@@ -129,6 +130,7 @@ class AuthApiController extends Controller
 
         return response()->json(
             [
+                "exists" => true,
                 "status" => true,
                 "message" => "User found.",
             ],
@@ -330,8 +332,11 @@ class AuthApiController extends Controller
             200,
         );
     }
-    public function registration(Request $r, $phone_no, $token)
+    public function registration(Request $r, $phone_no = null, $token = null)
     {
+        $phone_no = $r->mobile ?? $phone_no;
+        $token = $r->token ?? $token;
+
         $check_no = PhoneVerification::where("user_mobile", $phone_no)
             ->where("token", $token)
             ->whereNotNull("verified_at")
