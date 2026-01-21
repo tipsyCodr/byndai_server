@@ -23,7 +23,7 @@ class ChatApiController extends Controller
     }
     public function sendMessages(Request $r)
     {
-        $data = $r->validate(['chat_id' => 'required|exists:master_chats,id', 'message' => 'nullable|string', 'attachments.*' => 'file|mimes:jpg,jpeg,png|max:10240', 'reply_to_id' => 'nullable|exists:master_messages,id']);
+        $data = $r->validate(['chat_id' => 'required|exists:chats,id', 'message' => 'nullable|string', 'attachments.*' => 'file|mimes:jpg,jpeg,png|max:10240', 'reply_to_id' => 'nullable|exists:chat_messages,id']);
         $senderId = Auth::id();
         $message = ChatMessage::create(['chat_id' => $data['chat_id'], 'sender_id' => $senderId, 'message' => $data['message'] ?? null, 'reply_to_id' => $data['reply_to_id'] ?? null]);
 
@@ -63,7 +63,7 @@ class ChatApiController extends Controller
     }
     public function toggleLike(Request $r)
     {
-        $data = $r->validate(['message_id' => 'required|exists:master_messages,id', 'emoji' => 'required']);
+        $data = $r->validate(['message_id' => 'required|exists:chat_messages,id', 'emoji' => 'required']);
         $userId = Auth::id();
         $like = MessageLike::where('user_id', $userId)->where('message_id', $data['message_id'])->where('emoji', $data['emoji'])->first();
         if ($like) {

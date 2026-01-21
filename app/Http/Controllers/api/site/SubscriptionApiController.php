@@ -99,8 +99,8 @@ class SubscriptionApiController extends Controller
             //     'payment_capture' => 1
             // ]);
 
-            Payment::create(['user_id' => $user_id, 'order_id' => '12345', 'amount' => $amount, 'currency' => 'INR', 'payment_gateway' => 'razorpay', 'payment_mode' => 'online', 'status' => 1, 'response_data' => '']);
-            return ['status' => true, 'message' => 'Payment initiated successfully'];
+            $payment = Payment::create(['user_id' => $user_id, 'order_id' => '12345', 'amount' => $amount, 'currency' => 'INR', 'payment_gateway' => 'razorpay', 'payment_mode' => 'online', 'status' => 1, 'response_data' => json_encode([])]);
+            return ['status' => true, 'message' => 'Payment initiated successfully', 'payment' => $payment];
         } catch (\Exception $e) {
             Log::error('Payment Error: ' . $e->getMessage());
             return ['status' => false, 'message' => 'Payment initiation failed: ' . $e->getMessage()];
@@ -139,6 +139,7 @@ class SubscriptionApiController extends Controller
             if (!$payment['status']) {
                 return response()->json(['status' => false, 'message' => 'Payment initiation failed.']);
             }
+            $data['payment_id'] = $payment['payment']->id;
             $subscription = Subscription::create($data);
             return response()->json(['status' => true, 'message' => 'Subscription created successfully!', 'data' => $subscription]);
         } catch (\Exception $e) {

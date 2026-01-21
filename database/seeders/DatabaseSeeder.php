@@ -17,12 +17,12 @@ class DatabaseSeeder extends Seeder
             DistrictSeeder::class,
             MasterIndustrySeeder::class,
             MasterLinkSeeder::class,
-            // UserSeeder::class,
-            // ProductSeerder::class,
-            // ProductImageSeeder::class,
-            // PlanSeeder::class,
-            // RestrictionSeeder::class,
-            // SubscriptionSeeder::class,
+            UserSeeder::class,
+            ProductSeerder::class,
+            ProductImageSeeder::class,
+            PlanSeeder::class,
+            RestrictionSeeder::class,
+            SubscriptionSeeder::class,
         ]);
     }
 }

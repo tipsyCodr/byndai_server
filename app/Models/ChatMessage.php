@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class ChatMessage extends Model
 {
     use HasFactory;
-    protected $fillable = ['chat_id', 'sender_id', 'message', 'reply_to_id', 'is_read', 'is_deleted'];
+    protected $fillable = ['chat_id', 'sender_id', 'message', 'reply_to_id', 'is_read', 'is_deleted', 'is_delivered'];
 
     public function attachments()
     {

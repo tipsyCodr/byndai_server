@@ -18,8 +18,8 @@ return new class extends Migration
             $table->dateTime('start_date');
             $table->dateTime('end_date');
             $table->dateTime('trial_end_date')->nullable();
-            $table->integer('status')->default(0)->comment('0 is in-active 1 is active 2 is pending 3 is trial');
-            $table->unsignedBigInteger('payment_id');
+            $table->decimal('amount', 10, 2)->default(0.00);
+            $table->unsignedBigInteger('payment_id')->nullable();
             $table->integer('renewal_status')->default(10)->comment('10 is new plan 9 is renewal plan');
             $table->dateTime('cancelled_at')->nullable();
             $table->string('cancel_reason')->nullable();

@@ -17,9 +17,9 @@ return new class extends Migration
             $table->unsignedBigInteger('sender_id');
             $table->text('message')->nullable();
             $table->unsignedBigInteger('reply_to_id')->nullable();
-            $table->tinyInteger('is_delivered')->default(0)->comment('0 = undelivered, 1 = delivered');
-            $table->tinyInteger('is_read')->default(0)->comment('0 = unread, 1 = read');
-            $table->tinyInteger('is_deleted')->default(0)->comment('0 = visible, 1 = deleted');
+            $table->tinyInteger('is_delivered')->default(0);
+            $table->tinyInteger('is_read')->default(0);
+            $table->tinyInteger('is_deleted')->default(0);
             $table->timestamps();
         });
     }

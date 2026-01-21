@@ -213,7 +213,7 @@ Route::middleware(["auth:sanctum"])->group(function () {
         ChatApiController::class,
         "sendMessages",
     ]);
-    Route::post("/chat/mark-read", [ChatApiController::class, "markAsRead"]);
+    Route::post("/chat/mark-read/{chatId}", [ChatApiController::class, "markAsRead"]);
     Route::post("/chat/like-message", [ChatApiController::class, "toggleLike"]);
     Route::post("/chat/delete-message/{message_Id}", [
         ChatApiController::class,
