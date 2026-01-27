@@ -42,10 +42,10 @@ Route::post('/leads', [LeadController::class, 'store']);
 Route::get('/leads/{id}', [LeadController::class, 'show']);
 Route::put('/leads/{id}', [LeadController::class, 'update']); 
 Route::delete('/leads/{id}', [LeadController::class, 'destroy']);
-// Route::post('/ocr-extract', [LeadController::class, 'ocrExtract']);
-Route::middleware(['cors'])->group(function () {
-    Route::post('/ocr-extract', [LeadController::class, 'ocrExtract']);
-});
+Route::post('/ocr-extract', [LeadController::class, 'ocrExtract']);
+// Route::middleware(['cors'])->group(function () {
+//     Route::post('/ocr-extract', [LeadController::class, 'ocrExtract']);
+// });
 
 
 Route::middleware(["auth:sanctum"])->group(function () {
