@@ -51,6 +51,13 @@ class LeadController extends Controller
         $perPage = $request->get('per_page', 10);
     
         $leads = $query->latest()->paginate($perPage);
+
+           $leads->getCollection()->transform(function ($lead) {
+        if ($lead->lead_image) {
+            $lead->image_url = asset('storage/' . $lead->lead_image);
+        }
+        return $lead;
+    });
     
         return response()->json([
             'success' => true,
@@ -65,43 +72,114 @@ class LeadController extends Controller
     }
 
 
-    // ✅ STORE lead
-    public function store(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string',
-            'mobiles' => 'required|array|min:1|max:3',
-            'mobiles.*' => 'required|string|max:15',
-            'email2' => 'nullable|email', 
-            'website' => 'nullable|string',
-        ]);
+   
 
-        $mobiles = $request->mobiles;
+   public function store(Request $request)
+{
+    $request->validate([
+        'name' => 'required|string',
+        'email' => 'required|email',
+        'email2' => 'nullable|email', 
+        'website' => 'nullable|string',
+        'lead_image' => 'nullable|string',
+        'image_filename' => 'nullable|string',
+        // ✅ Individual mobile fields validate करो
+        'mobile_no_1' => 'required|string|max:15',
+        'mobile_no_2' => 'nullable|string|max:15',
+        'mobile_no_3' => 'nullable|string|max:15',
+    ]);
 
-        $lead = Lead::create([
-            'name' => $request->name,
-            'company_name' => $request->company_name,
-            'email' => $request->email,
-            'email2' => $request->email2,   
-            'website' => $request->website,
-            'address' => $request->address,
-            'mobile_no_1' => $mobiles[0],
-            'mobile_no_2' => $mobiles[1] ?? null,
-            'mobile_no_3' => $mobiles[2] ?? null,
-        ]);
+    $leadData = [
+        'name' => $request->name,
+        'company_name' => $request->company_name ?? '',
+        'email' => $request->email,
+        'email2' => $request->email2 ?? null,   
+        'website' => $request->website ?? null,
+        'address' => $request->address ?? '',
+        // ✅ Direct individual fields use करो
+        'mobile_no_1' => $request->mobile_no_1,
+        'mobile_no_2' => $request->mobile_no_2 ?? null,
+        'mobile_no_3' => $request->mobile_no_3 ?? null,
+    ];
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Lead created successfully',
-            'data' => $lead
-        ], 201);
+    // ✅ Handle image if provided
+    if ($request->has('lead_image') && !empty($request->lead_image)) {
+        // Save base64 image to storage
+        $imagePath = $this->saveBase64Image($request->lead_image, $request->image_filename ?? 'scanned_image.jpg');
+        
+        if ($imagePath) {
+            $leadData['lead_image'] = $imagePath;
+            $leadData['image_filename'] = $request->image_filename ?? 'scanned_image.jpg';
+        }
     }
+
+    $lead = Lead::create($leadData);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Lead created successfully',
+        'data' => $lead
+    ], 201);
+}
+
+// ✅ Helper function to save base64 image
+private function saveBase64Image($base64Image, $filename)
+{
+    try {
+        // Remove data:image/...;base64, prefix if present
+        if (strpos($base64Image, 'base64,') !== false) {
+            $base64Image = substr($base64Image, strpos($base64Image, ',') + 1);
+        }
+
+        // Decode base64
+        $imageData = base64_decode($base64Image);
+        
+        if ($imageData === false) {
+            Log::error('Failed to decode base64 image');
+            return null;
+        }
+
+        // Create directory if not exists
+        $directory = storage_path('app/public/lead_images');
+        if (!file_exists($directory)) {
+            mkdir($directory, 0777, true);
+        }
+
+        // Generate unique filename
+        $uniqueFilename = time() . '_' . uniqid() . '_' . $filename;
+        $filePath = $directory . '/' . $uniqueFilename;
+
+        // Save file
+        file_put_contents($filePath, $imageData);
+
+        // Return relative path for storage
+        return 'lead_images/' . $uniqueFilename;
+
+    } catch (\Exception $e) {
+        Log::error('Error saving base64 image: ' . $e->getMessage());
+        return null;
+    }
+}
 
     // ✅ SHOW single lead
+    // public function show($id)
+    // {
+    //     return Lead::findOrFail($id);
+    // }
     public function show($id)
-    {
-        return Lead::findOrFail($id);
+{
+    $lead = Lead::findOrFail($id);
+    
+    // Add full image URL if exists
+    if ($lead->lead_image) {
+        $lead->image_url = asset('storage/' . $lead->lead_image);
     }
+    
+    return response()->json([
+        'success' => true,
+        'data' => $lead
+    ]);
+}
 
     // ✅ DELETE
     public function destroy($id)
@@ -111,109 +189,103 @@ class LeadController extends Controller
     }
 
     // ✅ UPDATE lead
-   public function update(Request $request, $id)
-   {
-       $request->validate([
-           'name' => 'required|string',
-           'mobile_no_1' => 'required|string|max:15',
-           'mobile_no_2' => 'nullable|string|max:15',
-           'mobile_no_3' => 'nullable|string|max:15',
-           'email' => 'nullable|email',
-           'email2' => 'nullable|email',   
-           'website' => 'nullable|string',
-           'company_name' => 'nullable|string',
-           'address' => 'nullable|string',
-       ]);
-   
-       $lead = Lead::findOrFail($id);
-   
-       $lead->update([
-           'name' => $request->name,
-           'company_name' => $request->company_name,
-           'email' => $request->email,
-           'email2' => $request->email2,   
-           'website' => $request->website, 
-           'address' => $request->address,
-           'mobile_no_1' => $request->mobile_no_1,
-           'mobile_no_2' => $request->mobile_no_2,
-           'mobile_no_3' => $request->mobile_no_3,
-       ]);
-   
-       return response()->json([
-           'success' => true,
-           'message' => 'Lead updated successfully',
-           'data' => $lead
-       ]);
-   }
-
-
-
-
-
-
-//      public function ocrExtract(Request $request)
+//    public function update(Request $request, $id)
 //    {
 //        $request->validate([
-//            'images' => 'required|array|min:1|max:2',
-//            'images.*' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120',
+//            'name' => 'required|string',
+//            'mobile_no_1' => 'required|string|max:15',
+//            'mobile_no_2' => 'nullable|string|max:15',
+//            'mobile_no_3' => 'nullable|string|max:15',
+//            'email' => 'nullable|email',
+//            'email2' => 'nullable|email',   
+//            'website' => 'nullable|string',
+//            'company_name' => 'nullable|string',
+//            'address' => 'nullable|string',
 //        ]);
-
-//        $finalText = '';
-
-//        $uploadPath = public_path('uploads/ocr');
-
-//        if (!file_exists($uploadPath)) {
-//            mkdir($uploadPath, 0777, true);
-//        }
-
-//        foreach ($request->file('images') as $image) {
-
-//            // 🔹 Save image in public/uploads/ocr
-//            $filename = uniqid() . '.' . $image->getClientOriginalExtension();
-//            $fullPath = $uploadPath . DIRECTORY_SEPARATOR . $filename;
-
-//            $image->move($uploadPath, $filename);
-
-//            // 🔹 Log image path (console log)
-//            Log::info("OCR Image Received:", [
-//                'file' => $filename,
-//                'path' => $fullPath
-//            ]);
-
-//            // 🔹 Run OCR
-//            try {
-//                $text = (new TesseractOCR($fullPath))
-//                            ->lang('eng')
-//                            ->run();
-
-//                // 🔹 Log OCR Output
-//                Log::info("OCR Output:", [
-//                    'text' => $text
-//                ]);
-
-//                $finalText .= "\n" . $text;
-
-//            } catch (\Exception $e) {
-
-//                Log::error("OCR Failed:", [
-//                    'error' => $e->getMessage()
-//                ]);
-
-//                return response()->json([
-//                    'success' => false,
-//                    'error' => $e->getMessage()
-//                ], 500);
-//            }
-//        }
-
+   
+//        $lead = Lead::findOrFail($id);
+   
+//        $lead->update([
+//            'name' => $request->name,
+//            'company_name' => $request->company_name,
+//            'email' => $request->email,
+//            'email2' => $request->email2,   
+//            'website' => $request->website, 
+//            'address' => $request->address,
+//            'mobile_no_1' => $request->mobile_no_1,
+//            'mobile_no_2' => $request->mobile_no_2,
+//            'mobile_no_3' => $request->mobile_no_3,
+//        ]);
+   
 //        return response()->json([
 //            'success' => true,
-//            'text' => trim($finalText)
+//            'message' => 'Lead updated successfully',
+//            'data' => $lead
 //        ]);
-//      }
+//    }
 
-public function ocrExtract(Request $request)
+// ✅ UPDATE lead (with image support)
+public function update(Request $request, $id)
 {
+    $request->validate([
+        'name' => 'required|string',
+        'mobile_no_1' => 'required|string|max:15',
+        'mobile_no_2' => 'nullable|string|max:15',
+        'mobile_no_3' => 'nullable|string|max:15',
+        'email' => 'nullable|email',
+        'email2' => 'nullable|email',   
+        'website' => 'nullable|string',
+        'company_name' => 'nullable|string',
+        'address' => 'nullable|string',
+        // ✅ Add image validation for update
+        'lead_image' => 'nullable|string',
+        'image_filename' => 'nullable|string',
+    ]);
+
+    $lead = Lead::findOrFail($id);
+
+    $updateData = [
+        'name' => $request->name,
+        'company_name' => $request->company_name,
+        'email' => $request->email,
+        'email2' => $request->email2,   
+        'website' => $request->website, 
+        'address' => $request->address,
+        'mobile_no_1' => $request->mobile_no_1,
+        'mobile_no_2' => $request->mobile_no_2,
+        'mobile_no_3' => $request->mobile_no_3,
+    ];
+
+    // ✅ Handle image update if provided
+    if ($request->has('lead_image') && !empty($request->lead_image)) {
+        // Delete old image if exists
+        if ($lead->lead_image) {
+            $oldImagePath = storage_path('app/public/' . $lead->lead_image);
+            if (file_exists($oldImagePath)) {
+                unlink($oldImagePath);
+            }
+        }
+
+        // Save new image
+        $imagePath = $this->saveBase64Image($request->lead_image, $request->image_filename ?? 'updated_image.jpg');
+        
+        if ($imagePath) {
+            $updateData['lead_image'] = $imagePath;
+            $updateData['image_filename'] = $request->image_filename ?? 'updated_image.jpg';
+        }
+    }
+
+    $lead->update($updateData);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Lead updated successfully',
+        'data' => $lead
+    ]);
+}
+
+   public function ocrExtract(Request $request)
+   {
     $request->validate([
         'images' => 'required|array|min:1|max:2',
         'images.*' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120',
@@ -256,11 +328,11 @@ public function ocrExtract(Request $request)
         'text' => trim($finalText),
         'formdata' => $jsonData
     ]);
-}
+   }
 
 
-private function parseOCRText($text)
-{
+   private function parseOCRText($text)
+   {
     $lines = preg_split('/\r\n|\r|\n/', $text);
 
     $data = [
@@ -339,11 +411,11 @@ private function parseOCRText($text)
     $data['address'] = implode(', ', array_unique($addresses));
 
     return $data;
-}
-
-
-private function isCompanyName($text)
-{
+   }
+   
+   
+   private function isCompanyName($text)
+   {
     $keywords = [
         'ltd','private','pvt','inc','llp','enterprise','enterprises',
         'industries','corp','corporation','solutions','group',
@@ -359,10 +431,10 @@ private function isCompanyName($text)
     if (strtoupper($text) === $text && str_word_count($text) > 1) return true;
 
     return false;
-}
-
-private function isPersonName($text)
-{
+   }
+   
+   private function isPersonName($text)
+   {
     $words = explode(' ', $text);
     if (count($words) > 3) return false;
 
@@ -370,10 +442,10 @@ private function isPersonName($text)
         if (!preg_match('/^[A-Z][a-z]+$/', $w)) return false;
     }
     return true;
-}
-
-private function isAddress($text)
-{
+   }
+   
+   private function isAddress($text)
+   {
     $keywords = [
         'street','road','rd','sector','block','lane','ln','colony',
         'district','near','area','city','state','country','pin','po'
@@ -386,7 +458,7 @@ private function isAddress($text)
     }
 
     return preg_match('/\d+/', $text) && preg_match('/[a-zA-Z]/', $text);
-}
+   }
 
 
 

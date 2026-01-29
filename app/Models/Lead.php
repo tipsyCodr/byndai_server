@@ -17,5 +17,7 @@ class Lead extends Model
         'mobile_no_1',
         'mobile_no_2',
         'mobile_no_3',
+        'lead_image',      // ✅ Add this
+        'image_filename',  // ✅ Add this
     ];
 }
