@@ -194,4 +194,36 @@ class ProfileApiController extends Controller
 
         return response()->json(['status' => true, 'message' => 'User profile card fetched successfully', 'data' => $data], 200);
     }
+
+    public function usersProfileCardData($user_id)
+{
+    $data = MasterUserDetail::with('user')
+        ->where('user_id', $user_id)
+        ->first();
+
+    if (!$data) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Profile not found'
+        ], 404);
+    }
+
+    $data->profile_pic = $data->profile_pic 
+        ? asset('assets/uploads/profile_pics/' . $data->profile_pic) 
+        : null;
+
+    $data->profile_logo = $data->profile_logo 
+        ? asset('assets/uploads/profile_logos/' . $data->profile_logo) 
+        : null;
+
+    $data->profile_banner = $data->profile_banner 
+        ? asset('assets/uploads/profile_banners/' . $data->profile_banner) 
+        : null;
+
+    return response()->json([
+        'status' => true,
+        'message' => 'User profile card fetched successfully',
+        'data' => $data
+    ], 200);
+}
 }
