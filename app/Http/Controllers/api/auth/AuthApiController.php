@@ -334,6 +334,8 @@ class AuthApiController extends Controller
     }
     public function registration(Request $r, $phone_no = null, $token = null)
     {
+
+       
         $phone_no = $r->mobile ?? $phone_no;
         $token = $r->token ?? $token;
 
@@ -356,6 +358,7 @@ class AuthApiController extends Controller
         }
         $r->validate([
             "name" => "required",
+            "user_name" => "required|string|unique:users,user_name",
             "email" => "nullable|email|unique:users,email",
             "password" => "required|string",
         ]);
@@ -365,6 +368,7 @@ class AuthApiController extends Controller
         try {
             $user = new User();
             $user->user_mobile = $phone_no;
+            $user->user_name = $r->user_name; 
             $user->email = $r->email;
             $user->password = bcrypt($r->password);
             // $user->otp = $otp;
