@@ -5,6 +5,7 @@ namespace App\Http\Controllers\api\site;
 use App\Http\Controllers\Controller;
 use App\Models\BusinessInfo;
 use App\Models\MasterUserDetail;
+use App\Models\User;
 use App\Models\UserLink;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -196,34 +197,66 @@ class ProfileApiController extends Controller
     }
 
     public function usersProfileCardData($user_id)
-{
-    $data = MasterUserDetail::with('user')
-        ->where('user_id', $user_id)
-        ->first();
-
-    if (!$data) {
+    {
+        $data = MasterUserDetail::with('user')
+            ->where('user_id', $user_id)
+            ->first();
+    
+        if (!$data) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Profile not found'
+            ], 404);
+        }
+    
+        $data->profile_pic = $data->profile_pic 
+            ? asset('assets/uploads/profile_pics/' . $data->profile_pic) 
+            : null;
+    
+        $data->profile_logo = $data->profile_logo 
+            ? asset('assets/uploads/profile_logos/' . $data->profile_logo) 
+            : null;
+    
+        $data->profile_banner = $data->profile_banner 
+            ? asset('assets/uploads/profile_banners/' . $data->profile_banner) 
+            : null;
+    
         return response()->json([
-            'status' => false,
-            'message' => 'Profile not found'
-        ], 404);
+            'status' => true,
+            'message' => 'User profile card fetched successfully',
+            'data' => $data
+        ], 200);
     }
 
-    $data->profile_pic = $data->profile_pic 
-        ? asset('assets/uploads/profile_pics/' . $data->profile_pic) 
-        : null;
+    public function usersNameProfileData($user_name)
+    {
+        
+        $data1 = User::where('user_name', $user_name)->first();
+    
+        if (!$data1) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Profile not found'
+            ], 404);
+        }
+    
+       $user_id = $data1->id;
 
-    $data->profile_logo = $data->profile_logo 
-        ? asset('assets/uploads/profile_logos/' . $data->profile_logo) 
-        : null;
-
-    $data->profile_banner = $data->profile_banner 
-        ? asset('assets/uploads/profile_banners/' . $data->profile_banner) 
-        : null;
-
-    return response()->json([
-        'status' => true,
-        'message' => 'User profile card fetched successfully',
-        'data' => $data
-    ], 200);
-}
+         $data = MasterUserDetail::with('user')
+            ->where('user_id', $user_id)
+            ->first();
+    
+        if (!$data) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Profile not found'
+            ], 404);
+        }
+    
+        return response()->json([
+            'status' => true,
+            'message' => 'User profile fetched successfully',
+            'data' => $data
+        ], 200);
+    }
 }

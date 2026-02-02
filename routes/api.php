@@ -75,6 +75,11 @@ Route::middleware(["auth:sanctum"])->group(function () {
         "usersProfileCardData",
     ]);
 
+    Route::get("/user-profile/{user_name}", [
+        ProfileApiController::class,
+        "usersNameProfileData",
+    ]);
+
     Route::match(["get", "post"], "/profile", [
         ProfileApiController::class,
         "getOrUpdateProfile",
