@@ -141,6 +141,11 @@ Route::middleware(["auth:sanctum"])->group(function () {
         "getUsersByKeywords",
     ]);
 
+    Route::post('/connection-request', [
+       ConnectionApiController::class,
+       'sendConnectionRequest'
+    ]);
+
     Route::get("/connection-show", [
         ConnectionApiController::class,
         "connectionShow",

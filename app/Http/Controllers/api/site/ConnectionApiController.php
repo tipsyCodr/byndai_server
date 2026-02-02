@@ -113,35 +113,56 @@ class ConnectionApiController extends Controller
         $connection->delete();
         return response()->json(['status' => true, 'message' => 'Connection removed successfully'], 200);
     }
-    // public function connectionToggle(Request $r)
-    // {
-    //     $data = $r->validate([
-    //         'receiver_id' => 'required|exists:users,id'
-    //     ]);
-    //     $sender_id = Auth::id();
-    //     if ($sender_id == $data['receiver_id']) {
-    //         return response()->json(['status' => false, 'message' => 'You cannot send a request to yourself'], 400);
-    //     }
-    //     $connected = Connection::where(function ($q) use ($sender_id, $data) {
-    //         $q->where('user_id', $sender_id)->where('friend_id', $data['receiver_id'])
-    //             ->orWhere(function ($q2) use ($sender_id, $data) {
-    //                 $q2->where('user_id', $data['receiver_id'])->where('friend_id', $sender_id);
-    //             });
-    //     })->first();
-    //     if ($connected) {
-    //         return response()->json(['status' => false, 'message' => 'You are already connected'], 409);
-    //     }
-    //     $pending = ConnectionRequest::where(function ($q) use ($sender_id, $data) {
-    //         $q->where('sender_id', $sender_id)->where('receiver_id', $data['receiver_id'])
-    //             ->orWhere(function ($q2) use ($sender_id, $data) {
-    //                 $q2->where('sender_id', $data['receiver_id'])->where('receiver_id', $sender_id);
-    //             });
-    //     })->where('status', 0)->first();
-    //     if ($pending) {
-    //         $pending->delete();
-    //         return response()->json(['status' => true, 'message' => 'Connection request cancelled successfully'], 200);
-    //     }
-    //     $newRequest = ConnectionRequest::create(['sender_id' => $sender_id, 'receiver_id' => $data['receiver_id'], 'request_type' => 'friend_request', 'status' => 0, 'requested_at' => now(),]);
-    //     return response()->json(['status' => true, 'message' => 'Connection request sent successfully', 'data' => $newRequest], 201);
-    // }
+
+
+    //amit coding  start
+
+
+    public function sendConnectionRequest(Request $request)
+    {
+        $request->validate([
+            'receiver_id' => 'required|exists:users,id',
+        ]);
+    
+        $senderId = Auth::id();
+        $receiverId = $request->receiver_id;
+    
+        // ❌ self request
+        if ($senderId == $receiverId) {
+            return response()->json([
+                'status' => false,
+                'message' => 'You cannot send request to yourself'
+            ], 400);
+        }
+    
+        // ❌ already pending / accepted
+        $already = ConnectionRequest::where('sender_id', $senderId)
+            ->where('receiver_id', $receiverId)
+            ->whereIn('status', [0, 2])
+            ->first();
+    
+        if ($already) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Request already exists'
+            ], 409);
+        }
+    
+        // ✅ create request
+        $connection = ConnectionRequest::create([
+            'sender_id'    => $senderId,
+            'receiver_id'  => $receiverId,
+            'status'       => 0, // pending
+            'request_type' => 'friend_request',
+            'requested_at' => now(),
+        ]);
+    
+        return response()->json([
+            'status' => true,
+            'message' => 'Connection request sent successfully',
+            'data' => $connection
+        ], 201);
+    }
+
+    
 }
