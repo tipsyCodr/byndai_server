@@ -405,6 +405,28 @@ class AuthApiController extends Controller
             );
         }
     }
+
+    public function checkUsername(Request $request)
+    {
+        $request->validate([
+            'user_name' => 'required|string'
+        ]);
+    
+        $exists = User::where('user_name', $request->user_name)->exists();
+    
+        if ($exists) {
+            return response()->json([
+                'status' => false,
+                'message' => 'User name already exists'
+            ], 422);
+        }
+    
+        return response()->json([
+            'status' => true,
+            'message' => 'User name is available'
+        ], 200);
+    }
+
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
