@@ -245,6 +245,43 @@ public function updateConnectionRequestStatus(Request $request)
     ], 200);
 }
 
+public function getFriendListByUser($userId)
+{
+    // 🔹 all connections jaha user involved ho
+    $connections = Connection::where('user_id', $userId)
+        ->orWhere('friend_id', $userId)
+        ->get();
+
+    $friends = [];
+
+    foreach ($connections as $connection) {
+
+        // 🧠 identify friend id
+        $friendId = $connection->user_id == $userId
+            ? $connection->friend_id
+            : $connection->user_id;
+
+        // 🔍 get friend detail
+        $detail = MasterUserDetail::with('user')
+            ->where('user_id', $friendId)
+            ->first();
+
+        if ($detail) {
+            $friends[] = [
+                'friend_id' => $friendId,
+                'fname'     => $detail->fname,
+                'user_name' => $detail->user->user_name ?? null,
+            ];
+        }
+    }
+
+    return response()->json([
+        'status'  => true,
+        'message' => 'Friend list fetched successfully',
+        'count'   => count($friends),
+        'data'    => $friends
+    ], 200);
+}
 
     
 }

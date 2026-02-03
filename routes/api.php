@@ -292,6 +292,8 @@ Route::middleware(["auth:sanctum"])->group(function () {
         "checkPaidPlans",
     ]);
 
+    //amit api
+
     Route::get('/connection-receiver-senders/{receiver_id}', [
       ConnectionApiController::class,
       'getUniqueSendersByReceiver'
@@ -300,6 +302,11 @@ Route::middleware(["auth:sanctum"])->group(function () {
     Route::post('/connection-request/update-status', [
       ConnectionApiController::class,
       'updateConnectionRequestStatus'
+    ]);
+
+    Route::get('/friends/{user_id}', [
+        ConnectionApiController::class,
+        'getFriendListByUser'
     ]);
 
     Route::post("/logout", [AuthApiController::class, "logout"]);
