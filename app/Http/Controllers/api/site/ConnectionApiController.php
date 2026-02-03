@@ -4,6 +4,8 @@ namespace App\Http\Controllers\api\site;
 
 use App\Http\Controllers\Controller;
 use App\Models\Connection;
+use App\Models\User;
+use App\Models\MasterUserDetail;
 use App\Models\ConnectionRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -163,6 +165,43 @@ class ConnectionApiController extends Controller
             'data' => $connection
         ], 201);
     }
+
+
+
+public function getUniqueSendersByReceiver($receiverId)
+{
+    // Step 1: Get all unique sender_ids for this receiver
+    $senders = ConnectionRequest::where('receiver_id', $receiverId)
+        ->get(['sender_id', 'status']); // status bhi fetch karlo
+
+    $responseData = [];
+
+    foreach ($senders as $sender) {
+        // Step 2: Get MasterUserDetail with related User info
+        $userDetail = MasterUserDetail::with('user')
+            ->where('user_id', $sender->sender_id)
+            ->first();
+
+        if ($userDetail) {
+            $responseData[] = [
+                'sender_id' => $sender->sender_id,
+                'status'    => $sender->status,
+                'fname'     => $userDetail->fname,
+                'user_name' => $userDetail->user->user_name ?? null,
+            ];
+        }
+    }
+
+    return response()->json([
+        'status'  => true,
+        'message' => 'Unique senders fetched successfully',
+        'count'   => count($responseData),
+        'data'    => $responseData
+    ], 200);
+}
+
+
+
 
     
 }

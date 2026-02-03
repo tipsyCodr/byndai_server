@@ -292,6 +292,11 @@ Route::middleware(["auth:sanctum"])->group(function () {
         "checkPaidPlans",
     ]);
 
+    Route::get('/connection-receiver-senders/{receiver_id}', [
+      ConnectionApiController::class,
+      'getUniqueSendersByReceiver'
+    ]);
+
     Route::post("/logout", [AuthApiController::class, "logout"]);
 
    
