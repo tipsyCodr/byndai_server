@@ -201,6 +201,49 @@ public function getUniqueSendersByReceiver($receiverId)
 }
 
 
+public function updateConnectionRequestStatus(Request $request)
+{
+    $data = $request->validate([
+        'sender_id'   => 'required|exists:users,id',
+        'receiver_id' => 'required|exists:users,id',
+        'status'      => 'required|in:1,2' // 1 = reject, 2 = accept
+    ]);
+
+    // 🔍 find pending request
+    $connectionRequest = ConnectionRequest::where('sender_id', $data['sender_id'])
+        ->where('receiver_id', $data['receiver_id'])
+        ->where('status', 0) // only pending
+        ->first();
+
+    if (!$connectionRequest) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Pending connection request not found'
+        ], 404);
+    }
+
+    // ✅ update status
+    $connectionRequest->status = $data['status'];
+    $connectionRequest->responded_at = now();
+    $connectionRequest->save();
+
+    // 🤝 if accepted → create connection
+    if ($data['status'] == 2) {
+        Connection::create([
+            'user_id'    => $data['receiver_id'],
+            'friend_id'  => $data['sender_id'],
+            'connected_at' => now()
+        ]);
+    }
+
+    return response()->json([
+        'status'  => true,
+        'message' => $data['status'] == 2
+            ? 'Connection request accepted successfully'
+            : 'Connection request rejected successfully',
+        'data'    => $connectionRequest
+    ], 200);
+}
 
 
     

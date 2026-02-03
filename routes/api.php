@@ -297,6 +297,11 @@ Route::middleware(["auth:sanctum"])->group(function () {
       'getUniqueSendersByReceiver'
     ]);
 
+    Route::post('/connection-request/update-status', [
+      ConnectionApiController::class,
+      'updateConnectionRequestStatus'
+    ]);
+
     Route::post("/logout", [AuthApiController::class, "logout"]);
 
    
