@@ -462,37 +462,139 @@ public function getFriendListByUser(Request $request, $userId)
 }
 
 
-public function getUniqueReceiversBySender($senderId)
+// public function getUniqueReceiversBySender($senderId)
+// {
+//     $receivers = ConnectionRequest::where('sender_id', $senderId)
+//         ->where('status', 0) // ✅ only pending
+//         ->get(['receiver_id', 'status']);
+
+//     $responseData = [];
+
+//     foreach ($receivers as $receiver) {
+
+//         $userDetail = MasterUserDetail::with('user')
+//             ->where('user_id', $receiver->receiver_id)
+//             ->first();
+
+//         if ($userDetail) {
+//             $responseData[] = [
+//                 'receiver_id' => $receiver->receiver_id,
+//                 'status'      => $receiver->status,
+//                 'fname'       => $userDetail->fname,
+//                 'user_name'   => $userDetail->user->user_name ?? null,
+//             ];
+//         }
+//     }
+
+//     return response()->json([
+//         'status'  => true,
+//         'message' => 'Pending receivers fetched successfully',
+//         'count'   => count($responseData),
+//         'data'    => $responseData
+//     ], 200);
+// }
+
+public function getUniqueReceiversBySender(Request $request, $senderId)
 {
-    $receivers = ConnectionRequest::where('sender_id', $senderId)
-        ->where('status', 0) // ✅ only pending
-        ->get(['receiver_id', 'status']);
+    $search  = $request->query('search');
+    $sortBy  = $request->query('sort_by', 'fname');
+    $order   = $request->query('order', 'asc');
+    $perPage = (int) $request->query('per_page', 10);
 
-    $responseData = [];
-
-    foreach ($receivers as $receiver) {
-
-        $userDetail = MasterUserDetail::with('user')
-            ->where('user_id', $receiver->receiver_id)
-            ->first();
-
-        if ($userDetail) {
-            $responseData[] = [
-                'receiver_id' => $receiver->receiver_id,
-                'status'      => $receiver->status,
-                'fname'       => $userDetail->fname,
-                'user_name'   => $userDetail->user->user_name ?? null,
-            ];
-        }
+    // allowed per_page
+    $allowedPerPage = [5, 10, 15, 20];
+    if (!in_array($perPage, $allowedPerPage)) {
+        $perPage = 10;
     }
+
+    // Step 1: sender ke saare unique receiver ids nikaalo (only pending status=0)
+    $receiverIds = ConnectionRequest::where('sender_id', $senderId)
+        ->where('status', 0) // ✅ only pending
+        ->pluck('receiver_id')
+        ->unique()
+        ->toArray();
+
+    if (empty($receiverIds)) {
+        return response()->json([
+            'status'  => true,
+            'message' => 'No receivers found',
+            'count'   => 0,
+            'pagination' => [
+                'current_page' => 1,
+                'last_page' => 1,
+                'per_page' => $perPage,
+                'next_page_url' => null,
+                'prev_page_url' => null,
+            ],
+            'data' => []
+        ], 200);
+    }
+
+    // Step 2: MasterUserDetail query
+    $query = MasterUserDetail::with('user')
+        ->whereIn('user_id', $receiverIds);
+
+    // ✅ Search
+    if (!empty($search)) {
+        $query->where(function ($q) use ($search) {
+            $q->where('fname', 'LIKE', "%$search%")
+              ->orWhereHas('user', function ($u) use ($search) {
+                  $u->where('user_name', 'LIKE', "%$search%");
+              });
+        });
+    }
+
+    // ✅ Sort
+    if ($sortBy === "user_name") {
+        $query->join('users', 'master_user_details.user_id', '=', 'users.id')
+              ->orderBy('users.user_name', $order)
+              ->select('master_user_details.*');
+    } else {
+        // allowed sort columns
+        $allowedSort = ['fname', 'user_id'];
+        if (!in_array($sortBy, $allowedSort)) {
+            $sortBy = 'fname';
+        }
+        $query->orderBy($sortBy, $order);
+    }
+
+    // ✅ Pagination
+    $receivers = $query->paginate($perPage);
+
+    // Step 3: statuses nikalna (connection_requests table se)
+    $statuses = ConnectionRequest::where('sender_id', $senderId)
+        ->whereIn('receiver_id', $receiverIds)
+        ->where('status', 0)
+        ->get()
+        ->keyBy('receiver_id');
+
+    // response data map
+    $data = $receivers->getCollection()->map(function ($detail) use ($statuses) {
+        $status = $statuses[$detail->user_id]->status ?? 0;
+
+        return [
+            'receiver_id' => $detail->user_id,
+            'status'      => $status,
+            'fname'       => $detail->fname,
+            'user_name'   => $detail->user->user_name ?? null,
+        ];
+    });
 
     return response()->json([
         'status'  => true,
         'message' => 'Pending receivers fetched successfully',
-        'count'   => count($responseData),
-        'data'    => $responseData
+        'count'   => $receivers->total(),
+        'pagination' => [
+            'current_page' => $receivers->currentPage(),
+            'last_page'    => $receivers->lastPage(),
+            'per_page'     => $receivers->perPage(),
+            'next_page_url'=> $receivers->nextPageUrl(),
+            'prev_page_url'=> $receivers->previousPageUrl(),
+        ],
+        'data' => $data
     ], 200);
 }
+
 
 public function deleteConnectionRequest(Request $request)
 {
