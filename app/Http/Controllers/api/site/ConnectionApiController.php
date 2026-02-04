@@ -283,5 +283,37 @@ public function getFriendListByUser($userId)
     ], 200);
 }
 
+
+public function getUniqueReceiversBySender($senderId)
+{
+    
+    $receivers = ConnectionRequest::where('sender_id', $senderId)
+        ->get(['receiver_id', 'status']); // status bhi fetch karlo
+
+    $responseData = [];
+
+    foreach ($receivers as $receiver) {
+        // Step 2: Get MasterUserDetail with related User info
+        $userDetail = MasterUserDetail::with('user')
+            ->where('user_id', $receiver->receiver_id)
+            ->first();
+
+        if ($userDetail) {
+            $responseData[] = [
+                'receiver_id' => $receiver->receiver_id,
+                'status'    => $receiver->status,
+                'fname'     => $userDetail->fname,
+                'user_name' => $userDetail->user->user_name ?? null,
+            ];
+        }
+    }
+
+    return response()->json([
+        'status'  => true,
+        'message' => 'Unique receivers fetched successfully',
+        'count'   => count($responseData),
+        'data'    => $responseData
+    ], 200);
+}
     
 }

@@ -299,6 +299,11 @@ Route::middleware(["auth:sanctum"])->group(function () {
       'getUniqueSendersByReceiver'
     ]);
 
+     Route::get('/connection-senders-receiver/{sender_id}', [
+      ConnectionApiController::class,
+      'getUniqueReceiversBySender'
+    ]);
+
     Route::post('/connection-request/update-status', [
       ConnectionApiController::class,
       'updateConnectionRequestStatus'
