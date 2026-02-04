@@ -158,10 +158,7 @@ Route::middleware(["auth:sanctum"])->group(function () {
         ConnectionApiController::class,
         "connectionRequests",
     ]);
-    Route::post("/connection-create", [
-        ConnectionApiController::class,
-        "connectionCreate",
-    ]);
+    
     Route::post("/connection-accept/{rid}", [
         ConnectionApiController::class,
         "connectionAccept",
@@ -293,6 +290,11 @@ Route::middleware(["auth:sanctum"])->group(function () {
     ]);
 
     //amit api
+
+    Route::post("/connection-create", [
+        ConnectionApiController::class,
+        "connectionCreate",
+    ]);
 
     Route::get('/connection-receiver-senders/{receiver_id}', [
       ConnectionApiController::class,
