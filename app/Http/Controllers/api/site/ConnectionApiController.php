@@ -245,43 +245,123 @@ public function updateConnectionRequestStatus(Request $request)
     ], 200);
 }
 
-public function getFriendListByUser($userId)
+// public function getFriendListByUser($userId)
+// {
+//     // 🔹 all connections jaha user involved ho
+//     $connections = Connection::where('user_id', $userId)
+//         ->orWhere('friend_id', $userId)
+//         ->get();
+
+//     $friends = [];
+
+//     foreach ($connections as $connection) {
+
+//         // 🧠 identify friend id
+//         $friendId = $connection->user_id == $userId
+//             ? $connection->friend_id
+//             : $connection->user_id;
+
+//         // 🔍 get friend detail
+//         $detail = MasterUserDetail::with('user')
+//             ->where('user_id', $friendId)
+//             ->first();
+
+//         if ($detail) {
+//             $friends[] = [
+//                 'friend_id' => $friendId,
+//                 'fname'     => $detail->fname,
+//                 'user_name' => $detail->user->user_name ?? null,
+//             ];
+//         }
+//     }
+
+//     return response()->json([
+//         'status'  => true,
+//         'message' => 'Friend list fetched successfully',
+//         'count'   => count($friends),
+//         'data'    => $friends
+//     ], 200);
+// }
+
+public function getFriendListByUser(Request $request, $userId)
 {
-    // 🔹 all connections jaha user involved ho
+    $search   = $request->query('search');
+    $sortBy   = $request->query('sort_by', 'fname'); // default
+    $order    = $request->query('order', 'asc');
+    $perPage  = (int) $request->query('per_page', 10);
+
+    // limit allowed perPage
+    $allowedPerPage = [5,10,15,20];
+    if (!in_array($perPage, $allowedPerPage)) {
+        $perPage = 10;
+    }
+
+    // connections jaha user involved ho
     $connections = Connection::where('user_id', $userId)
         ->orWhere('friend_id', $userId)
         ->get();
 
-    $friends = [];
+    $friendIds = [];
 
     foreach ($connections as $connection) {
-
-        // 🧠 identify friend id
-        $friendId = $connection->user_id == $userId
+        $friendIds[] = ($connection->user_id == $userId)
             ? $connection->friend_id
             : $connection->user_id;
-
-        // 🔍 get friend detail
-        $detail = MasterUserDetail::with('user')
-            ->where('user_id', $friendId)
-            ->first();
-
-        if ($detail) {
-            $friends[] = [
-                'friend_id' => $friendId,
-                'fname'     => $detail->fname,
-                'user_name' => $detail->user->user_name ?? null,
-            ];
-        }
     }
+
+    // duplicate remove
+    $friendIds = array_unique($friendIds);
+
+    // friends query
+    $query = MasterUserDetail::with('user')
+        ->whereIn('user_id', $friendIds);
+
+    // ✅ Search
+    if (!empty($search)) {
+        $query->where(function ($q) use ($search) {
+            $q->where('fname', 'LIKE', "%$search%")
+              ->orWhereHas('user', function ($u) use ($search) {
+                  $u->where('user_name', 'LIKE', "%$search%");
+              });
+        });
+    }
+
+    // ✅ Sort
+    if ($sortBy == "user_name") {
+        $query->join('users', 'master_user_details.user_id', '=', 'users.id')
+              ->orderBy('users.user_name', $order)
+              ->select('master_user_details.*');
+    } else {
+        $query->orderBy($sortBy, $order);
+    }
+
+    // ✅ Pagination
+    $friends = $query->paginate($perPage);
+
+    // response format
+    $data = $friends->map(function ($detail) {
+        return [
+            'friend_id' => $detail->user_id,
+            'fname'     => $detail->fname,
+            'user_name' => $detail->user->user_name ?? null,
+        ];
+    });
 
     return response()->json([
         'status'  => true,
         'message' => 'Friend list fetched successfully',
-        'count'   => count($friends),
-        'data'    => $friends
+        'count'   => $friends->total(),
+        'pagination' => [
+            'current_page' => $friends->currentPage(),
+            'last_page'    => $friends->lastPage(),
+            'per_page'     => $friends->perPage(),
+            'next_page_url'=> $friends->nextPageUrl(),
+            'prev_page_url'=> $friends->previousPageUrl(),
+        ],
+        'data' => $data
     ], 200);
 }
+
 
 public function getUniqueReceiversBySender($senderId)
 {
