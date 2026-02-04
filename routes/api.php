@@ -311,6 +311,11 @@ Route::middleware(["auth:sanctum"])->group(function () {
       'updateConnectionRequestStatus'
     ]);
 
+    Route::post('/connection-request/delete', [
+      ConnectionApiController::class,
+      'deleteConnectionRequest'
+    ]);
+
     Route::get('/friends/{user_id}', [
         ConnectionApiController::class,
         'getFriendListByUser'

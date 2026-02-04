@@ -283,39 +283,6 @@ public function getFriendListByUser($userId)
     ], 200);
 }
 
-
-// public function getUniqueReceiversBySender($senderId)
-// {
-    
-//     $receivers = ConnectionRequest::where('sender_id', $senderId)
-//         ->get(['receiver_id', 'status']); // status bhi fetch karlo
-
-//     $responseData = [];
-
-//     foreach ($receivers as $receiver) {
-//         // Step 2: Get MasterUserDetail with related User info
-//         $userDetail = MasterUserDetail::with('user')
-//             ->where('user_id', $receiver->receiver_id)
-//             ->first();
-
-//         if ($userDetail) {
-//             $responseData[] = [
-//                 'receiver_id' => $receiver->receiver_id,
-//                 'status'    => $receiver->status,
-//                 'fname'     => $userDetail->fname,
-//                 'user_name' => $userDetail->user->user_name ?? null,
-//             ];
-//         }
-//     }
-
-//     return response()->json([
-//         'status'  => true,
-//         'message' => 'Unique receivers fetched successfully',
-//         'count'   => count($responseData),
-//         'data'    => $responseData
-//     ], 200);
-// }
-
 public function getUniqueReceiversBySender($senderId)
 {
     $receivers = ConnectionRequest::where('sender_id', $senderId)
@@ -345,6 +312,56 @@ public function getUniqueReceiversBySender($senderId)
         'message' => 'Pending receivers fetched successfully',
         'count'   => count($responseData),
         'data'    => $responseData
+    ], 200);
+}
+
+public function deleteConnectionRequest(Request $request)
+{
+    $data = $request->validate([
+        'sender_id'   => 'required|exists:users,id',
+        'receiver_id' => 'required|exists:users,id',
+        'status'      => 'nullable|in:0,1,2'
+    ]);
+
+    // ✅ optional security: only sender/receiver hi delete kar sake
+    $authId = Auth::id();
+
+    if ($authId != $data['sender_id'] && $authId != $data['receiver_id']) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Unauthorized: You cannot delete this request'
+        ], 403);
+    }
+
+    // 🔍 find request
+    $query = ConnectionRequest::where('sender_id', $data['sender_id'])
+        ->where('receiver_id', $data['receiver_id']);
+
+    // ✅ agar status bhi pass hua hai to status bhi match karega
+    if (isset($data['status'])) {
+        $query->where('status', $data['status']);
+    }
+
+    $requestRow = $query->first();
+
+    if (!$requestRow) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Connection request not found'
+        ], 404);
+    }
+
+    // 🗑 delete
+    $requestRow->delete();
+
+    return response()->json([
+        'status'  => true,
+        'message' => 'Connection request deleted successfully',
+        'data'    => [
+            'sender_id'   => $data['sender_id'],
+            'receiver_id' => $data['receiver_id'],
+            'status'      => $requestRow->status,
+        ]
     ], 200);
 }
 
