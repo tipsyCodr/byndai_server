@@ -168,35 +168,134 @@ class ConnectionApiController extends Controller
 
 
 
-public function getUniqueSendersByReceiver($receiverId)
+// public function getUniqueSendersByReceiver($receiverId)
+// {
+//     // Step 1: Get all unique sender_ids for this receiver
+//     $senders = ConnectionRequest::where('receiver_id', $receiverId)
+//         ->get(['sender_id', 'status']); // status bhi fetch karlo
+
+//     $responseData = [];
+
+//     foreach ($senders as $sender) {
+//         // Step 2: Get MasterUserDetail with related User info
+//         $userDetail = MasterUserDetail::with('user')
+//             ->where('user_id', $sender->sender_id)
+//             ->first();
+
+//         if ($userDetail) {
+//             $responseData[] = [
+//                 'sender_id' => $sender->sender_id,
+//                 'status'    => $sender->status,
+//                 'fname'     => $userDetail->fname,
+//                 'user_name' => $userDetail->user->user_name ?? null,
+//             ];
+//         }
+//     }
+
+//     return response()->json([
+//         'status'  => true,
+//         'message' => 'Unique senders fetched successfully',
+//         'count'   => count($responseData),
+//         'data'    => $responseData
+//     ], 200);
+// }
+
+public function getUniqueSendersByReceiver(Request $request, $receiverId)
 {
-    // Step 1: Get all unique sender_ids for this receiver
-    $senders = ConnectionRequest::where('receiver_id', $receiverId)
-        ->get(['sender_id', 'status']); // status bhi fetch karlo
+    $search  = $request->query('search');
+    $sortBy  = $request->query('sort_by', 'fname');
+    $order   = $request->query('order', 'asc');
+    $perPage = (int) $request->query('per_page', 10);
 
-    $responseData = [];
-
-    foreach ($senders as $sender) {
-        // Step 2: Get MasterUserDetail with related User info
-        $userDetail = MasterUserDetail::with('user')
-            ->where('user_id', $sender->sender_id)
-            ->first();
-
-        if ($userDetail) {
-            $responseData[] = [
-                'sender_id' => $sender->sender_id,
-                'status'    => $sender->status,
-                'fname'     => $userDetail->fname,
-                'user_name' => $userDetail->user->user_name ?? null,
-            ];
-        }
+    // allowed per_page
+    $allowedPerPage = [5, 10, 15, 20];
+    if (!in_array($perPage, $allowedPerPage)) {
+        $perPage = 10;
     }
+
+    // Step 1: receiver ke saare sender ids nikaalo
+    $senderIds = ConnectionRequest::where('receiver_id', $receiverId)
+        ->pluck('sender_id')
+        ->unique()
+        ->toArray();
+
+    if (empty($senderIds)) {
+        return response()->json([
+            'status'  => true,
+            'message' => 'No senders found',
+            'count'   => 0,
+            'pagination' => [
+                'current_page' => 1,
+                'last_page' => 1,
+                'per_page' => $perPage,
+                'next_page_url' => null,
+                'prev_page_url' => null,
+            ],
+            'data' => []
+        ], 200);
+    }
+
+    // Step 2: MasterUserDetail query
+    $query = MasterUserDetail::with('user')
+        ->whereIn('user_id', $senderIds);
+
+    // ✅ Search
+    if (!empty($search)) {
+        $query->where(function ($q) use ($search) {
+            $q->where('fname', 'LIKE', "%$search%")
+              ->orWhereHas('user', function ($u) use ($search) {
+                  $u->where('user_name', 'LIKE', "%$search%");
+              });
+        });
+    }
+
+    // ✅ Sort
+    if ($sortBy === "user_name") {
+        $query->join('users', 'master_user_details.user_id', '=', 'users.id')
+              ->orderBy('users.user_name', $order)
+              ->select('master_user_details.*');
+    } else {
+        // allowed sort columns
+        $allowedSort = ['fname', 'user_id'];
+        if (!in_array($sortBy, $allowedSort)) {
+            $sortBy = 'fname';
+        }
+        $query->orderBy($sortBy, $order);
+    }
+
+    // ✅ Pagination
+    $senders = $query->paginate($perPage);
+
+    // Step 3: status nikalna (connection_requests table se)
+    $statuses = ConnectionRequest::where('receiver_id', $receiverId)
+        ->whereIn('sender_id', $senderIds)
+        ->get()
+        ->keyBy('sender_id');
+
+    // response data map
+    $data = $senders->map(function ($detail) use ($statuses) {
+        $status = $statuses[$detail->user_id]->status ?? 0;
+
+        return [
+            'sender_id' => $detail->user_id,
+            'status'    => $status,
+            'fname'     => $detail->fname,
+            'user_name' => $detail->user->user_name ?? null,
+        ];
+    });
 
     return response()->json([
         'status'  => true,
         'message' => 'Unique senders fetched successfully',
-        'count'   => count($responseData),
-        'data'    => $responseData
+        'count'   => $senders->total(),
+        'pagination' => [
+            'current_page' => $senders->currentPage(),
+            'last_page'    => $senders->lastPage(),
+            'per_page'     => $senders->perPage(),
+            'next_page_url'=> $senders->nextPageUrl(),
+            'prev_page_url'=> $senders->previousPageUrl(),
+        ],
+        'data' => $data
     ], 200);
 }
 
