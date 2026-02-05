@@ -9,6 +9,7 @@ use App\Http\Controllers\api\site\MasterCommentApiController;
 use App\Http\Controllers\api\site\MasterEventApiController;
 use App\Http\Controllers\api\site\MasterKeywordApiController;
 use App\Http\Controllers\api\site\MasterPostApiController;
+use App\Http\Controllers\api\site\PostApiController;
 use App\Http\Controllers\api\site\ProductApiController;
 use App\Http\Controllers\api\site\ProfileApiController;
 use App\Http\Controllers\api\site\RestrictionApiController;

@@ -7,7 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
+use App\Models\User;
 use App\Models\Post;
 use App\Models\PostMedia;
 use App\Models\PostReaction;
@@ -17,114 +19,139 @@ use App\Models\PostShare;
 use App\Models\PostView;
 use App\Models\PostReport;
 use App\Models\MasterUserDetail;
+use Illuminate\Support\Facades\Auth;
 
 class PostApiController extends Controller
 {
     // =========================
     // 1) CREATE POST (with media)
     // =========================
+   
     public function createPost(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'title' => 'nullable|string|max:150',
-            'description' => 'nullable|string|max:5000',
-            'media' => 'nullable|array|max:7',
-            'media.*' => 'file|max:51200', // 50MB
-        ]);
+      $validator = Validator::make($request->all(), [
+          'title' => 'nullable|string|max:150',
+          'description' => 'nullable|string|max:5000',  
 
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => $validator->errors()->first(),
-            ], 422);
-        }
+          // separate images/videos
+          'images' => 'nullable|array|max:5',
+          'images.*' => 'file|mimes:jpg,jpeg,png,webp|max:10240', // 10MB each  
 
-        try {
-            $user = $request->user(); // sanctum user
-            $userId = $user->id;
+          'videos' => 'nullable|array|max:2',
+          'videos.*' => 'file|mimes:mp4,mov,avi,mkv,webm|max:51200', // 50MB each
+      ]);  
 
-            DB::beginTransaction();
+      if ($validator->fails()) {
+          return response()->json([
+              'status' => false,
+              'message' => $validator->errors()->first(),
+              'errors' => $validator->errors(),
+          ], 422);
+      }  
 
-            $post = Post::create([
-                'user_id' => $userId,
-                'title' => $request->title ?? null,
-                'description' => $request->description ?? null,
-                'status' => 'active',
-            ]);
+      try {
+          $user = $request->user(); // sanctum user
+          if (!$user) {
+              return response()->json([
+                  'status' => false,
+                  'message' => 'Unauthorized',
+              ], 401);
+          }  
 
-            // media upload
-            if ($request->hasFile('media')) {
+          $userId = $user->id;  
 
-                $files = $request->file('media');
-                $imageCount = 0;
-                $videoCount = 0;
+          DB::beginTransaction();  
 
-                foreach ($files as $index => $file) {
+          // 1) create post
+          $post = Post::create([
+              'user_id' => $userId,
+              'title' => $request->title ?? null,
+              'description' => $request->description ?? null,
+              'status' => 'active',
+          ]);  
 
-                    $mime = $file->getMimeType();
+          $position = 1;  
 
-                    $mediaType = null;
+          // 2) store images
+          if ($request->hasFile('images')) {  
 
-                    if (Str::startsWith($mime, 'image/')) {
-                        $mediaType = 'image';
-                        $imageCount++;
-                    } elseif (Str::startsWith($mime, 'video/')) {
-                        $mediaType = 'video';
-                        $videoCount++;
-                    } else {
-                        DB::rollBack();
-                        return response()->json([
-                            'status' => false,
-                            'message' => 'Only image/video allowed',
-                        ], 422);
-                    }
+              $imageFiles = $request->file('images');  
 
-                    if ($imageCount > 5) {
-                        DB::rollBack();
-                        return response()->json([
-                            'status' => false,
-                            'message' => 'Maximum 5 images allowed',
-                        ], 422);
-                    }
+              if (count($imageFiles) > 5) {
+                  DB::rollBack();
+                  return response()->json([
+                      'status' => false,
+                      'message' => 'Maximum 5 images allowed',
+                  ], 422);
+              }  
 
-                    if ($videoCount > 2) {
-                        DB::rollBack();
-                        return response()->json([
-                            'status' => false,
-                            'message' => 'Maximum 2 videos allowed',
-                        ], 422);
-                    }
+              foreach ($imageFiles as $file) {  
 
-                    // store file
-                    $fileName = time() . "_" . uniqid() . "." . $file->getClientOriginalExtension();
-                    $path = $file->storeAs("uploads/posts", $fileName, "public");
+                  $fileName = time() . "_" . uniqid() . "." . $file->getClientOriginalExtension();  
 
-                    PostMedia::create([
-                        'post_id' => $post->id,
-                        'media_type' => $mediaType,
-                        'media_url' => "/storage/" . $path,
-                        'thumbnail_url' => null,
-                        'position' => $index + 1,
-                    ]);
-                }
-            }
+                  // save in storage/app/public/uploads/posts
+                  $path = $file->storeAs("uploads/posts", $fileName, "public");  
 
-            DB::commit();
+                  PostMedia::create([
+                      'post_id' => $post->id,
+                      'media_type' => 'image',
+                      'media_url' => "/storage/" . $path,
+                      'thumbnail_url' => null,
+                      'position' => $position++,
+                  ]);
+              }
+          }  
 
-            return response()->json([
-                'status' => true,
-                'message' => 'Post created successfully',
-                'data' => $this->postFullResponse($post->id, $userId),
-            ], 200);
+          // 3) store videos
+          if ($request->hasFile('videos')) {  
 
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'status' => false,
-                'message' => 'Failed to create post: ' . $e->getMessage(),
-            ], 500);
-        }
+              $videoFiles = $request->file('videos');  
+
+              if (count($videoFiles) > 2) {
+                  DB::rollBack();
+                  return response()->json([
+                      'status' => false,
+                      'message' => 'Maximum 2 videos allowed',
+                  ], 422);
+              }  
+
+              foreach ($videoFiles as $file) {  
+
+                  $fileName = time() . "_" . uniqid() . "." . $file->getClientOriginalExtension();  
+
+                  $path = $file->storeAs("uploads/posts", $fileName, "public");  
+
+                  PostMedia::create([
+                      'post_id' => $post->id,
+                      'media_type' => 'video',
+                      'media_url' => "/storage/" . $path,
+                      'thumbnail_url' => null,
+                      'position' => $position++,
+                  ]);
+              }
+          }  
+
+          DB::commit();  
+
+          // return full response
+          return response()->json([
+              'status' => true,
+              'message' => 'Post created successfully',
+              'data' => $this->postFullResponse($post->id, $userId),
+          ], 200);  
+
+      } catch (\Exception $e) {  
+
+          DB::rollBack();  
+
+          return response()->json([
+              'status' => false,
+              'message' => 'Failed to create post',
+              'error' => $e->getMessage(),
+          ], 500);
+      }
     }
+
 
     // =========================
     // 2) UPDATE POST
@@ -638,60 +665,126 @@ class PostApiController extends Controller
     // =========================
     // Helper: Full Post Response
     // =========================
+    // private function postFullResponse($postId, $viewerUserId)
+    // {
+    //     $post = Post::with(['media'])->where('id', $postId)->first();
+
+    //     if (!$post) return null;
+
+    //     // user + fname
+    //     $user = MasterUserDetail::where('id', $post->user_id)->first();
+
+    //     $fname = null;
+    //     if ($user && $user->MasterUserDetailDetails) {
+    //         $fname = $user->MasterUserDetailDetails->fname ?? null;
+    //     }
+
+    //     // counts
+    //     $likeCount = PostReaction::where('post_id', $postId)->where('reaction_type', 'like')->count();
+    //     $dislikeCount = PostReaction::where('post_id', $postId)->where('reaction_type', 'dislike')->count();
+    //     $commentCount = PostComment::where('post_id', $postId)->count();
+    //     $saveCount = PostSave::where('post_id', $postId)->count();
+    //     $shareCount = PostShare::where('post_id', $postId)->count();
+    //     $viewCount = PostView::where('post_id', $postId)->count();
+
+    //     // my states
+    //     $myReaction = PostReaction::where('post_id', $postId)->where('user_id', $viewerUserId)->value('reaction_type');
+    //     $isSaved = PostSave::where('post_id', $postId)->where('user_id', $viewerUserId)->exists();
+
+    //     return [
+    //         'id' => $post->id,
+    //         'user_id' => $post->user_id,
+    //         'user_name' => $user->user_name ?? null,
+    //         'fname' => $fname,
+
+    //         'title' => $post->title,
+    //         'description' => $post->description,
+    //         'status' => $post->status,
+
+    //         'created_at' => $post->created_at,
+    //         'updated_at' => $post->updated_at,
+
+    //         'media' => $post->media,
+
+    //         'counts' => [
+    //             'likes' => $likeCount,
+    //             'dislikes' => $dislikeCount,
+    //             'comments' => $commentCount,
+    //             'saves' => $saveCount,
+    //             'shares' => $shareCount,
+    //             'views' => $viewCount,
+    //         ],
+
+    //         'my' => [
+    //             'reaction' => $myReaction ?? "none",
+    //             'saved' => $isSaved,
+    //         ],
+    //     ];
+    // }
+
     private function postFullResponse($postId, $viewerUserId)
-    {
-        $post = Post::with(['media'])->where('id', $postId)->first();
+{
+    $post = Post::with(['media'])->where('id', $postId)->first();
+    if (!$post) return null;
 
-        if (!$post) return null;
+    // Fetch User
+    $postUser = User::where('id', $post->user_id)->first();
 
-        // user + fname
-        $user = MasterUserDetail::where('id', $post->user_id)->first();
+    // Fetch User Detail by user_id
+    $userDetail = MasterUserDetail::where('user_id', $post->user_id)->first();
 
-        $fname = null;
-        if ($user && $user->MasterUserDetailDetails) {
-            $fname = $user->MasterUserDetailDetails->fname ?? null;
-        }
+    $fname = $userDetail ? $userDetail->fname : null;
 
-        // counts
-        $likeCount = PostReaction::where('post_id', $postId)->where('reaction_type', 'like')->count();
-        $dislikeCount = PostReaction::where('post_id', $postId)->where('reaction_type', 'dislike')->count();
-        $commentCount = PostComment::where('post_id', $postId)->count();
-        $saveCount = PostSave::where('post_id', $postId)->count();
-        $shareCount = PostShare::where('post_id', $postId)->count();
-        $viewCount = PostView::where('post_id', $postId)->count();
+    // counts
+    $likeCount = PostReaction::where('post_id', $postId)->where('reaction_type', 'like')->count();
+    $dislikeCount = PostReaction::where('post_id', $postId)->where('reaction_type', 'dislike')->count();
+    $commentCount = PostComment::where('post_id', $postId)->count();
+    $saveCount = PostSave::where('post_id', $postId)->count();
+    $shareCount = PostShare::where('post_id', $postId)->count();
+    $viewCount = PostView::where('post_id', $postId)->count();
 
-        // my states
-        $myReaction = PostReaction::where('post_id', $postId)->where('user_id', $viewerUserId)->value('reaction_type');
-        $isSaved = PostSave::where('post_id', $postId)->where('user_id', $viewerUserId)->exists();
+    // my states
+    $myReaction = PostReaction::where('post_id', $postId)
+        ->where('user_id', $viewerUserId)
+        ->value('reaction_type');
 
-        return [
-            'id' => $post->id,
-            'user_id' => $post->user_id,
-            'user_name' => $user->user_name ?? null,
-            'fname' => $fname,
+    $isSaved = PostSave::where('post_id', $postId)
+        ->where('user_id', $viewerUserId)
+        ->exists();
 
-            'title' => $post->title,
-            'description' => $post->description,
-            'status' => $post->status,
+    return [
+        'id' => $post->id,
+        'user_id' => $post->user_id,
 
-            'created_at' => $post->created_at,
-            'updated_at' => $post->updated_at,
+        // from users table
+        'user_name' => $postUser ? $postUser->user_name : null,
 
-            'media' => $post->media,
+        // from master_user_details table
+        'fname' => $fname,
 
-            'counts' => [
-                'likes' => $likeCount,
-                'dislikes' => $dislikeCount,
-                'comments' => $commentCount,
-                'saves' => $saveCount,
-                'shares' => $shareCount,
-                'views' => $viewCount,
-            ],
+        'title' => $post->title,
+        'description' => $post->description,
+        'status' => $post->status,
 
-            'my' => [
-                'reaction' => $myReaction ?? "none",
-                'saved' => $isSaved,
-            ],
-        ];
-    }
+        'created_at' => $post->created_at,
+        'updated_at' => $post->updated_at,
+
+        'media' => $post->media,
+
+        'counts' => [
+            'likes' => $likeCount,
+            'dislikes' => $dislikeCount,
+            'comments' => $commentCount,
+            'saves' => $saveCount,
+            'shares' => $shareCount,
+            'views' => $viewCount,
+        ],
+
+        'my' => [
+            'reaction' => $myReaction ?? "none",
+            'saved' => $isSaved,
+        ],
+    ];
+}
+
 }
