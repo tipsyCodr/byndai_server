@@ -322,6 +322,63 @@ Route::middleware(["auth:sanctum"])->group(function () {
         'getFriendListByUser'
     ]);
 
+    //  api for post start
+        
+    Route::post('/posts/create', [
+      PostApiController::class, 
+      'createPost'
+    ]);
+    Route::post('/posts/update/{post_id}', [
+      PostApiController::class, 
+      'updatePost'
+    ]);
+    Route::delete('/posts/delete/{post_id}', [
+      PostApiController::class,
+      'deletePost'
+    ]);
+
+    Route::get('/posts/feed', [
+      PostApiController::class,
+      'feed'
+    ]);
+    Route::get('/posts/{post_id}', [
+      PostApiController::class,
+      'postDetail'
+    ]);
+
+    Route::post('/posts/react', [
+      PostApiController::class, 
+      'reactPost'
+    ]); 
+    Route::post('/posts/comment', [
+      PostApiController::class,
+      'addComment'
+    ]);
+    Route::delete('/posts/comment/{comment_id}', [
+      PostApiController::class,
+      'deleteComment'
+    ]);
+
+    Route::post('/posts/save', [
+      PostApiController::class,
+      'toggleSave'
+    ]);
+    Route::post('/posts/share', [
+      PostApiController::class, 
+      'sharePost'
+    ]);
+    Route::post('/posts/view', [
+      PostApiController::class, 
+      'viewPost'
+    ]);
+
+    Route::post('/posts/report', [
+      PostApiController::class, 
+      'reportPost'
+    ]);
+
+    // api for post end
+
     Route::post("/logout", [AuthApiController::class, "logout"]);
 
    

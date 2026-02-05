@@ -1,0 +1,10 @@
+*****  Business feed ke liye create kiye gye tables  ******
+
+1. posts
+2. post_media
+3. post_reactions
+4. post_comments
+5. post_saves
+6. post_shares
+7. post_views
+8. post_reports
