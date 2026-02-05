@@ -68,7 +68,64 @@ class AuthApiController extends Controller
         }
     } 
 
-   public function filterListUsers(Request $request)
+//    public function filterListUsers(Request $request)
+//    {
+//     try {
+
+//         $userId = $request->user_id;
+
+//         if (!$userId) {
+//             return response()->json([
+//                 "status" => false,
+//                 "message" => "user_id is required",
+//             ], 400);
+//         }
+
+//         // 1) Friends list (Connection table)
+//         $friendIds = Connection::where('user_id', $userId)
+//             ->pluck('friend_id')
+//             ->toArray();
+
+//         // 2) Connection request sent users list
+//         $requestedUserIds = ConnectionRequest::where('sender_id', $userId)
+//             ->pluck('receiver_id')
+//             ->toArray();
+
+//         // Merge all excluded IDs
+//         $excludedIds = array_unique(array_merge(
+//             [$userId],          // self
+//             $friendIds,         // friends
+//             $requestedUserIds   // already requested
+//         ));
+
+//         // Pagination (default 10)
+//         $users = User::whereNotIn('id', $excludedIds)
+//             ->orderBy('id', 'desc')
+//             ->paginate(10);
+
+//         return response()->json([
+//             "status" => true,
+//             "message" => "Successfully fetched users",
+//             "data" => $users->items(),
+//             "pagination" => [
+//                 "current_page" => $users->currentPage(),
+//                 "last_page" => $users->lastPage(),
+//                 "per_page" => $users->perPage(),
+//                 "total" => $users->total(),
+//                 "next_page_url" => $users->nextPageUrl(),
+//                 "prev_page_url" => $users->previousPageUrl(),
+//             ]
+//         ], 200);
+
+//     } catch (Exception $e) {
+//         return response()->json([
+//             "status" => false,
+//             "message" => "Failed to fetch users: " . $e->getMessage(),
+//         ], 500);
+//     }
+//    }
+
+      public function filterListUsers(Request $request)
 {
     try {
 
@@ -93,20 +150,37 @@ class AuthApiController extends Controller
 
         // Merge all excluded IDs
         $excludedIds = array_unique(array_merge(
-            [$userId],          // self
-            $friendIds,         // friends
-            $requestedUserIds   // already requested
+            [$userId],          
+            $friendIds,         
+            $requestedUserIds   
         ));
 
         // Pagination (default 10)
-        $users = User::whereNotIn('id', $excludedIds)
+        $users = User::with('masterUser')   // ✅ join MasterUserDetail
+            ->whereNotIn('id', $excludedIds)
             ->orderBy('id', 'desc')
             ->paginate(10);
+
+        // ✅ Add fname into each user object
+        $data = collect($users->items())->map(function ($user) {
+            return [
+                "id" => $user->id,
+                "user_name" => $user->user_name,
+                "user_mobile" => $user->user_mobile,
+                "email" => $user->email,
+                "status" => $user->status,
+                "created_at" => $user->created_at,
+                "updated_at" => $user->updated_at,
+
+                // 👇 MasterUserDetail se fname
+                "fname" => $user->masterUser->fname ?? null,
+            ];
+        });
 
         return response()->json([
             "status" => true,
             "message" => "Successfully fetched users",
-            "data" => $users->items(),
+            "data" => $data,
             "pagination" => [
                 "current_page" => $users->currentPage(),
                 "last_page" => $users->lastPage(),
@@ -124,6 +198,7 @@ class AuthApiController extends Controller
         ], 500);
     }
 }
+
 
 
     public function resetPinOtp(Request $r)
