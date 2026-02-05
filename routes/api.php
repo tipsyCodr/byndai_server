@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Route;
 Route::post("/check-mobile", [AuthApiController::class, "checkMobile"]);
 Route::post("/reset-pin-otp", [AuthApiController::class, "resetPinOtp"]);
 Route::get("/users/list", [AuthApiController::class, "listUsers"]);
+Route::post("/users/filter-list", [AuthApiController::class, "filterListUsers"]);
 Route::post("/regenerate-otp/{phone}", [
     AuthApiController::class,
     "regenerateOtp",

@@ -11,6 +11,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use App\Models\Connection;
+use App\Models\ConnectionRequest;
+
 use Exception;
 
 class AuthApiController extends Controller
@@ -63,7 +66,65 @@ class AuthApiController extends Controller
                 "message" => "Failed to fetch users: " . $e->getMessage(),
             ]);
         }
+    } 
+
+   public function filterListUsers(Request $request)
+{
+    try {
+
+        $userId = $request->user_id;
+
+        if (!$userId) {
+            return response()->json([
+                "status" => false,
+                "message" => "user_id is required",
+            ], 400);
+        }
+
+        // 1) Friends list (Connection table)
+        $friendIds = Connection::where('user_id', $userId)
+            ->pluck('friend_id')
+            ->toArray();
+
+        // 2) Connection request sent users list
+        $requestedUserIds = ConnectionRequest::where('sender_id', $userId)
+            ->pluck('receiver_id')
+            ->toArray();
+
+        // Merge all excluded IDs
+        $excludedIds = array_unique(array_merge(
+            [$userId],          // self
+            $friendIds,         // friends
+            $requestedUserIds   // already requested
+        ));
+
+        // Pagination (default 10)
+        $users = User::whereNotIn('id', $excludedIds)
+            ->orderBy('id', 'desc')
+            ->paginate(10);
+
+        return response()->json([
+            "status" => true,
+            "message" => "Successfully fetched users",
+            "data" => $users->items(),
+            "pagination" => [
+                "current_page" => $users->currentPage(),
+                "last_page" => $users->lastPage(),
+                "per_page" => $users->perPage(),
+                "total" => $users->total(),
+                "next_page_url" => $users->nextPageUrl(),
+                "prev_page_url" => $users->previousPageUrl(),
+            ]
+        ], 200);
+
+    } catch (Exception $e) {
+        return response()->json([
+            "status" => false,
+            "message" => "Failed to fetch users: " . $e->getMessage(),
+        ], 500);
     }
+}
+
 
     public function resetPinOtp(Request $r)
     {
