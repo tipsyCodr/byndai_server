@@ -786,6 +786,7 @@ class PostApiController extends Controller
 
                 'title' => $post->title,
                 'description' => $post->description,
+                'industry_id' => $post->industry_id,
                 'status' => $post->status,
                 'created_at' => $post->created_at,
                 'updated_at' => $post->updated_at,
@@ -880,6 +881,7 @@ class PostApiController extends Controller
 
         'title' => $post->title,
         'description' => $post->description,
+        'industry_id' => $post->industry_id,
         'status' => $post->status,
 
         'created_at' => $post->created_at,
