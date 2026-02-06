@@ -827,9 +827,14 @@ class PostApiController extends Controller
     } catch (\Exception $e) {
         return response()->json([
             'status' => false,
-            'message' => 'Failed to fetch posts: ' . $e->getMessage(),
+            'message' => 'Failed to fetch posts: ',
         ], 500);
     }
+    }
+
+    public function allPostList()
+    {
+     return response()->json(["hit" => "i am here"]);
     }
 
 

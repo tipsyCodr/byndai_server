@@ -4,6 +4,7 @@ use App\Http\Controllers\api\auth\AuthApiController;
 use App\Http\Controllers\api\site\ChatApiController;
 use App\Http\Controllers\api\site\ConnectionApiController;
 use App\Http\Controllers\api\site\CustomerMasterApiController;
+use App\Http\Controllers\api\site\LeadController;
 use App\Http\Controllers\api\site\MasterApiController;
 use App\Http\Controllers\api\site\MasterCommentApiController;
 use App\Http\Controllers\api\site\MasterEventApiController;
@@ -14,383 +15,392 @@ use App\Http\Controllers\api\site\ProductApiController;
 use App\Http\Controllers\api\site\ProfileApiController;
 use App\Http\Controllers\api\site\RestrictionApiController;
 use App\Http\Controllers\api\site\SubscriptionApiController;
-use App\Http\Controllers\api\site\LeadController;
 use Illuminate\Support\Facades\Route;
 
-Route::post("/check-mobile", [AuthApiController::class, "checkMobile"]);
-Route::post("/reset-pin-otp", [AuthApiController::class, "resetPinOtp"]);
-Route::get("/users/list", [AuthApiController::class, "listUsers"]);
-Route::post("/users/filter-list", [AuthApiController::class, "filterListUsers"]);
-Route::post("/regenerate-otp/{phone}", [
+Route::post('/check-mobile', [AuthApiController::class, 'checkMobile']);
+Route::post('/reset-pin-otp', [AuthApiController::class, 'resetPinOtp']);
+Route::get('/users/list', [AuthApiController::class, 'listUsers']);
+Route::post('/users/filter-list', [AuthApiController::class, 'filterListUsers']);
+Route::post('/regenerate-otp/{phone}', [
     AuthApiController::class,
-    "regenerateOtp",
+    'regenerateOtp',
 ]);
-Route::post("/verify-otp/{phone_no}/{token}", [
+Route::post('/verify-otp/{phone_no}/{token}', [
     AuthApiController::class,
-    "verifyOtp",
+    'verifyOtp',
 ]);
-Route::post("/registration/{phone_no}/{token}", [
+Route::post('/registration/{phone_no}/{token}', [
     AuthApiController::class,
-    "registration",
+    'registration',
 ]);
-Route::post("/check-username", [
+Route::post('/check-username', [
     AuthApiController::class,
-    "checkUsername"
+    'checkUsername',
 ]);
-Route::post("/login/phone/check", [AuthApiController::class, "checkPhone"]);
-Route::post("/login/pin/check", [AuthApiController::class, "checkPin"]);
-Route::post("/login/pin/set", [AuthApiController::class, "setPin"]);
-Route::post("/login/pin", [AuthApiController::class, "loginWithPin"]);
-Route::post("/login/{phone}", [AuthApiController::class, "login"]);
+Route::post('/login/phone/check', [AuthApiController::class, 'checkPhone']);
+Route::post('/login/pin/check', [AuthApiController::class, 'checkPin']);
+Route::post('/login/pin/set', [AuthApiController::class, 'setPin']);
+Route::post('/login/pin', [AuthApiController::class, 'loginWithPin']);
+Route::post('/login/{phone}', [AuthApiController::class, 'login']);
 
 Route::get('/leads', [LeadController::class, 'index']);
 Route::post('/leads', [LeadController::class, 'store']);
 Route::get('/leads/{id}', [LeadController::class, 'show']);
-Route::put('/leads/{id}', [LeadController::class, 'update']); 
+Route::put('/leads/{id}', [LeadController::class, 'update']);
 Route::delete('/leads/{id}', [LeadController::class, 'destroy']);
 Route::post('/ocr-extract', [LeadController::class, 'ocrExtract']);
 // Route::middleware(['cors'])->group(function () {
 //     Route::post('/ocr-extract', [LeadController::class, 'ocrExtract']);
 // });
 
-
-Route::middleware(["auth:sanctum"])->group(function () {
-    Route::get("/master-links", [MasterApiController::class, "getMasterLinks"]);
-    Route::get("/master-country", [MasterApiController::class, "getCountry"]);
-    Route::get("/master-indus-type", [
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/master-links', [MasterApiController::class, 'getMasterLinks']);
+    Route::get('/master-country', [MasterApiController::class, 'getCountry']);
+    Route::get('/master-indus-type', [
         MasterApiController::class,
-        "getIndustryTypeList",
+        'getIndustryTypeList',
     ]);
-    Route::post("/master-state", [MasterApiController::class, "getState"]);
-    Route::post("/master-district", [
+    Route::post('/master-state', [MasterApiController::class, 'getState']);
+    Route::post('/master-district', [
         MasterApiController::class,
-        "getDistrict",
+        'getDistrict',
     ]);
 
-    Route::get("/profile-card", [
+    Route::get('/profile-card', [
         ProfileApiController::class,
-        "usersProfileCard",
+        'usersProfileCard',
     ]);
 
-     Route::get("/profile-card/{user_id}", [
+    Route::get('/profile-card/{user_id}', [
         ProfileApiController::class,
-        "usersProfileCardData",
+        'usersProfileCardData',
     ]);
 
-    Route::get("/user-profile/{user_name}", [
+    Route::get('/user-profile/{user_name}', [
         ProfileApiController::class,
-        "usersNameProfileData",
+        'usersNameProfileData',
     ]);
 
-    Route::match(["get", "post"], "/profile", [
+    Route::match(['get', 'post'], '/profile', [
         ProfileApiController::class,
-        "getOrUpdateProfile",
+        'getOrUpdateProfile',
     ]);
-    Route::match(["get", "post", "put", "patch", "delete"], "/links", [
+    Route::match(['get', 'post', 'put', 'patch', 'delete'], '/links', [
         ProfileApiController::class,
-        "UserLinks",
+        'UserLinks',
     ]);
-    Route::match(["get", "post"], "/business-info", [
+    Route::match(['get', 'post'], '/business-info', [
         ProfileApiController::class,
-        "BusinessInfo",
+        'BusinessInfo',
     ]);
 
-    Route::get("/product", [ProductApiController::class, "product"]);
-    Route::get("/product/update/{prod_id}", [
+    Route::get('/product', [ProductApiController::class, 'product']);
+    Route::get('/product/update/{prod_id}', [
         ProductApiController::class,
-        "getProductforUpdate",
+        'getProductforUpdate',
     ]);
-    Route::post("/product/create", [
+    Route::post('/product/create', [
         ProductApiController::class,
-        "createProduct",
+        'createProduct',
     ]);
-    Route::post("/product/update/{prod_id}", [
+    Route::post('/product/update/{prod_id}', [
         ProductApiController::class,
-        "updateProduct",
+        'updateProduct',
     ]);
-    Route::delete("/product/image/{img_id}", [
+    Route::delete('/product/image/{img_id}', [
         ProductApiController::class,
-        "deleteProductImage",
+        'deleteProductImage',
     ]);
-    Route::delete("/product/link/{link_id}", [
+    Route::delete('/product/link/{link_id}', [
         ProductApiController::class,
-        "deleteProductLinks",
+        'deleteProductLinks',
     ]);
 
-    Route::post("/customer-master/index", [
+    Route::post('/customer-master/index', [
         CustomerMasterApiController::class,
-        "index",
+        'index',
     ]);
-    Route::post("/customer-master/create", [
+    Route::post('/customer-master/create', [
         CustomerMasterApiController::class,
-        "create",
+        'create',
     ]);
-    Route::post("/customer-master/update/{id}", [
+    Route::post('/customer-master/update/{id}', [
         CustomerMasterApiController::class,
-        "update",
+        'update',
     ]);
 
-    Route::match(["get", "post"], "/master-keywords", [
+    Route::match(['get', 'post'], '/master-keywords', [
         MasterKeywordApiController::class,
-        "index",
+        'index',
     ]);
-    Route::delete("/master-keywords/{id}", [
+    Route::delete('/master-keywords/{id}', [
         MasterKeywordApiController::class,
-        "deleteKeyword",
+        'deleteKeyword',
     ]);
-    Route::post("/search-users", [
+    Route::post('/search-users', [
         MasterKeywordApiController::class,
-        "getUsersByKeywords",
+        'getUsersByKeywords',
     ]);
 
     Route::post('/connection-request', [
-       ConnectionApiController::class,
-       'sendConnectionRequest'
+        ConnectionApiController::class,
+        'sendConnectionRequest',
     ]);
 
-    Route::get("/connection-show", [
+    Route::get('/connection-show', [
         ConnectionApiController::class,
-        "connectionShow",
+        'connectionShow',
     ]);
-    Route::get("/connection-count", [
+    Route::get('/connection-count', [
         ConnectionApiController::class,
-        "connectionCount",
+        'connectionCount',
     ]);
-    Route::get("/connection-request", [
+    Route::get('/connection-request', [
         ConnectionApiController::class,
-        "connectionRequests",
-    ]);
-    
-    Route::post("/connection-accept/{rid}", [
-        ConnectionApiController::class,
-        "connectionAccept",
-    ]);
-    Route::post("/connection-reject/{rid}", [
-        ConnectionApiController::class,
-        "connectionReject",
-    ]);
-    Route::post("/connection-remove/{rid}", [
-        ConnectionApiController::class,
-        "connectionRemove",
+        'connectionRequests',
     ]);
 
-    Route::post("/show-event", [MasterEventApiController::class, "showEvent"]);
-    Route::post("/create-event", [
+    Route::post('/connection-accept/{rid}', [
+        ConnectionApiController::class,
+        'connectionAccept',
+    ]);
+    Route::post('/connection-reject/{rid}', [
+        ConnectionApiController::class,
+        'connectionReject',
+    ]);
+    Route::post('/connection-remove/{rid}', [
+        ConnectionApiController::class,
+        'connectionRemove',
+    ]);
+
+    Route::post('/show-event', [MasterEventApiController::class, 'showEvent']);
+    Route::post('/create-event', [
         MasterEventApiController::class,
-        "createEvent",
+        'createEvent',
     ]);
-    Route::delete("/delete-event/{eid}", [
+    Route::delete('/delete-event/{eid}', [
         MasterEventApiController::class,
-        "deleteEevent",
+        'deleteEevent',
     ]);
 
-    Route::get("/show-postby-industry/{indus_type}", [
+    Route::get('/show-postby-industry/{indus_type}', [
         MasterPostApiController::class,
-        "showPostByIndustry",
+        'showPostByIndustry',
     ]);
-    Route::get("/show-save-postlist", [
+    Route::get('/show-save-postlist', [
         MasterPostApiController::class,
-        "showSavePostList",
+        'showSavePostList',
     ]);
-    Route::get("/show-saved-post/{post_id}", [
+    Route::get('/show-saved-post/{post_id}', [
         MasterPostApiController::class,
-        "showSavedPost",
+        'showSavedPost',
     ]);
-    Route::post("/show-post", [MasterPostApiController::class, "showPost"]);
-    Route::post("/create-post", [MasterPostApiController::class, "createPost"]);
-    Route::post("/save-post/{post_id}", [
+    Route::post('/show-post', [MasterPostApiController::class, 'showPost']);
+    Route::post('/create-post', [MasterPostApiController::class, 'createPost']);
+    Route::post('/save-post/{post_id}', [
         MasterPostApiController::class,
-        "toggleSavePost",
+        'toggleSavePost',
     ]);
-    Route::post("/toggle-like/{post_id}", [
+    Route::post('/toggle-like/{post_id}', [
         MasterPostApiController::class,
-        "likeOrUnlike",
+        'likeOrUnlike',
     ]);
-    Route::delete("/delete-post/{pid}", [
+    Route::delete('/delete-post/{pid}', [
         MasterPostApiController::class,
-        "deletePost",
+        'deletePost',
     ]);
 
-    Route::get("/comment/{post_id}", [
+    Route::get('/comment/{post_id}', [
         MasterCommentApiController::class,
-        "getComments",
+        'getComments',
     ]);
-    Route::post("/comment", [
+    Route::post('/comment', [
         MasterCommentApiController::class,
-        "createComments",
+        'createComments',
     ]);
-    Route::post("/comment/reply", [
+    Route::post('/comment/reply', [
         MasterCommentApiController::class,
-        "replyComment",
+        'replyComment',
     ]);
-    Route::post("/comment/toggle-like", [
+    Route::post('/comment/toggle-like', [
         MasterCommentApiController::class,
-        "likeOrUnlikeComment",
+        'likeOrUnlikeComment',
     ]);
-    Route::delete("/comment/delete/{c_id}", [
+    Route::delete('/comment/delete/{c_id}', [
         MasterCommentApiController::class,
-        "deleteComments",
+        'deleteComments',
     ]);
 
-    Route::get("/chat/get-message/{chatId}", [
+    Route::get('/chat/get-message/{chatId}', [
         ChatApiController::class,
-        "getMessages",
+        'getMessages',
     ]);
-    Route::post("/chat/create-chat/{other_Id}", [
+    Route::post('/chat/create-chat/{other_Id}', [
         ChatApiController::class,
-        "createChat",
+        'createChat',
     ]);
-    Route::post("/chat/send-message", [
+    Route::post('/chat/send-message', [
         ChatApiController::class,
-        "sendMessages",
+        'sendMessages',
     ]);
-    Route::post("/chat/mark-read/{chatId}", [ChatApiController::class, "markAsRead"]);
-    Route::post("/chat/like-message", [ChatApiController::class, "toggleLike"]);
-    Route::post("/chat/delete-message/{message_Id}", [
+    Route::post('/chat/mark-read/{chatId}', [ChatApiController::class, 'markAsRead']);
+    Route::post('/chat/like-message', [ChatApiController::class, 'toggleLike']);
+    Route::post('/chat/delete-message/{message_Id}', [
         ChatApiController::class,
-        "deleteMessage",
+        'deleteMessage',
     ]);
 
-    Route::get("/restrictions", [
+    Route::get('/restrictions', [
         RestrictionApiController::class,
-        "getRestrictionData",
+        'getRestrictionData',
     ]);
-    Route::get("/restrictions/{id}", [
+    Route::get('/restrictions/{id}', [
         RestrictionApiController::class,
-        "getRestriction",
+        'getRestriction',
     ]);
-    Route::post("/restrictions", [
+    Route::post('/restrictions', [
         RestrictionApiController::class,
-        "createRestriction",
+        'createRestriction',
     ]);
-    Route::put("/restrictions/{id}", [
+    Route::put('/restrictions/{id}', [
         RestrictionApiController::class,
-        "updateRestriction",
+        'updateRestriction',
     ]);
 
-    Route::get("/plans", [SubscriptionApiController::class, "showPlan"]);
-    Route::get("/plans/{plan_id}", [
+    Route::get('/plans', [SubscriptionApiController::class, 'showPlan']);
+    Route::get('/plans/{plan_id}', [
         SubscriptionApiController::class,
-        "getPlans",
+        'getPlans',
     ]);
-    Route::post("/plans", [SubscriptionApiController::class, "createPlan"]);
-    Route::put("/plans/{plan_id}", [
+    Route::post('/plans', [SubscriptionApiController::class, 'createPlan']);
+    Route::put('/plans/{plan_id}', [
         SubscriptionApiController::class,
-        "getUpdatePlans",
+        'getUpdatePlans',
     ]);
-    Route::delete("/plans/{plan_id}", [
+    Route::delete('/plans/{plan_id}', [
         SubscriptionApiController::class,
-        "deletePlans",
+        'deletePlans',
     ]);
-    Route::post("/create-subscription", [
+    Route::post('/create-subscription', [
         SubscriptionApiController::class,
-        "createSubscription",
+        'createSubscription',
     ]);
-    Route::post("/features", [
+    Route::post('/features', [
         SubscriptionApiController::class,
-        "checkPaidPlans",
+        'checkPaidPlans',
     ]);
 
-    //amit api
+    // amit api
 
-    Route::post("/connection-create", [
+    Route::post('/connection-create', [
         ConnectionApiController::class,
-        "connectionCreate",
+        'connectionCreate',
     ]);
 
     Route::get('/connection-receiver-senders/{receiver_id}', [
-      ConnectionApiController::class,
-      'getUniqueSendersByReceiver'
+        ConnectionApiController::class,
+        'getUniqueSendersByReceiver',
     ]);
 
-     Route::get('/connection-senders-receiver/{sender_id}', [
-      ConnectionApiController::class,
-      'getUniqueReceiversBySender'
+    Route::get('/connection-senders-receiver/{sender_id}', [
+        ConnectionApiController::class,
+        'getUniqueReceiversBySender',
     ]);
 
     Route::post('/connection-request/update-status', [
-      ConnectionApiController::class,
-      'updateConnectionRequestStatus'
+        ConnectionApiController::class,
+        'updateConnectionRequestStatus',
     ]);
 
     Route::post('/connection-request/delete', [
-      ConnectionApiController::class,
-      'deleteConnectionRequest'
+        ConnectionApiController::class,
+        'deleteConnectionRequest',
     ]);
 
     Route::get('/friends/{user_id}', [
         ConnectionApiController::class,
-        'getFriendListByUser'
+        'getFriendListByUser',
     ]);
 
     //  api for post start
-        
-    Route::post('/posts/create', [
-      PostApiController::class, 
-      'createPost'
-    ]);
-    Route::post('/posts/update/{post_id}', [
-      PostApiController::class, 
-      'updatePost'
-    ]);
-    Route::delete('/posts/delete/{post_id}', [
-      PostApiController::class,
-      'deletePost'
+
+    Route::get('/posts/all_post_list', [
+        PostApiController::class,
+        'allPostList',
     ]);
 
-    Route::get('/posts/feed', [
-      PostApiController::class,
-      'feed'
+    Route::post('/posts/create', [
+        PostApiController::class,
+        'createPost',
     ]);
-    Route::get('/posts/{post_id}', [
-      PostApiController::class,
-      'postDetail'
+  
+
+    Route::get('/posts/feed', [
+        PostApiController::class,
+        'feed',
     ]);
 
     Route::post('/posts/react', [
-      PostApiController::class, 
-      'reactPost'
-    ]); 
+        PostApiController::class,
+        'reactPost',
+    ]);
     Route::post('/posts/comment', [
-      PostApiController::class,
-      'addComment'
+        PostApiController::class,
+        'addComment',
     ]);
-    Route::delete('/posts/comment/{comment_id}', [
-      PostApiController::class,
-      'deleteComment'
-    ]);
+    
 
     Route::post('/posts/save', [
-      PostApiController::class,
-      'toggleSave'
+        PostApiController::class,
+        'toggleSave',
     ]);
     Route::post('/posts/share', [
-      PostApiController::class, 
-      'sharePost'
+        PostApiController::class,
+        'sharePost',
     ]);
     Route::post('/posts/view', [
-      PostApiController::class, 
-      'viewPost'
+        PostApiController::class,
+        'viewPost',
     ]);
 
     Route::post('/posts/report', [
-      PostApiController::class, 
-      'reportPost'
+        PostApiController::class,
+        'reportPost',
+    ]);
+
+    
+
+    Route::get('/posts/list', [
+        PostApiController::class,
+        'listAllPosts',
+    ]);
+
+    Route::post('/posts/update/{post_id}', [
+        PostApiController::class,
+        'updatePost',
+    ]);
+    Route::delete('/posts/delete/{post_id}', [
+        PostApiController::class,
+        'deletePost',
+    ]);
+
+    Route::delete('/posts/comment/{comment_id}', [
+        PostApiController::class,
+        'deleteComment',
     ]);
 
     Route::get('/posts/user/{user_id}', [
-      PostApiController::class,
-      'userPosts'
+        PostApiController::class,
+        'userPosts',
     ]);
 
-    Route::get('/posts/list', [
-      PostApiController::class,
-      'listAllPosts'
+    Route::get('/posts/{post_id}', [
+        PostApiController::class,
+        'postDetail',
     ]);
 
     // api for post end
 
-    Route::post("/logout", [AuthApiController::class, "logout"]);
+    Route::post('/logout', [AuthApiController::class, 'logout']);
 
-   
 });
