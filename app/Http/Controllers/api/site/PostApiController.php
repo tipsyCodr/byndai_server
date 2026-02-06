@@ -692,6 +692,146 @@ class PostApiController extends Controller
     }
 
     // =========================
+    // 13) User Active Status Post List
+    // =========================
+
+    public function userPosts(Request $request, $user_id)
+    {
+    try {
+        $viewerUserId = $request->user()->id;
+
+        $posts = Post::where('user_id', $user_id)
+            ->where('status', 'active')
+            ->orderBy('id', 'desc')
+            ->paginate(10);
+
+        $data = [];
+
+        foreach ($posts->items() as $post) {
+            $data[] = $this->postFullResponse($post->id, $viewerUserId);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'User posts fetched successfully',
+            'data' => $data,
+            'pagination' => [
+                'current_page' => $posts->currentPage(),
+                'last_page' => $posts->lastPage(),
+                'per_page' => $posts->perPage(),
+                'total' => $posts->total(),
+                'next_page_url' => $posts->nextPageUrl(),
+                'prev_page_url' => $posts->previousPageUrl(),
+            ]
+        ], 200);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Failed to fetch user posts: ' . $e->getMessage(),
+        ], 500);
+    }
+    }
+
+    // =========================
+    // 13) All User Post List
+    // =========================
+
+    public function listAllPosts(Request $request)
+    {
+    try {
+        $viewerUserId = $request->user()->id;
+
+        $posts = Post::with([
+                'media',
+                'user',
+                'userDetail'
+            ])
+            ->where('status', 'active')
+            ->orderBy('id', 'desc')
+            ->paginate(10);
+
+        $data = [];
+
+        foreach ($posts->items() as $post) {
+
+            // counts
+            $likeCount = PostReaction::where('post_id', $post->id)->where('reaction_type', 'like')->count();
+            $dislikeCount = PostReaction::where('post_id', $post->id)->where('reaction_type', 'dislike')->count();
+            $commentCount = PostComment::where('post_id', $post->id)->count();
+            $saveCount = PostSave::where('post_id', $post->id)->count();
+            $shareCount = PostShare::where('post_id', $post->id)->count();
+            $viewCount = PostView::where('post_id', $post->id)->count();
+
+            // my states
+            $myReaction = PostReaction::where('post_id', $post->id)
+                ->where('user_id', $viewerUserId)
+                ->value('reaction_type');
+
+            $isSaved = PostSave::where('post_id', $post->id)
+                ->where('user_id', $viewerUserId)
+                ->exists();
+
+            $data[] = [
+                'id' => $post->id,
+                'user_id' => $post->user_id,
+
+                // user info
+                'user' => [
+                    'user_name' => $post->user ? $post->user->user_name : null,
+                    'fname' => $post->userDetail ? $post->userDetail->fname : null,
+                ],
+
+                'title' => $post->title,
+                'description' => $post->description,
+                'status' => $post->status,
+                'created_at' => $post->created_at,
+                'updated_at' => $post->updated_at,
+
+                // media (images/videos links)
+                'media' => $post->media,
+
+                'counts' => [
+                    'likes' => $likeCount,
+                    'dislikes' => $dislikeCount,
+                    'comments' => $commentCount,
+                    'saves' => $saveCount,
+                    'shares' => $shareCount,
+                    'views' => $viewCount,
+                ],
+
+                'my' => [
+                    'reaction' => $myReaction ?? "none",
+                    'saved' => $isSaved,
+                ],
+            ];
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'All posts fetched successfully',
+            'data' => $data,
+            'pagination' => [
+                'current_page' => $posts->currentPage(),
+                'last_page' => $posts->lastPage(),
+                'per_page' => $posts->perPage(),
+                'total' => $posts->total(),
+                'next_page_url' => $posts->nextPageUrl(),
+                'prev_page_url' => $posts->previousPageUrl(),
+            ]
+        ], 200);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Failed to fetch posts: ' . $e->getMessage(),
+        ], 500);
+    }
+    }
+
+
+
+    // =========================
     // Helper: Full Post Response
     // =========================
    

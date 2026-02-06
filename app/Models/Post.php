@@ -16,9 +16,19 @@ class Post extends Model
         'status',
     ];
 
+    // public function user()
+    // {
+    //     return $this->belongsTo(MasterUserDetail::class, 'user_id');
+    // }
+
     public function user()
     {
-        return $this->belongsTo(MasterUserDetail::class, 'user_id');
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
+
+    public function userDetail()
+    {
+        return $this->hasOne(MasterUserDetail::class, 'user_id', 'user_id');
     }
 
     public function media()

@@ -378,6 +378,16 @@ Route::middleware(["auth:sanctum"])->group(function () {
       'reportPost'
     ]);
 
+    Route::get('/posts/user/{user_id}', [
+      PostApiController::class,
+      'userPosts'
+    ]);
+
+    Route::get('/posts/list', [
+      PostApiController::class,
+      'listAllPosts'
+    ]);
+
     // api for post end
 
     Route::post("/logout", [AuthApiController::class, "logout"]);
