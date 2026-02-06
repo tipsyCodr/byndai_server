@@ -333,7 +333,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
         PostApiController::class,
         'createPost',
     ]);
-  
 
     Route::get('/posts/feed', [
         PostApiController::class,
@@ -348,7 +347,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
         PostApiController::class,
         'addComment',
     ]);
-    
 
     Route::post('/posts/save', [
         PostApiController::class,
@@ -367,8 +365,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
         PostApiController::class,
         'reportPost',
     ]);
-
-    
 
     Route::get('/posts/list', [
         PostApiController::class,
