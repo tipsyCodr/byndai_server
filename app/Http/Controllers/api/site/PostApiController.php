@@ -313,65 +313,80 @@ class PostApiController extends Controller
     // =========================
     // 6) REACT (LIKE/DISLIKE)
     // =========================
+    
+
     public function reactPost(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'post_id' => 'required|integer',
-            'reaction_type' => 'required|in:like,dislike,none',
-        ]);
+    // Validation
+    $validator = Validator::make($request->all(), [
+        'post_id' => 'required|integer',
+        'reaction_type' => 'required|in:like,dislike,none',
+        'reaction' => 'required|in:like,dislike,none',
+    ]);
 
-        if ($validator->fails()) {
+    if ($validator->fails()) {
+        return response()->json([
+            'status' => false,
+            'message' => $validator->errors()->first(),
+        ], 422);
+    }
+
+    try {
+        $userId = $request->user()->id;
+        $postId = $request->post_id;
+
+        // Check if post exists and is active
+        $post = Post::where('id', $postId)
+            ->where('status', 'active')
+            ->first();
+
+        if (!$post) {
             return response()->json([
                 'status' => false,
-                'message' => $validator->errors()->first(),
-            ], 422);
+                'message' => 'Post not found',
+            ], 404);
         }
 
-        try {
-            $userId = $request->user()->id;
-            $postId = $request->post_id;
+        // Remove reaction if type is none
+        if ($request->reaction_type === "none") {
+            PostReaction::where('post_id', $postId)
+                ->where('user_id', $userId)
+                ->delete();
 
-            $post = Post::where('id', $postId)
-                ->where('status', 'active')
-                ->first();
-
-            if (!$post) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Post not found',
-                ], 404);
-            }
-
-            if ($request->reaction_type === "none") {
-                PostReaction::where('post_id', $postId)
-                    ->where('user_id', $userId)
-                    ->delete();
-
-                return response()->json([
-                    'status' => true,
-                    'message' => 'Reaction removed',
-                    'data' => $this->postFullResponse($postId, $userId),
-                ], 200);
-            }
-
-            PostReaction::updateOrCreate(
-                ['post_id' => $postId, 'user_id' => $userId],
-                ['reaction_type' => $request->reaction_type]
-            );
+             $this->updatePostCounts($postId);
 
             return response()->json([
                 'status' => true,
-                'message' => 'Reaction updated',
+                'message' => 'Reaction removed',
                 'data' => $this->postFullResponse($postId, $userId),
             ], 200);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Failed to react: ' . $e->getMessage(),
-            ], 500);
         }
+
+        // Update or create reaction correctly
+        PostReaction::updateOrCreate(
+            ['post_id' => $postId, 'user_id' => $userId], // Find record
+            [
+                'reaction_type' => $request->reaction_type, // Update/Insert values
+                'reaction' => $request->reaction
+            ]
+        );
+
+        $this->updatePostCounts($postId);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Reaction updated',
+            'data' => $this->postFullResponse($postId, $userId),
+        ], 200);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Failed to react: ' . $e->getMessage(),
+        ], 500);
     }
+    }
+
 
     // =========================
     // 7) ADD COMMENT / REPLY
@@ -426,6 +441,8 @@ class PostApiController extends Controller
                 'parent_id' => $request->parent_id ?? null,
             ]);
 
+            $this->updatePostCounts($request->post_id);
+
             return response()->json([
                 'status' => true,
                 'message' => 'Comment added successfully',
@@ -439,6 +456,10 @@ class PostApiController extends Controller
             ], 500);
         }
     }
+
+
+
+
 
     // =========================
     // 8) DELETE COMMENT
@@ -460,6 +481,8 @@ class PostApiController extends Controller
             }
 
             $comment->delete();
+
+            $this->updatePostCounts($postId);
 
             return response()->json([
                 'status' => true,
@@ -520,6 +543,8 @@ class PostApiController extends Controller
                 $msg = "Post saved";
             }
 
+            $this->updatePostCounts($postId);
+
             return response()->json([
                 'status' => true,
                 'message' => $msg,
@@ -559,6 +584,8 @@ class PostApiController extends Controller
                 'user_id' => $userId,
                 'share_type' => $request->share_type ?? "internal",
             ]);
+
+            $this->updatePostCounts($request->post_id);
 
             return response()->json([
                 'status' => true,
@@ -606,6 +633,8 @@ class PostApiController extends Controller
                     'user_id' => $userId,
                     'ip_address' => $ip,
                 ]);
+
+                $this->updatePostCounts($postId);
             }
 
             return response()->json([
@@ -665,65 +694,10 @@ class PostApiController extends Controller
     // =========================
     // Helper: Full Post Response
     // =========================
-    // private function postFullResponse($postId, $viewerUserId)
-    // {
-    //     $post = Post::with(['media'])->where('id', $postId)->first();
-
-    //     if (!$post) return null;
-
-    //     // user + fname
-    //     $user = MasterUserDetail::where('id', $post->user_id)->first();
-
-    //     $fname = null;
-    //     if ($user && $user->MasterUserDetailDetails) {
-    //         $fname = $user->MasterUserDetailDetails->fname ?? null;
-    //     }
-
-    //     // counts
-    //     $likeCount = PostReaction::where('post_id', $postId)->where('reaction_type', 'like')->count();
-    //     $dislikeCount = PostReaction::where('post_id', $postId)->where('reaction_type', 'dislike')->count();
-    //     $commentCount = PostComment::where('post_id', $postId)->count();
-    //     $saveCount = PostSave::where('post_id', $postId)->count();
-    //     $shareCount = PostShare::where('post_id', $postId)->count();
-    //     $viewCount = PostView::where('post_id', $postId)->count();
-
-    //     // my states
-    //     $myReaction = PostReaction::where('post_id', $postId)->where('user_id', $viewerUserId)->value('reaction_type');
-    //     $isSaved = PostSave::where('post_id', $postId)->where('user_id', $viewerUserId)->exists();
-
-    //     return [
-    //         'id' => $post->id,
-    //         'user_id' => $post->user_id,
-    //         'user_name' => $user->user_name ?? null,
-    //         'fname' => $fname,
-
-    //         'title' => $post->title,
-    //         'description' => $post->description,
-    //         'status' => $post->status,
-
-    //         'created_at' => $post->created_at,
-    //         'updated_at' => $post->updated_at,
-
-    //         'media' => $post->media,
-
-    //         'counts' => [
-    //             'likes' => $likeCount,
-    //             'dislikes' => $dislikeCount,
-    //             'comments' => $commentCount,
-    //             'saves' => $saveCount,
-    //             'shares' => $shareCount,
-    //             'views' => $viewCount,
-    //         ],
-
-    //         'my' => [
-    //             'reaction' => $myReaction ?? "none",
-    //             'saved' => $isSaved,
-    //         ],
-    //     ];
-    // }
+   
 
     private function postFullResponse($postId, $viewerUserId)
-{
+   {
     $post = Post::with(['media'])->where('id', $postId)->first();
     if (!$post) return null;
 
@@ -785,6 +759,18 @@ class PostApiController extends Controller
             'saved' => $isSaved,
         ],
     ];
-}
+   }
+
+   private function updatePostCounts($postId)
+   {
+    Post::where('id', $postId)->update([
+        'like_count' => PostReaction::where('post_id', $postId)->where('reaction_type', 'like')->count(),
+        'dislike_count' => PostReaction::where('post_id', $postId)->where('reaction_type', 'dislike')->count(),
+        'comment_count' => PostComment::where('post_id', $postId)->count(),
+        'save_count' => PostSave::where('post_id', $postId)->count(),
+        'share_count' => PostShare::where('post_id', $postId)->count(),
+        'view_count' => PostView::where('post_id', $postId)->count(),
+    ]);
+   }
 
 }

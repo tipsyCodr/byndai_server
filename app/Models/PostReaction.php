@@ -13,6 +13,7 @@ class PostReaction extends Model
         'post_id',
         'user_id',
         'reaction_type',
+        'reaction',
     ];
 
     public function post()
