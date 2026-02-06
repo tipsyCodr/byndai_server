@@ -31,7 +31,8 @@ class PostApiController extends Controller
     {
       $validator = Validator::make($request->all(), [
           'title' => 'nullable|string|max:150',
-          'description' => 'nullable|string|max:5000',  
+          'description' => 'nullable|string|max:5000', 
+          'industry_id' => 'required|integer', 
 
           // separate images/videos
           'images' => 'nullable|array|max:5',
@@ -67,6 +68,7 @@ class PostApiController extends Controller
               'user_id' => $userId,
               'title' => $request->title ?? null,
               'description' => $request->description ?? null,
+              'industry_id' => $request->industry_id,
               'status' => 'active',
           ]);  
 
