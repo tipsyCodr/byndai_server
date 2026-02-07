@@ -13,6 +13,7 @@ use App\Models\PostSave;
 use App\Models\PostShare;
 use App\Models\PostView;
 use App\Models\User;
+use App\Models\MasterIndustry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -966,6 +967,30 @@ class PostApiController extends Controller
            ], 500);
        }
      }
+
+     //=================================
+     // Get industries data
+     //===============================
+
+     public function getIndustriesData()
+    {
+        try {
+            $industries = MasterIndustry::orderBy('id', 'desc')->get();
+
+            return response()->json([
+                "status" => true,
+                "message" => "Industries fetched successfully",
+                "data" => $industries
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                "status" => false,
+                "message" => "Something went wrong",
+                "error" => $e->getMessage()
+            ], 500);
+        }
+    }
 
 
     // =========================

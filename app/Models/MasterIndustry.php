@@ -8,5 +8,5 @@ use Illuminate\Database\Eloquent\Model;
 class MasterIndustry extends Model
 {
     use HasFactory;
-    protected $fillable = ['title', 'icons', 'status'];
+    protected $fillable = ['id', 'title', 'icons', 'status'];
 }

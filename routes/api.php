@@ -400,6 +400,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'postDetail',
     ]);
 
+    Route::get('/industries', [
+        PostApiController::class,
+         'getIndustriesData'
+    ]);
+
     // api for post end
 
     Route::post('/logout', [AuthApiController::class, 'logout']);
