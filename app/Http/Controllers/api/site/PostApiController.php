@@ -3,157 +3,155 @@
 namespace App\Http\Controllers\api\site;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Storage;
-
-use App\Models\User;
+use App\Models\MasterUserDetail;
 use App\Models\Post;
+use App\Models\PostComment;
 use App\Models\PostMedia;
 use App\Models\PostReaction;
-use App\Models\PostComment;
+use App\Models\PostReport;
 use App\Models\PostSave;
 use App\Models\PostShare;
 use App\Models\PostView;
-use App\Models\PostReport;
-use App\Models\MasterUserDetail;
-use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 class PostApiController extends Controller
 {
     // =========================
     // 1) CREATE POST (with media)
     // =========================
-   
+
     public function createPost(Request $request)
     {
-      $validator = Validator::make($request->all(), [
-          'title' => 'nullable|string|max:150',
-          'description' => 'nullable|string|max:5000', 
-          'industry_id' => 'required|integer', 
+        $validator = Validator::make($request->all(), [
+            'title' => 'nullable|string|max:150',
+            'description' => 'nullable|string|max:5000',
+            'industry_id' => 'required|integer',
 
-          // separate images/videos
-          'images' => 'nullable|array|max:5',
-          'images.*' => 'file|mimes:jpg,jpeg,png,webp|max:10240', // 10MB each  
+            // separate images/videos
+            'images' => 'nullable|array|max:5',
+            'images.*' => 'file|mimes:jpg,jpeg,png,webp|max:10240', // 10MB each
 
-          'videos' => 'nullable|array|max:2',
-          'videos.*' => 'file|mimes:mp4,mov,avi,mkv,webm|max:51200', // 50MB each
-      ]);  
+            'videos' => 'nullable|array|max:2',
+            'videos.*' => 'file|mimes:mp4,mov,avi,mkv,webm|max:51200', // 50MB each
+        ]);
 
-      if ($validator->fails()) {
-          return response()->json([
-              'status' => false,
-              'message' => $validator->errors()->first(),
-              'errors' => $validator->errors(),
-          ], 422);
-      }  
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => $validator->errors()->first(),
+                'errors' => $validator->errors(),
+            ], 422);
+        }
 
-      try {
-          $user = $request->user(); // sanctum user
-          if (!$user) {
-              return response()->json([
-                  'status' => false,
-                  'message' => 'Unauthorized',
-              ], 401);
-          }  
+        try {
+            $user = $request->user(); // sanctum user
+            if (! $user) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized',
+                ], 401);
+            }
 
-          $userId = $user->id;  
+            $userId = $user->id;
 
-          DB::beginTransaction();  
+            DB::beginTransaction();
 
-          // 1) create post
-          $post = Post::create([
-              'user_id' => $userId,
-              'title' => $request->title ?? null,
-              'description' => $request->description ?? null,
-              'industry_id' => $request->industry_id,
-              'status' => 'active',
-          ]);  
+            // 1) create post
+            $post = Post::create([
+                'user_id' => $userId,
+                'title' => $request->title ?? null,
+                'description' => $request->description ?? null,
+                'industry_id' => $request->industry_id,
+                'status' => 'active',
+            ]);
 
-          $position = 1;  
+            $position = 1;
 
-          // 2) store images
-          if ($request->hasFile('images')) {  
+            // 2) store images
+            if ($request->hasFile('images')) {
 
-              $imageFiles = $request->file('images');  
+                $imageFiles = $request->file('images');
 
-              if (count($imageFiles) > 5) {
-                  DB::rollBack();
-                  return response()->json([
-                      'status' => false,
-                      'message' => 'Maximum 5 images allowed',
-                  ], 422);
-              }  
+                if (count($imageFiles) > 5) {
+                    DB::rollBack();
 
-              foreach ($imageFiles as $file) {  
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Maximum 5 images allowed',
+                    ], 422);
+                }
 
-                  $fileName = time() . "_" . uniqid() . "." . $file->getClientOriginalExtension();  
+                foreach ($imageFiles as $file) {
 
-                  // save in storage/app/public/uploads/posts
-                  $path = $file->storeAs("uploads/posts", $fileName, "public");  
+                    $fileName = time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
 
-                  PostMedia::create([
-                      'post_id' => $post->id,
-                      'media_type' => 'image',
-                      'media_url' => "/storage/" . $path,
-                      'thumbnail_url' => null,
-                      'position' => $position++,
-                  ]);
-              }
-          }  
+                    // save in storage/app/public/uploads/posts
+                    $path = $file->storeAs('uploads/posts', $fileName, 'public');
 
-          // 3) store videos
-          if ($request->hasFile('videos')) {  
+                    PostMedia::create([
+                        'post_id' => $post->id,
+                        'media_type' => 'image',
+                        'media_url' => '/storage/'.$path,
+                        'thumbnail_url' => null,
+                        'position' => $position++,
+                    ]);
+                }
+            }
 
-              $videoFiles = $request->file('videos');  
+            // 3) store videos
+            if ($request->hasFile('videos')) {
 
-              if (count($videoFiles) > 2) {
-                  DB::rollBack();
-                  return response()->json([
-                      'status' => false,
-                      'message' => 'Maximum 2 videos allowed',
-                  ], 422);
-              }  
+                $videoFiles = $request->file('videos');
 
-              foreach ($videoFiles as $file) {  
+                if (count($videoFiles) > 2) {
+                    DB::rollBack();
 
-                  $fileName = time() . "_" . uniqid() . "." . $file->getClientOriginalExtension();  
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Maximum 2 videos allowed',
+                    ], 422);
+                }
 
-                  $path = $file->storeAs("uploads/posts", $fileName, "public");  
+                foreach ($videoFiles as $file) {
 
-                  PostMedia::create([
-                      'post_id' => $post->id,
-                      'media_type' => 'video',
-                      'media_url' => "/storage/" . $path,
-                      'thumbnail_url' => null,
-                      'position' => $position++,
-                  ]);
-              }
-          }  
+                    $fileName = time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
 
-          DB::commit();  
+                    $path = $file->storeAs('uploads/posts', $fileName, 'public');
 
-          // return full response
-          return response()->json([
-              'status' => true,
-              'message' => 'Post created successfully',
-              'data' => $this->postFullResponse($post->id, $userId),
-          ], 200);  
+                    PostMedia::create([
+                        'post_id' => $post->id,
+                        'media_type' => 'video',
+                        'media_url' => '/storage/'.$path,
+                        'thumbnail_url' => null,
+                        'position' => $position++,
+                    ]);
+                }
+            }
 
-      } catch (\Exception $e) {  
+            DB::commit();
 
-          DB::rollBack();  
+            // return full response
+            return response()->json([
+                'status' => true,
+                'message' => 'Post created successfully',
+                'data' => $this->postFullResponse($post->id, $userId),
+            ], 200);
 
-          return response()->json([
-              'status' => false,
-              'message' => 'Failed to create post',
-              'error' => $e->getMessage(),
-          ], 500);
-      }
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to create post',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
-
 
     // =========================
     // 2) UPDATE POST
@@ -179,7 +177,7 @@ class PostApiController extends Controller
                 ->where('user_id', $userId)
                 ->first();
 
-            if (!$post) {
+            if (! $post) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Post not found or unauthorized',
@@ -200,7 +198,7 @@ class PostApiController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to update post: ' . $e->getMessage(),
+                'message' => 'Failed to update post: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -217,7 +215,7 @@ class PostApiController extends Controller
                 ->where('user_id', $userId)
                 ->first();
 
-            if (!$post) {
+            if (! $post) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Post not found or unauthorized',
@@ -234,7 +232,7 @@ class PostApiController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to delete post: ' . $e->getMessage(),
+                'message' => 'Failed to delete post: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -268,13 +266,13 @@ class PostApiController extends Controller
                     'total' => $posts->total(),
                     'next_page_url' => $posts->nextPageUrl(),
                     'prev_page_url' => $posts->previousPageUrl(),
-                ]
+                ],
             ], 200);
 
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to fetch feed: ' . $e->getMessage(),
+                'message' => 'Failed to fetch feed: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -291,7 +289,7 @@ class PostApiController extends Controller
                 ->where('status', 'active')
                 ->first();
 
-            if (!$post) {
+            if (! $post) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Post not found',
@@ -307,7 +305,7 @@ class PostApiController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to fetch post detail: ' . $e->getMessage(),
+                'message' => 'Failed to fetch post detail: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -315,90 +313,14 @@ class PostApiController extends Controller
     // =========================
     // 6) REACT (LIKE/DISLIKE)
     // =========================
-    
 
     public function reactPost(Request $request)
     {
-    // Validation
-    $validator = Validator::make($request->all(), [
-        'post_id' => 'required|integer',
-        'reaction_type' => 'required|in:like,dislike,none',
-        'reaction' => 'required|in:like,dislike,none',
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json([
-            'status' => false,
-            'message' => $validator->errors()->first(),
-        ], 422);
-    }
-
-    try {
-        $userId = $request->user()->id;
-        $postId = $request->post_id;
-
-        // Check if post exists and is active
-        $post = Post::where('id', $postId)
-            ->where('status', 'active')
-            ->first();
-
-        if (!$post) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Post not found',
-            ], 404);
-        }
-
-        // Remove reaction if type is none
-        if ($request->reaction_type === "none") {
-            PostReaction::where('post_id', $postId)
-                ->where('user_id', $userId)
-                ->delete();
-
-             $this->updatePostCounts($postId);
-
-            return response()->json([
-                'status' => true,
-                'message' => 'Reaction removed',
-                'data' => $this->postFullResponse($postId, $userId),
-            ], 200);
-        }
-
-        // Update or create reaction correctly
-        PostReaction::updateOrCreate(
-            ['post_id' => $postId, 'user_id' => $userId], // Find record
-            [
-                'reaction_type' => $request->reaction_type, // Update/Insert values
-                'reaction' => $request->reaction
-            ]
-        );
-
-        $this->updatePostCounts($postId);
-
-        return response()->json([
-            'status' => true,
-            'message' => 'Reaction updated',
-            'data' => $this->postFullResponse($postId, $userId),
-        ], 200);
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'status' => false,
-            'message' => 'Failed to react: ' . $e->getMessage(),
-        ], 500);
-    }
-    }
-
-
-    // =========================
-    // 7) ADD COMMENT / REPLY
-    // =========================
-    public function addComment(Request $request)
-    {
+        // Validation
         $validator = Validator::make($request->all(), [
             'post_id' => 'required|integer',
-            'comment' => 'required|string|max:2000',
-            'parent_id' => 'nullable|integer',
+            'reaction_type' => 'required|in:like,dislike,none',
+            'reaction' => 'required|in:like,dislike,none',
         ]);
 
         if ($validator->fails()) {
@@ -410,57 +332,200 @@ class PostApiController extends Controller
 
         try {
             $userId = $request->user()->id;
+            $postId = $request->post_id;
 
-            $post = Post::where('id', $request->post_id)
+            // Check if post exists and is active
+            $post = Post::where('id', $postId)
                 ->where('status', 'active')
                 ->first();
 
-            if (!$post) {
+            if (! $post) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Post not found',
                 ], 404);
             }
 
-            // if reply parent exists
-            if ($request->parent_id) {
-                $parent = PostComment::where('id', $request->parent_id)
-                    ->where('post_id', $request->post_id)
-                    ->first();
+            // Remove reaction if type is none
+            if ($request->reaction_type === 'none') {
+                PostReaction::where('post_id', $postId)
+                    ->where('user_id', $userId)
+                    ->delete();
 
-                if (!$parent) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => 'Parent comment not found',
-                    ], 404);
-                }
+                $this->updatePostCounts($postId);
+
+                return response()->json([
+                    'status' => true,
+                    'message' => 'Reaction removed',
+                    'data' => $this->postFullResponse($postId, $userId),
+                ], 200);
             }
 
-            $comment = PostComment::create([
-                'post_id' => $request->post_id,
-                'user_id' => $userId,
-                'comment' => $request->comment,
-                'parent_id' => $request->parent_id ?? null,
-            ]);
+            // Update or create reaction correctly
+            PostReaction::updateOrCreate(
+                ['post_id' => $postId, 'user_id' => $userId], // Find record
+                [
+                    'reaction_type' => $request->reaction_type, // Update/Insert values
+                    'reaction' => $request->reaction,
+                ]
+            );
 
-            $this->updatePostCounts($request->post_id);
+            $this->updatePostCounts($postId);
 
             return response()->json([
                 'status' => true,
-                'message' => 'Comment added successfully',
-                'data' => $comment,
+                'message' => 'Reaction updated',
+                'data' => $this->postFullResponse($postId, $userId),
             ], 200);
 
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to add comment: ' . $e->getMessage(),
+                'message' => 'Failed to react: '.$e->getMessage(),
             ], 500);
         }
     }
 
+    // =========================
+    // 7) ADD COMMENT / REPLY
+    // =========================
+    // public function addComment(Request $request)
+    // {
+    //     $validator = Validator::make($request->all(), [
+    //         'post_id' => 'required|integer',
+    //         'comment' => 'required|string|max:2000',
+    //         'parent_id' => 'nullable|integer',
+    //     ]);
 
+    //     if ($validator->fails()) {
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => $validator->errors()->first(),
+    //         ], 422);
+    //     }
 
+    //     try {
+    //         $userId = $request->user()->id;
+
+    //         $post = Post::where('id', $request->post_id)
+    //             ->where('status', 'active')
+    //             ->first();
+
+    //         if (! $post) {
+    //             return response()->json([
+    //                 'status' => false,
+    //                 'message' => 'Post not found',
+    //             ], 404);
+    //         }
+
+    //         // if reply parent exists
+    //         if ($request->parent_id) {
+    //             $parent = PostComment::where('id', $request->parent_id)
+    //                 ->where('post_id', $request->post_id)
+    //                 ->first();
+
+    //             if (! $parent) {
+    //                 return response()->json([
+    //                     'status' => false,
+    //                     'message' => 'Parent comment not found',
+    //                 ], 404);
+    //             }
+    //         }
+
+    //         $comment = PostComment::create([
+    //             'post_id' => $request->post_id,
+    //             'user_id' => $userId,
+    //             'comment' => $request->comment,
+    //             'parent_id' => $request->parent_id ?? null,
+    //         ]);
+
+    //         $this->updatePostCounts($request->post_id);
+
+    //         return response()->json([
+    //             'status' => true,
+    //             'message' => 'Comment added successfully',
+    //             'data' => $comment,
+    //         ], 200);
+
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => 'Failed to add comment: '.$e->getMessage(),
+    //         ], 500);
+    //     }
+    // }
+
+    public function addComment(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'post_id' => 'required|integer',
+        'comment' => 'required|string|max:2000',
+        'parent_id' => 'nullable|integer',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'status' => false,
+            'message' => $validator->errors()->first(),
+        ], 422);
+    }
+
+    try {
+        $userId = $request->user()->id;
+
+        $post = Post::where('id', $request->post_id)
+            ->where('status', 'active')
+            ->first();
+
+        if (!$post) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Post not found',
+            ], 404);
+        }
+
+        // Reply validation
+        if ($request->parent_id) {
+            $parent = PostComment::where('id', $request->parent_id)
+                ->where('post_id', $request->post_id)
+                ->first();
+
+            if (!$parent) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Parent comment not found',
+                ], 404);
+            }
+        }
+
+        $newComment = PostComment::create([
+            'post_id' => $request->post_id,
+            'user_id' => $userId,
+            'comment' => $request->comment,
+            'parent_id' => $request->parent_id ?? null,
+        ]);
+
+        $this->updatePostCounts($request->post_id);
+
+        // ✅ load user + fname
+        $newComment = PostComment::with([
+            'user:id,user_name',
+            'user.masterUser:emp_id,user_id,fname',
+        ])->find($newComment->id);
+
+        return response()->json([
+            'status' => true,
+            'message' => $request->parent_id ? 'Reply added successfully' : 'Comment added successfully',
+            'data' => $newComment,
+        ], 200);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Failed to add comment: ' . $e->getMessage(),
+        ], 500);
+    }
+}
 
 
     // =========================
@@ -475,7 +540,7 @@ class PostApiController extends Controller
                 ->where('user_id', $userId)
                 ->first();
 
-            if (!$comment) {
+            if (! $comment) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Comment not found or unauthorized',
@@ -494,7 +559,7 @@ class PostApiController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to delete comment: ' . $e->getMessage(),
+                'message' => 'Failed to delete comment: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -523,7 +588,7 @@ class PostApiController extends Controller
                 ->where('status', 'active')
                 ->first();
 
-            if (!$post) {
+            if (! $post) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Post not found',
@@ -536,13 +601,13 @@ class PostApiController extends Controller
 
             if ($exists) {
                 $exists->delete();
-                $msg = "Post unsaved";
+                $msg = 'Post unsaved';
             } else {
                 PostSave::create([
                     'post_id' => $postId,
                     'user_id' => $userId,
                 ]);
-                $msg = "Post saved";
+                $msg = 'Post saved';
             }
 
             $this->updatePostCounts($postId);
@@ -556,7 +621,7 @@ class PostApiController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to save post: ' . $e->getMessage(),
+                'message' => 'Failed to save post: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -584,7 +649,7 @@ class PostApiController extends Controller
             PostShare::create([
                 'post_id' => $request->post_id,
                 'user_id' => $userId,
-                'share_type' => $request->share_type ?? "internal",
+                'share_type' => $request->share_type ?? 'internal',
             ]);
 
             $this->updatePostCounts($request->post_id);
@@ -597,7 +662,7 @@ class PostApiController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to share: ' . $e->getMessage(),
+                'message' => 'Failed to share: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -629,7 +694,7 @@ class PostApiController extends Controller
                 ->where('user_id', $userId)
                 ->first();
 
-            if (!$exists) {
+            if (! $exists) {
                 PostView::create([
                     'post_id' => $postId,
                     'user_id' => $userId,
@@ -647,7 +712,7 @@ class PostApiController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to count view: ' . $e->getMessage(),
+                'message' => 'Failed to count view: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -688,7 +753,7 @@ class PostApiController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to report: ' . $e->getMessage(),
+                'message' => 'Failed to report: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -699,227 +764,291 @@ class PostApiController extends Controller
 
     public function userPosts(Request $request, $user_id)
     {
-    try {
-        $viewerUserId = $request->user()->id;
+        try {
+            $viewerUserId = $request->user()->id;
 
-        $posts = Post::where('user_id', $user_id)
-            ->where('status', 'active')
-            ->orderBy('id', 'desc')
-            ->paginate(10);
+            $posts = Post::where('user_id', $user_id)
+                ->where('status', 'active')
+                ->orderBy('id', 'desc')
+                ->paginate(10);
 
-        $data = [];
+            $data = [];
 
-        foreach ($posts->items() as $post) {
-            $data[] = $this->postFullResponse($post->id, $viewerUserId);
+            foreach ($posts->items() as $post) {
+                $data[] = $this->postFullResponse($post->id, $viewerUserId);
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'User posts fetched successfully',
+                'data' => $data,
+                'pagination' => [
+                    'current_page' => $posts->currentPage(),
+                    'last_page' => $posts->lastPage(),
+                    'per_page' => $posts->perPage(),
+                    'total' => $posts->total(),
+                    'next_page_url' => $posts->nextPageUrl(),
+                    'prev_page_url' => $posts->previousPageUrl(),
+                ],
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch user posts: '.$e->getMessage(),
+            ], 500);
         }
-
-        return response()->json([
-            'status' => true,
-            'message' => 'User posts fetched successfully',
-            'data' => $data,
-            'pagination' => [
-                'current_page' => $posts->currentPage(),
-                'last_page' => $posts->lastPage(),
-                'per_page' => $posts->perPage(),
-                'total' => $posts->total(),
-                'next_page_url' => $posts->nextPageUrl(),
-                'prev_page_url' => $posts->previousPageUrl(),
-            ]
-        ], 200);
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'status' => false,
-            'message' => 'Failed to fetch user posts: ' . $e->getMessage(),
-        ], 500);
-    }
     }
 
     // =========================
-    // 13) All User Post List
+    // 13)  Particular User Post List
     // =========================
 
     public function listAllPosts(Request $request)
     {
-    try {
-        $viewerUserId = $request->user()->id;
+        try {
+            $viewerUserId = $request->user()->id;
 
-        $posts = Post::with([
+            $posts = Post::with([
                 'media',
                 'user',
-                'userDetail'
+                'userDetail',
             ])
-            ->where('status', 'active')
-            ->orderBy('id', 'desc')
-            ->paginate(10);
+                ->where('status', 'active')
+                ->orderBy('id', 'desc')
+                ->paginate(10);
 
-        $data = [];
+            $data = [];
 
-        foreach ($posts->items() as $post) {
+            foreach ($posts->items() as $post) {
 
-            // counts
-            $likeCount = PostReaction::where('post_id', $post->id)->where('reaction_type', 'like')->count();
-            $dislikeCount = PostReaction::where('post_id', $post->id)->where('reaction_type', 'dislike')->count();
-            $commentCount = PostComment::where('post_id', $post->id)->count();
-            $saveCount = PostSave::where('post_id', $post->id)->count();
-            $shareCount = PostShare::where('post_id', $post->id)->count();
-            $viewCount = PostView::where('post_id', $post->id)->count();
+                // counts
+                $likeCount = PostReaction::where('post_id', $post->id)->where('reaction_type', 'like')->count();
+                $dislikeCount = PostReaction::where('post_id', $post->id)->where('reaction_type', 'dislike')->count();
+                $commentCount = PostComment::where('post_id', $post->id)->count();
+                $saveCount = PostSave::where('post_id', $post->id)->count();
+                $shareCount = PostShare::where('post_id', $post->id)->count();
+                $viewCount = PostView::where('post_id', $post->id)->count();
 
-            // my states
-            $myReaction = PostReaction::where('post_id', $post->id)
-                ->where('user_id', $viewerUserId)
-                ->value('reaction_type');
+                // my states
+                $myReaction = PostReaction::where('post_id', $post->id)
+                    ->where('user_id', $viewerUserId)
+                    ->value('reaction_type');
 
-            $isSaved = PostSave::where('post_id', $post->id)
-                ->where('user_id', $viewerUserId)
-                ->exists();
+                $isSaved = PostSave::where('post_id', $post->id)
+                    ->where('user_id', $viewerUserId)
+                    ->exists();
 
-            $data[] = [
-                'id' => $post->id,
-                'user_id' => $post->user_id,
+                $data[] = [
+                    'id' => $post->id,
+                    'user_id' => $post->user_id,
 
-                // user info
-                'user' => [
-                    'user_name' => $post->user ? $post->user->user_name : null,
-                    'fname' => $post->userDetail ? $post->userDetail->fname : null,
+                    // user info
+                    'user' => [
+                        'user_name' => $post->user ? $post->user->user_name : null,
+                        'fname' => $post->userDetail ? $post->userDetail->fname : null,
+                    ],
+
+                    'title' => $post->title,
+                    'description' => $post->description,
+                    'industry_id' => $post->industry_id,
+                    'status' => $post->status,
+                    'created_at' => $post->created_at,
+                    'updated_at' => $post->updated_at,
+
+                    // media (images/videos links)
+                    'media' => $post->media,
+
+                    'counts' => [
+                        'likes' => $likeCount,
+                        'dislikes' => $dislikeCount,
+                        'comments' => $commentCount,
+                        'saves' => $saveCount,
+                        'shares' => $shareCount,
+                        'views' => $viewCount,
+                    ],
+
+                    'my' => [
+                        'reaction' => $myReaction ?? 'none',
+                        'saved' => $isSaved,
+                    ],
+                ];
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'All posts fetched successfully',
+                'data' => $data,
+                'pagination' => [
+                    'current_page' => $posts->currentPage(),
+                    'last_page' => $posts->lastPage(),
+                    'per_page' => $posts->perPage(),
+                    'total' => $posts->total(),
+                    'next_page_url' => $posts->nextPageUrl(),
+                    'prev_page_url' => $posts->previousPageUrl(),
                 ],
+            ], 200);
 
-                'title' => $post->title,
-                'description' => $post->description,
-                'industry_id' => $post->industry_id,
-                'status' => $post->status,
-                'created_at' => $post->created_at,
-                'updated_at' => $post->updated_at,
-
-                // media (images/videos links)
-                'media' => $post->media,
-
-                'counts' => [
-                    'likes' => $likeCount,
-                    'dislikes' => $dislikeCount,
-                    'comments' => $commentCount,
-                    'saves' => $saveCount,
-                    'shares' => $shareCount,
-                    'views' => $viewCount,
-                ],
-
-                'my' => [
-                    'reaction' => $myReaction ?? "none",
-                    'saved' => $isSaved,
-                ],
-            ];
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch posts: ',
+            ], 500);
         }
+    }
+
+    // =========================
+    // 14) All User Post List second
+    // =========================
+    public function allPostList()
+    {
+        return response()->json(['hit' => 'i am here']);
+    }
+
+    // =========================
+    // 14)  Post Comment List
+    // =========================
+
+     public function getPostComments($postId, Request $request)
+     {
+       try {
+
+        $post = Post::where('id', $postId)
+            ->where('status', 'active')
+            ->first();
+
+        if (!$post) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Post not found',
+            ], 404);
+        }
+
+        $comments = PostComment::with([
+            'user:id,user_name',
+            'user.masterUser:emp_id,user_id,fname',
+        ])
+            ->where('post_id', $postId)
+            ->orderBy('id', 'desc')
+            ->get()
+            ->map(function ($c) {
+
+                return [
+                    'id' => $c->id,
+                    'post_id' => $c->post_id,
+                    'user_id' => $c->user_id,
+                    'comment' => $c->comment,
+                    'parent_id' => $c->parent_id,
+
+                    'created_at' => $c->created_at,
+                    'created_at_human' => $c->created_at
+                        ? $c->created_at->diffForHumans()
+                        : null,
+
+                    'user' => [
+                        'id' => $c->user?->id,
+                        'user_name' => $c->user?->user_name,
+                        'fname' => $c->user?->masterUser?->fname,
+                    ],
+                ];
+            });
 
         return response()->json([
             'status' => true,
-            'message' => 'All posts fetched successfully',
-            'data' => $data,
-            'pagination' => [
-                'current_page' => $posts->currentPage(),
-                'last_page' => $posts->lastPage(),
-                'per_page' => $posts->perPage(),
-                'total' => $posts->total(),
-                'next_page_url' => $posts->nextPageUrl(),
-                'prev_page_url' => $posts->previousPageUrl(),
-            ]
+            'message' => 'Post comments fetched successfully',
+            'data' => $comments,
         ], 200);
 
-    } catch (\Exception $e) {
-        return response()->json([
-            'status' => false,
-            'message' => 'Failed to fetch posts: ',
-        ], 500);
-    }
-    }
-
-    public function allPostList()
-    {
-     return response()->json(["hit" => "i am here"]);
-    }
-
+       } catch (\Exception $e) {
+           return response()->json([
+               'status' => false,
+               'message' => 'Failed to fetch comments: ' . $e->getMessage(),
+           ], 500);
+       }
+     }
 
 
     // =========================
     // Helper: Full Post Response
     // =========================
-   
 
     private function postFullResponse($postId, $viewerUserId)
-   {
-    $post = Post::with(['media'])->where('id', $postId)->first();
-    if (!$post) return null;
+    {
+        $post = Post::with(['media'])->where('id', $postId)->first();
+        if (! $post) {
+            return null;
+        }
 
-    // Fetch User
-    $postUser = User::where('id', $post->user_id)->first();
+        // Fetch User
+        $postUser = User::where('id', $post->user_id)->first();
 
-    // Fetch User Detail by user_id
-    $userDetail = MasterUserDetail::where('user_id', $post->user_id)->first();
+        // Fetch User Detail by user_id
+        $userDetail = MasterUserDetail::where('user_id', $post->user_id)->first();
 
-    $fname = $userDetail ? $userDetail->fname : null;
+        $fname = $userDetail ? $userDetail->fname : null;
 
-    // counts
-    $likeCount = PostReaction::where('post_id', $postId)->where('reaction_type', 'like')->count();
-    $dislikeCount = PostReaction::where('post_id', $postId)->where('reaction_type', 'dislike')->count();
-    $commentCount = PostComment::where('post_id', $postId)->count();
-    $saveCount = PostSave::where('post_id', $postId)->count();
-    $shareCount = PostShare::where('post_id', $postId)->count();
-    $viewCount = PostView::where('post_id', $postId)->count();
+        // counts
+        $likeCount = PostReaction::where('post_id', $postId)->where('reaction_type', 'like')->count();
+        $dislikeCount = PostReaction::where('post_id', $postId)->where('reaction_type', 'dislike')->count();
+        $commentCount = PostComment::where('post_id', $postId)->count();
+        $saveCount = PostSave::where('post_id', $postId)->count();
+        $shareCount = PostShare::where('post_id', $postId)->count();
+        $viewCount = PostView::where('post_id', $postId)->count();
 
-    // my states
-    $myReaction = PostReaction::where('post_id', $postId)
-        ->where('user_id', $viewerUserId)
-        ->value('reaction_type');
+        // my states
+        $myReaction = PostReaction::where('post_id', $postId)
+            ->where('user_id', $viewerUserId)
+            ->value('reaction_type');
 
-    $isSaved = PostSave::where('post_id', $postId)
-        ->where('user_id', $viewerUserId)
-        ->exists();
+        $isSaved = PostSave::where('post_id', $postId)
+            ->where('user_id', $viewerUserId)
+            ->exists();
 
-    return [
-        'id' => $post->id,
-        'user_id' => $post->user_id,
+        return [
+            'id' => $post->id,
+            'user_id' => $post->user_id,
 
-        // from users table
-        'user_name' => $postUser ? $postUser->user_name : null,
+            // from users table
+            'user_name' => $postUser ? $postUser->user_name : null,
 
-        // from master_user_details table
-        'fname' => $fname,
+            // from master_user_details table
+            'fname' => $fname,
 
-        'title' => $post->title,
-        'description' => $post->description,
-        'industry_id' => $post->industry_id,
-        'status' => $post->status,
+            'title' => $post->title,
+            'description' => $post->description,
+            'industry_id' => $post->industry_id,
+            'status' => $post->status,
 
-        'created_at' => $post->created_at,
-        'updated_at' => $post->updated_at,
+            'created_at' => $post->created_at,
+            'updated_at' => $post->updated_at,
 
-        'media' => $post->media,
+            'media' => $post->media,
 
-        'counts' => [
-            'likes' => $likeCount,
-            'dislikes' => $dislikeCount,
-            'comments' => $commentCount,
-            'saves' => $saveCount,
-            'shares' => $shareCount,
-            'views' => $viewCount,
-        ],
+            'counts' => [
+                'likes' => $likeCount,
+                'dislikes' => $dislikeCount,
+                'comments' => $commentCount,
+                'saves' => $saveCount,
+                'shares' => $shareCount,
+                'views' => $viewCount,
+            ],
 
-        'my' => [
-            'reaction' => $myReaction ?? "none",
-            'saved' => $isSaved,
-        ],
-    ];
-   }
+            'my' => [
+                'reaction' => $myReaction ?? 'none',
+                'saved' => $isSaved,
+            ],
+        ];
+    }
 
-   private function updatePostCounts($postId)
-   {
-    Post::where('id', $postId)->update([
-        'like_count' => PostReaction::where('post_id', $postId)->where('reaction_type', 'like')->count(),
-        'dislike_count' => PostReaction::where('post_id', $postId)->where('reaction_type', 'dislike')->count(),
-        'comment_count' => PostComment::where('post_id', $postId)->count(),
-        'save_count' => PostSave::where('post_id', $postId)->count(),
-        'share_count' => PostShare::where('post_id', $postId)->count(),
-        'view_count' => PostView::where('post_id', $postId)->count(),
-    ]);
-   }
-
+    private function updatePostCounts($postId)
+    {
+        Post::where('id', $postId)->update([
+            'like_count' => PostReaction::where('post_id', $postId)->where('reaction_type', 'like')->count(),
+            'dislike_count' => PostReaction::where('post_id', $postId)->where('reaction_type', 'dislike')->count(),
+            'comment_count' => PostComment::where('post_id', $postId)->count(),
+            'save_count' => PostSave::where('post_id', $postId)->count(),
+            'share_count' => PostShare::where('post_id', $postId)->count(),
+            'view_count' => PostView::where('post_id', $postId)->count(),
+        ]);
+    }
 }

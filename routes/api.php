@@ -385,6 +385,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'deleteComment',
     ]);
 
+    Route::get('/posts/comments_list/{postId}', [
+      PostApiController::class,
+      'getPostComments',
+    ]);
+
     Route::get('/posts/user/{user_id}', [
         PostApiController::class,
         'userPosts',

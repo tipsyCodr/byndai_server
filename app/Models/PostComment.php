@@ -21,9 +21,9 @@ class PostComment extends Model
         return $this->belongsTo(Post::class, 'post_id');
     }
 
-    public function user()
+   public function user()
     {
-        return $this->belongsTo(MasterUserDetail::class, 'user_id');
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
     public function parent()
