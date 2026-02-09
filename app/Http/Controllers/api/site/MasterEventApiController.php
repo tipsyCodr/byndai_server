@@ -14,83 +14,7 @@ use Illuminate\Support\Facades\File;
 
 class MasterEventApiController extends Controller
 {
-    // public function showEvent(Request $r)
-    // {
-    //     $user_id = Auth::id();
-
-    //     $query = MasterEvent::with(['Industry', 'country', 'state', 'district', 'images']);
-
-    //     // ✅ Audience filter
-    //     if ($r->is_audience == 1) {
-
-    //         $connections = Connection::where('user_id', $user_id)
-    //             ->pluck('friend_id')
-    //             ->toArray();
-
-    //         $query->where(function ($q) use ($connections, $user_id) {
-    //             $q->whereIn('created_by', $connections)
-    //                 ->orWhere('created_by', $user_id);
-    //         });
-
-    //     } else {
-    //         $query->where('is_audience', 0);
-    //     }
-
-    //     // ✅ Search (title + description)
-    //     if (! empty($r->search)) {
-    //         $search = $r->search;
-
-    //         $query->where(function ($q) use ($search) {
-    //             $q->where('title', 'LIKE', "%$search%")
-    //                 ->orWhere('description', 'LIKE', "%$search%");
-    //         });
-    //     }
-
-    //     // ✅ Filters
-    //     if (! empty($r->industry_type)) {
-    //         $query->where('indus_type', $r->industry_type);
-    //     }
-
-    //     if (! empty($r->country_id)) {
-    //         $query->where('country_id', $r->country_id);
-    //     }
-
-    //     if (! empty($r->state_id)) {
-    //         $query->where('state_id', $r->state_id);
-    //     }
-
-    //     if (! empty($r->district_id)) {
-    //         $query->where('district_id', $r->district_id);
-    //     }
-
-    //     // ✅ Date filter
-    //     if (! empty($r->from_date) && ! empty($r->to_date)) {
-    //         $query->whereBetween(DB::raw('DATE(created_at)'), [$r->from_date, $r->to_date]);
-    //     } elseif (! empty($r->from_date)) {
-    //         $query->whereDate('created_at', '>=', $r->from_date);
-    //     } elseif (! empty($r->to_date)) {
-    //         $query->whereDate('created_at', '<=', $r->to_date);
-    //     }
-
-    //     // ✅ Sort latest first
-    //     $query->orderBy('id', 'DESC');
-
-    //     // ✅ Pagination (10 per page)
-    //     $perPage = 10;
-    //     $data_provider = $query->paginate($perPage);
-
-    //     return response()->json([
-    //         'status' => true,
-    //         'message' => 'Event list fetched successfully',
-    //         'total_events' => $data_provider->total(),
-    //         'current_page' => $data_provider->currentPage(),
-    //         'per_page' => $data_provider->perPage(),
-    //         'last_page' => $data_provider->lastPage(),
-    //         'next_page_url' => $data_provider->nextPageUrl(),
-    //         'prev_page_url' => $data_provider->previousPageUrl(),
-    //         'data' => $data_provider->items(),
-    //     ]);
-    // }
+  
 
     public function showEvent(Request $r)
     {
@@ -286,4 +210,60 @@ class MasterEventApiController extends Controller
             'message' => 'Event deleted successfully!',
         ]);
     }
+
+    public function getEventsByUserId(Request $r, $user_id)
+    {
+    $query = MasterEvent::with([
+        'Industry',
+        'country',
+        'state',
+        'district',
+        'images',
+        'createdByUser.masterUser',
+    ])->where('created_by', $user_id);
+
+    // ✅ Search (title + description)
+    if (!empty($r->search)) {
+        $search = $r->search;
+
+        $query->where(function ($q) use ($search) {
+            $q->where('title', 'LIKE', "%$search%")
+              ->orWhere('description', 'LIKE', "%$search%");
+        });
+    }
+
+    // ✅ Sort
+    // sort=latest OR sort=oldest
+    $sort = $r->sort ?? "latest";
+
+    if ($sort == "oldest") {
+        $query->orderBy('id', 'ASC');
+    } else {
+        $query->orderBy('id', 'DESC'); // latest default
+    }
+
+    // ✅ Pagination
+    $perPage = $r->per_page ?? 10;
+    $data_provider = $query->paginate($perPage);
+
+    // ✅ extra created_by info
+    $data_provider->getCollection()->transform(function ($event) {
+        $event->created_by_user_name = $event->createdByUser->user_name ?? null;
+        $event->created_by_fname = $event->createdByUser->masterUser->fname ?? null;
+        return $event;
+    });
+
+    return response()->json([
+        'status' => true,
+        'message' => 'User events fetched successfully',
+        'total_events' => $data_provider->total(),
+        'current_page' => $data_provider->currentPage(),
+        'per_page' => $data_provider->perPage(),
+        'last_page' => $data_provider->lastPage(),
+        'next_page_url' => $data_provider->nextPageUrl(),
+        'prev_page_url' => $data_provider->previousPageUrl(),
+        'data' => $data_provider->items(),
+    ]);
+    }
+
 }

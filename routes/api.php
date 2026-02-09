@@ -386,8 +386,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     ]);
 
     Route::get('/posts/comments_list/{postId}', [
-      PostApiController::class,
-      'getPostComments',
+        PostApiController::class,
+        'getPostComments',
     ]);
 
     Route::get('/posts/user/{user_id}', [
@@ -402,7 +402,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::get('/industries', [
         PostApiController::class,
-         'getIndustriesData'
+        'getIndustriesData',
+    ]);
+
+    Route::get('/user-events/{user_id}', [
+        MasterEventApiController::class,
+        'getEventsByUserId',
     ]);
 
     // api for post end
