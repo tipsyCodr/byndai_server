@@ -89,23 +89,57 @@ class MasterEventApiController extends Controller
         ]);
     }
 
+    // public function eventImage(Request $r, $title, $event_id)
+    // {
+    //     if ($r->hasFile('event_img')) {
+
+    //         $files = $r->file('event_img');
+
+    //         if (! is_array($files)) {
+    //             $files = [$files];
+    //         }
+
+    //         foreach ($files as $file) {
+
+    //             // ✅ mimeType pehle nikalna hai (move se pehle)
+    //             $mimeType = $file->getMimeType();
+    //             $type = str_contains($mimeType, 'video') ? 1 : 0;
+
+    //             $fileName = time().'_'.$file->getClientOriginalName();
+
+    //             $folderPath = "assets/uploads/event/$title/";
+    //             $fullPath = public_path($folderPath);
+
+    //             if (! file_exists($fullPath)) {
+    //                 mkdir($fullPath, 0777, true);
+    //             }
+
+    //             // ✅ ab move karo
+    //             $file->move($fullPath, $fileName);
+
+    //             MasterEventImage::create([
+    //                 'event_id' => $event_id,
+    //                 'event_img' => $fileName,
+    //                 'event_img_path' => $folderPath.$fileName,
+    //                 'type' => $type,
+    //             ]);
+    //         }
+    //     }
+    // }
+
     public function eventImage(Request $r, $title, $event_id)
     {
         if ($r->hasFile('event_img')) {
 
             $files = $r->file('event_img');
 
-            if (! is_array($files)) {
-                $files = [$files];
-            }
-
             foreach ($files as $file) {
 
-                // ✅ mimeType pehle nikalna hai (move se pehle)
+                // ✅ mimeType pehle
                 $mimeType = $file->getMimeType();
                 $type = str_contains($mimeType, 'video') ? 1 : 0;
 
-                $fileName = time().'_'.$file->getClientOriginalName();
+                $fileName = time().'_'.uniqid().'_'.$file->getClientOriginalName();
 
                 $folderPath = "assets/uploads/event/$title/";
                 $fullPath = public_path($folderPath);
@@ -114,7 +148,7 @@ class MasterEventApiController extends Controller
                     mkdir($fullPath, 0777, true);
                 }
 
-                // ✅ ab move karo
+                // ✅ ab move
                 $file->move($fullPath, $fileName);
 
                 MasterEventImage::create([
@@ -127,69 +161,84 @@ class MasterEventApiController extends Controller
         }
     }
 
+    // public function createEvent(Request $r)
+    // {
+    //     $user = Auth::user();
+    //     $data = $r->validate(['indus_type' => 'required', 'title' => 'required|string|max:100', 'description' => 'nullable|string', 'link' => 'nullable|url|max:255', 'event_img' => 'nullable', 'start_date' => 'required', 'end_date' => 'nullable|after_or_equal:start_date', 'timing' => 'nullable|date_format:H:i:s', 'country_id' => 'nullable', 'state_id' => 'nullable', 'district_id' => 'nullable', 'location' => 'nullable|string|max:255', 'event_type' => 'nullable|string|max:100', 'max_attendees' => 'nullable|integer|min:1', 'is_audience' => 'nullable', 'is_online' => 'nullable', 'status' => 'nullable|integer|in:0,1', 'created_by' => 'nullable|exists:users,id']);
+    //     $data['created_by'] = $user->id;
+    //     $event = MasterEvent::create($data);
+    //     $event_id = $event->id;
+    //     if ($r->hasFile('event_img')) {
+    //         $this->eventImage($r, $r->title, $event_id);
+    //     }
+
+    //     return response()->json(['message' => 'Event created successfully!', 'event_id' => $event_id]);
+    // }
+
     public function createEvent(Request $r)
     {
         $user = Auth::user();
-        $data = $r->validate(['indus_type' => 'required', 'title' => 'required|string|max:100', 'description' => 'nullable|string', 'link' => 'nullable|url|max:255', 'event_img' => 'nullable', 'start_date' => 'required', 'end_date' => 'nullable|after_or_equal:start_date', 'timing' => 'nullable|date_format:H:i:s', 'country_id' => 'nullable', 'state_id' => 'nullable', 'district_id' => 'nullable', 'location' => 'nullable|string|max:255', 'event_type' => 'nullable|string|max:100', 'max_attendees' => 'nullable|integer|min:1', 'is_audience' => 'nullable', 'is_online' => 'nullable', 'status' => 'nullable|integer|in:0,1', 'created_by' => 'nullable|exists:users,id']);
+
+        $data = $r->validate([
+            'indus_type' => 'required',
+            'title' => 'required|string|max:100',
+            'description' => 'nullable|string',
+            'link' => 'nullable|url|max:255',
+
+            // ✅ multiple max 5
+            'event_img' => 'nullable|array|max:5',
+            'event_img.*' => 'file|mimes:jpg,jpeg,png,webp,mp4,mov,avi|max:10240',
+
+            'start_date' => 'required',
+            'end_date' => 'nullable|after_or_equal:start_date',
+            'timing' => 'nullable|date_format:H:i:s',
+            'country_id' => 'nullable',
+            'state_id' => 'nullable',
+            'district_id' => 'nullable',
+            'location' => 'nullable|string|max:255',
+            'event_type' => 'nullable|string|max:100',
+            'max_attendees' => 'nullable|integer|min:1',
+            'is_audience' => 'nullable',
+            'is_online' => 'nullable',
+            'status' => 'nullable|integer|in:0,1',
+        ]);
+
         $data['created_by'] = $user->id;
+
         $event = MasterEvent::create($data);
-        $event_id = $event->id;
+
         if ($r->hasFile('event_img')) {
-            $this->eventImage($r, $r->title, $event_id);
+            $this->eventImage($r, $r->title, $event->id);
         }
 
-        return response()->json(['message' => 'Event created successfully!', 'event_id' => $event_id]);
+        return response()->json([
+            'status' => true,
+            'message' => 'Event created successfully!',
+            'event_id' => $event->id,
+        ]);
     }
-
-    
-
-    // public function deleteEevent($eid)
-    // {
-    //     $event = MasterEvent::with('images')->findOrFail($eid);
-
-    //     // ✅ Delete all images from folder + DB
-    //     foreach ($event->images as $img) {
-
-    //         // event_img_path = assets/uploads/event/title/filename.jpg
-    //         $fullPath = public_path($img->event_img_path);
-
-    //         if (File::exists($fullPath)) {
-    //             File::delete($fullPath);
-    //         }
-
-    //         $img->delete();
-    //     }
-
-    //     // ✅ Delete Event
-    //     $event->delete();
-
-    //     return response()->json([
-    //         'status' => true,
-    //         'message' => 'Event deleted successfully!',
-    //     ]);
-    // }
 
     public function deleteEevent($eid)
-{
-    $event = MasterEvent::with('images')->findOrFail($eid);
+    {
+        $event = MasterEvent::with('images')->findOrFail($eid);
 
-    // ✅ Folder path (title ke naam ka)
-    $folderPath = public_path("assets/uploads/event/" . $event->title);
+        // ✅ Folder path (title ke naam ka)
+        $folderPath = public_path('assets/uploads/event/'.$event->title);
 
-    // ✅ Delete all images rows
-    MasterEventImage::where('event_id', $eid)->delete();
+        // ✅ Delete all images rows
+        MasterEventImage::where('event_id', $eid)->delete();
 
-    // ✅ Delete Event
-    $event->delete();
+        // ✅ Delete Event
+        $event->delete();
 
-    // ✅ Delete folder (title wala)
-    if (File::exists($folderPath)) {
-        File::deleteDirectory($folderPath);
+        // ✅ Delete folder (title wala)
+        if (File::exists($folderPath)) {
+            File::deleteDirectory($folderPath);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Event deleted successfully!',
+        ]);
     }
-
-    return response()->json([
-        'status' => true,
-        'message' => 'Event deleted successfully!',
-    ]);
-}
 }
