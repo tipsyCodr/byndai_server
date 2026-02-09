@@ -66,4 +66,8 @@ class MasterEvent extends Model
         }
         return $query->latest()->get();
     }
+    public function images()
+    {
+    return $this->hasMany(MasterEventImage::class, 'event_id', 'id');
+    }
 }

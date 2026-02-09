@@ -173,7 +173,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'connectionRemove',
     ]);
 
-    Route::post('/show-event', [MasterEventApiController::class, 'showEvent']);
+    Route::get('/show-event', [MasterEventApiController::class, 'showEvent']);
     Route::post('/create-event', [
         MasterEventApiController::class,
         'createEvent',
