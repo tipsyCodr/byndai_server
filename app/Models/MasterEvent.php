@@ -70,4 +70,11 @@ class MasterEvent extends Model
     {
     return $this->hasMany(MasterEventImage::class, 'event_id', 'id');
     }
+
+    public function createdByUser()
+    {
+      return $this->belongsTo(User::class, 'created_by', 'id')
+        ->with('masterUser');
+    }
+
 }
