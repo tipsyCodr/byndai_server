@@ -308,62 +308,6 @@ class MasterEventApiController extends Controller
         ]);
     }
 
-    // public function getEventsByUserId(Request $r, $user_id)
-    // {
-    //     $query = MasterEvent::with([
-    //         'Industry',
-    //         'country',
-    //         'state',
-    //         'district',
-    //         'images',
-    //         'createdByUser.masterUser',
-    //     ])->where('created_by', $user_id);
-
-    //     // ✅ Search (title + description)
-    //     if (! empty($r->search)) {
-    //         $search = $r->search;
-
-    //         $query->where(function ($q) use ($search) {
-    //             $q->where('title', 'LIKE', "%$search%")
-    //                 ->orWhere('description', 'LIKE', "%$search%");
-    //         });
-    //     }
-
-    //     // ✅ Sort
-    //     // sort=latest OR sort=oldest
-    //     $sort = $r->sort ?? 'latest';
-
-    //     if ($sort == 'oldest') {
-    //         $query->orderBy('id', 'ASC');
-    //     } else {
-    //         $query->orderBy('id', 'DESC'); // latest default
-    //     }
-
-    //     // ✅ Pagination
-    //     $perPage = $r->per_page ?? 10;
-    //     $data_provider = $query->paginate($perPage);
-
-    //     // ✅ extra created_by info
-    //     $data_provider->getCollection()->transform(function ($event) {
-    //         $event->created_by_user_name = $event->createdByUser->user_name ?? null;
-    //         $event->created_by_fname = $event->createdByUser->masterUser->fname ?? null;
-
-    //         return $event;
-    //     });
-
-    //     return response()->json([
-    //         'status' => true,
-    //         'message' => 'User events fetched successfully',
-    //         'total_events' => $data_provider->total(),
-    //         'current_page' => $data_provider->currentPage(),
-    //         'per_page' => $data_provider->perPage(),
-    //         'last_page' => $data_provider->lastPage(),
-    //         'next_page_url' => $data_provider->nextPageUrl(),
-    //         'prev_page_url' => $data_provider->previousPageUrl(),
-    //         'data' => $data_provider->items(),
-    //     ]);
-    // }
-
     public function getEventsByUserId(Request $r, $user_id)
     {
         $query = MasterEvent::with([
@@ -373,11 +317,7 @@ class MasterEventApiController extends Controller
             'district',
             'images',
             'createdByUser.masterUser',
-        ])
-            ->where('created_by', $user_id);
-
-        // ✅ IMPORTANT: Only show events where end_date >= current date (ONLY DATE compare)
-        $query->whereDate('end_date', '>=', now()->format('Y-m-d'));
+        ])->where('created_by', $user_id);
 
         // ✅ Search (title + description)
         if (! empty($r->search)) {
