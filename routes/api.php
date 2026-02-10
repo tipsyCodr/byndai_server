@@ -410,6 +410,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'getEventsByUserId',
     ]);
 
+    Route::get('/states', [
+        MasterEventApiController::class,
+        'getAllStates',
+    ]);
+
     // api for post end
 
     Route::post('/logout', [AuthApiController::class, 'logout']);

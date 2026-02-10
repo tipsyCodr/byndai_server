@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Connection;
 use App\Models\MasterEvent;
 use App\Models\MasterEventImage;
+use App\Models\MasterState;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,8 +15,6 @@ use Illuminate\Support\Facades\File;
 
 class MasterEventApiController extends Controller
 {
-  
-
     public function showEvent(Request $r)
     {
         $user_id = Auth::id();
@@ -213,57 +212,68 @@ class MasterEventApiController extends Controller
 
     public function getEventsByUserId(Request $r, $user_id)
     {
-    $query = MasterEvent::with([
-        'Industry',
-        'country',
-        'state',
-        'district',
-        'images',
-        'createdByUser.masterUser',
-    ])->where('created_by', $user_id);
+        $query = MasterEvent::with([
+            'Industry',
+            'country',
+            'state',
+            'district',
+            'images',
+            'createdByUser.masterUser',
+        ])->where('created_by', $user_id);
 
-    // ✅ Search (title + description)
-    if (!empty($r->search)) {
-        $search = $r->search;
+        // ✅ Search (title + description)
+        if (! empty($r->search)) {
+            $search = $r->search;
 
-        $query->where(function ($q) use ($search) {
-            $q->where('title', 'LIKE', "%$search%")
-              ->orWhere('description', 'LIKE', "%$search%");
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'LIKE', "%$search%")
+                    ->orWhere('description', 'LIKE', "%$search%");
+            });
+        }
+
+        // ✅ Sort
+        // sort=latest OR sort=oldest
+        $sort = $r->sort ?? 'latest';
+
+        if ($sort == 'oldest') {
+            $query->orderBy('id', 'ASC');
+        } else {
+            $query->orderBy('id', 'DESC'); // latest default
+        }
+
+        // ✅ Pagination
+        $perPage = $r->per_page ?? 10;
+        $data_provider = $query->paginate($perPage);
+
+        // ✅ extra created_by info
+        $data_provider->getCollection()->transform(function ($event) {
+            $event->created_by_user_name = $event->createdByUser->user_name ?? null;
+            $event->created_by_fname = $event->createdByUser->masterUser->fname ?? null;
+
+            return $event;
         });
+
+        return response()->json([
+            'status' => true,
+            'message' => 'User events fetched successfully',
+            'total_events' => $data_provider->total(),
+            'current_page' => $data_provider->currentPage(),
+            'per_page' => $data_provider->perPage(),
+            'last_page' => $data_provider->lastPage(),
+            'next_page_url' => $data_provider->nextPageUrl(),
+            'prev_page_url' => $data_provider->previousPageUrl(),
+            'data' => $data_provider->items(),
+        ]);
     }
 
-    // ✅ Sort
-    // sort=latest OR sort=oldest
-    $sort = $r->sort ?? "latest";
+    public function getAllStates()
+    {
+        $states = MasterState::orderBy('state_name', 'ASC')->get();
 
-    if ($sort == "oldest") {
-        $query->orderBy('id', 'ASC');
-    } else {
-        $query->orderBy('id', 'DESC'); // latest default
+        return response()->json([
+            'status' => true,
+            'message' => 'States fetched successfully',
+            'data' => $states,
+        ], 200);
     }
-
-    // ✅ Pagination
-    $perPage = $r->per_page ?? 10;
-    $data_provider = $query->paginate($perPage);
-
-    // ✅ extra created_by info
-    $data_provider->getCollection()->transform(function ($event) {
-        $event->created_by_user_name = $event->createdByUser->user_name ?? null;
-        $event->created_by_fname = $event->createdByUser->masterUser->fname ?? null;
-        return $event;
-    });
-
-    return response()->json([
-        'status' => true,
-        'message' => 'User events fetched successfully',
-        'total_events' => $data_provider->total(),
-        'current_page' => $data_provider->currentPage(),
-        'per_page' => $data_provider->perPage(),
-        'last_page' => $data_provider->lastPage(),
-        'next_page_url' => $data_provider->nextPageUrl(),
-        'prev_page_url' => $data_provider->previousPageUrl(),
-        'data' => $data_provider->items(),
-    ]);
-    }
-
 }
