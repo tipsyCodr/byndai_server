@@ -415,6 +415,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'getAllStates',
     ]);
 
+    Route::get('/districts', [
+        MasterEventApiController::class,
+        'getAllDistricts',
+    ]);
+
     // api for post end
 
     Route::post('/logout', [AuthApiController::class, 'logout']);

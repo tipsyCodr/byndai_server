@@ -7,6 +7,7 @@ use App\Models\Connection;
 use App\Models\MasterEvent;
 use App\Models\MasterEventImage;
 use App\Models\MasterState;
+use App\Models\MasterDistrict;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -274,6 +275,17 @@ class MasterEventApiController extends Controller
             'status' => true,
             'message' => 'States fetched successfully',
             'data' => $states,
+        ], 200);
+    }
+
+     public function getAllDistricts()
+    {
+        $districts = MasterDistrict::orderBy('district_name', 'ASC')->get();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Districts fetched successfully',
+            'data' => $districts
         ], 200);
     }
 }
