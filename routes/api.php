@@ -435,6 +435,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'updateProfile',
     ]);
 
+    Route::post('/update_profile', [
+        AuthApiController::class,
+        'profileUpdate',
+    ]);
+
+
     // api for post end..
 
     Route::post('/logout', [AuthApiController::class, 'logout']);
