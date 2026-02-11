@@ -430,10 +430,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'getUserDetails',
     ]);
 
-    Route::post('/profile-data/update', [
-        PostApiController::class,
-        'updateProfile',
-    ]);
+    
 
     Route::post('/update_profile', [
         AuthApiController::class,
