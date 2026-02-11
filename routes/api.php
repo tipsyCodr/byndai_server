@@ -425,6 +425,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'uploadProfilePic',
     ]);
 
+    Route::get('/user-details/{id}', [
+        PostApiController::class,
+        'getUserDetails',
+    ]);
+
     // api for post end
 
     Route::post('/logout', [AuthApiController::class, 'logout']);
