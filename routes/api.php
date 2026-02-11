@@ -420,6 +420,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'getAllDistricts',
     ]);
 
+    Route::post('/upload-profile-pic', [
+        AuthApiController::class,
+        'uploadProfilePic',
+    ]);
+
     // api for post end
 
     Route::post('/logout', [AuthApiController::class, 'logout']);
