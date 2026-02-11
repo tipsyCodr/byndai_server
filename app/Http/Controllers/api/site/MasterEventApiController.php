@@ -4,10 +4,10 @@ namespace App\Http\Controllers\api\site;
 
 use App\Http\Controllers\Controller;
 use App\Models\Connection;
+use App\Models\MasterDistrict;
 use App\Models\MasterEvent;
 use App\Models\MasterEventImage;
 use App\Models\MasterState;
-use App\Models\MasterDistrict;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,6 +16,100 @@ use Illuminate\Support\Facades\File;
 
 class MasterEventApiController extends Controller
 {
+    // public function showEvent(Request $r)
+    // {
+    //     $user_id = Auth::id();
+
+    //     $query = MasterEvent::with([
+    //         'Industry',
+    //         'country',
+    //         'state',
+    //         'district',
+    //         'images',
+    //         'createdByUser.masterUser',
+    //     ]);
+
+    //     // ✅ Audience filter
+    //     if ($r->is_audience == 1) {
+
+    //         $connections = Connection::where('user_id', $user_id)
+    //             ->pluck('friend_id')
+    //             ->toArray();
+
+    //         $query->where(function ($q) use ($connections, $user_id) {
+    //             $q->whereIn('created_by', $connections)
+    //                 ->orWhere('created_by', $user_id);
+    //         });
+
+    //     } else {
+    //         $query->where('is_audience', 0);
+    //     }
+
+    //     // ✅ Search
+    //     if (! empty($r->search)) {
+    //         $search = $r->search;
+
+    //         $query->where(function ($q) use ($search) {
+    //             $q->where('title', 'LIKE', "%$search%")
+    //                 ->orWhere('description', 'LIKE', "%$search%");
+    //         });
+    //     }
+
+    //     // ✅ Filters
+    //     if (! empty($r->industry_type)) {
+    //         $query->where('indus_type', $r->industry_type);
+    //     }
+
+    //     if (! empty($r->country_id)) {
+    //         $query->where('country_id', $r->country_id);
+    //     }
+
+    //     if (! empty($r->state_id)) {
+    //         $query->where('state_id', $r->state_id);
+    //     }
+
+    //     if (! empty($r->district_id)) {
+    //         $query->where('district_id', $r->district_id);
+    //     }
+
+    //     // ✅ Date filter
+    //     if (! empty($r->from_date) && ! empty($r->to_date)) {
+    //         $query->whereBetween(DB::raw('DATE(created_at)'), [$r->from_date, $r->to_date]);
+    //     } elseif (! empty($r->from_date)) {
+    //         $query->whereDate('created_at', '>=', $r->from_date);
+    //     } elseif (! empty($r->to_date)) {
+    //         $query->whereDate('created_at', '<=', $r->to_date);
+    //     }
+
+    //     // ✅ Latest first
+    //     $query->orderBy('id', 'DESC');
+
+    //     // ✅ Pagination
+    //     $perPage = 10;
+    //     $data_provider = $query->paginate($perPage);
+
+    //     // ✅ Add created_by user info inside each event
+    //     $data_provider->getCollection()->transform(function ($event) {
+
+    //         $event->created_by_user_name = $event->createdByUser->user_name ?? null;
+    //         $event->created_by_fname = $event->createdByUser->masterUser->fname ?? null;
+
+    //         return $event;
+    //     });
+
+    //     return response()->json([
+    //         'status' => true,
+    //         'message' => 'Event list fetched successfully',
+    //         'total_events' => $data_provider->total(),
+    //         'current_page' => $data_provider->currentPage(),
+    //         'per_page' => $data_provider->perPage(),
+    //         'last_page' => $data_provider->lastPage(),
+    //         'next_page_url' => $data_provider->nextPageUrl(),
+    //         'prev_page_url' => $data_provider->previousPageUrl(),
+    //         'data' => $data_provider->items(),
+    //     ]);
+    // }
+
     public function showEvent(Request $r)
     {
         $user_id = Auth::id();
@@ -72,7 +166,7 @@ class MasterEventApiController extends Controller
             $query->where('district_id', $r->district_id);
         }
 
-        // ✅ Date filter
+        // ✅ Date filter (created_at)
         if (! empty($r->from_date) && ! empty($r->to_date)) {
             $query->whereBetween(DB::raw('DATE(created_at)'), [$r->from_date, $r->to_date]);
         } elseif (! empty($r->from_date)) {
@@ -80,6 +174,9 @@ class MasterEventApiController extends Controller
         } elseif (! empty($r->to_date)) {
             $query->whereDate('created_at', '<=', $r->to_date);
         }
+
+        // ✅ IMPORTANT: Only show events where end_date >= current date (ONLY DATE compare)
+        $query->whereDate('end_date', '>=', now()->format('Y-m-d'));
 
         // ✅ Latest first
         $query->orderBy('id', 'DESC');
@@ -278,14 +375,14 @@ class MasterEventApiController extends Controller
         ], 200);
     }
 
-     public function getAllDistricts()
+    public function getAllDistricts()
     {
         $districts = MasterDistrict::orderBy('district_name', 'ASC')->get();
 
         return response()->json([
             'status' => true,
             'message' => 'Districts fetched successfully',
-            'data' => $districts
+            'data' => $districts,
         ], 200);
     }
 }

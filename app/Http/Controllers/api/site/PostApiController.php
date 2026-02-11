@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api\site;
 
 use App\Http\Controllers\Controller;
+use App\Models\MasterIndustry;
 use App\Models\MasterUserDetail;
 use App\Models\Post;
 use App\Models\PostComment;
@@ -13,7 +14,6 @@ use App\Models\PostSave;
 use App\Models\PostShare;
 use App\Models\PostView;
 use App\Models\User;
-use App\Models\MasterIndustry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -457,77 +457,76 @@ class PostApiController extends Controller
     // }
 
     public function addComment(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'post_id' => 'required|integer',
-        'comment' => 'required|string|max:2000',
-        'parent_id' => 'nullable|integer',
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json([
-            'status' => false,
-            'message' => $validator->errors()->first(),
-        ], 422);
-    }
-
-    try {
-        $userId = $request->user()->id;
-
-        $post = Post::where('id', $request->post_id)
-            ->where('status', 'active')
-            ->first();
-
-        if (!$post) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Post not found',
-            ], 404);
-        }
-
-        // Reply validation
-        if ($request->parent_id) {
-            $parent = PostComment::where('id', $request->parent_id)
-                ->where('post_id', $request->post_id)
-                ->first();
-
-            if (!$parent) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Parent comment not found',
-                ], 404);
-            }
-        }
-
-        $newComment = PostComment::create([
-            'post_id' => $request->post_id,
-            'user_id' => $userId,
-            'comment' => $request->comment,
-            'parent_id' => $request->parent_id ?? null,
+    {
+        $validator = Validator::make($request->all(), [
+            'post_id' => 'required|integer',
+            'comment' => 'required|string|max:2000',
+            'parent_id' => 'nullable|integer',
         ]);
 
-        $this->updatePostCounts($request->post_id);
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
 
-        // ✅ load user + fname
-        $newComment = PostComment::with([
-            'user:id,user_name',
-            'user.masterUser:emp_id,user_id,fname',
-        ])->find($newComment->id);
+        try {
+            $userId = $request->user()->id;
 
-        return response()->json([
-            'status' => true,
-            'message' => $request->parent_id ? 'Reply added successfully' : 'Comment added successfully',
-            'data' => $newComment,
-        ], 200);
+            $post = Post::where('id', $request->post_id)
+                ->where('status', 'active')
+                ->first();
 
-    } catch (\Exception $e) {
-        return response()->json([
-            'status' => false,
-            'message' => 'Failed to add comment: ' . $e->getMessage(),
-        ], 500);
+            if (! $post) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Post not found',
+                ], 404);
+            }
+
+            // Reply validation
+            if ($request->parent_id) {
+                $parent = PostComment::where('id', $request->parent_id)
+                    ->where('post_id', $request->post_id)
+                    ->first();
+
+                if (! $parent) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Parent comment not found',
+                    ], 404);
+                }
+            }
+
+            $newComment = PostComment::create([
+                'post_id' => $request->post_id,
+                'user_id' => $userId,
+                'comment' => $request->comment,
+                'parent_id' => $request->parent_id ?? null,
+            ]);
+
+            $this->updatePostCounts($request->post_id);
+
+            // ✅ load user + fname
+            $newComment = PostComment::with([
+                'user:id,user_name',
+                'user.masterUser:emp_id,user_id,fname',
+            ])->find($newComment->id);
+
+            return response()->json([
+                'status' => true,
+                'message' => $request->parent_id ? 'Reply added successfully' : 'Comment added successfully',
+                'data' => $newComment,
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to add comment: '.$e->getMessage(),
+            ], 500);
+        }
     }
-}
-
 
     // =========================
     // 8) DELETE COMMENT
@@ -910,88 +909,87 @@ class PostApiController extends Controller
     // 14)  Post Comment List
     // =========================
 
-     public function getPostComments($postId, Request $request)
-     {
-       try {
+    public function getPostComments($postId, Request $request)
+    {
+        try {
 
-        $post = Post::where('id', $postId)
-            ->where('status', 'active')
-            ->first();
+            $post = Post::where('id', $postId)
+                ->where('status', 'active')
+                ->first();
 
-        if (!$post) {
+            if (! $post) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Post not found',
+                ], 404);
+            }
+
+            $comments = PostComment::with([
+                'user:id,user_name',
+                'user.masterUser:emp_id,user_id,fname',
+            ])
+                ->where('post_id', $postId)
+                ->orderBy('id', 'desc')
+                ->get()
+                ->map(function ($c) {
+
+                    return [
+                        'id' => $c->id,
+                        'post_id' => $c->post_id,
+                        'user_id' => $c->user_id,
+                        'comment' => $c->comment,
+                        'parent_id' => $c->parent_id,
+
+                        'created_at' => $c->created_at,
+                        'created_at_human' => $c->created_at
+                            ? $c->created_at->diffForHumans()
+                            : null,
+
+                        'user' => [
+                            'id' => $c->user?->id,
+                            'user_name' => $c->user?->user_name,
+                            'fname' => $c->user?->masterUser?->fname,
+                        ],
+                    ];
+                });
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Post comments fetched successfully',
+                'data' => $comments,
+            ], 200);
+
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Post not found',
-            ], 404);
+                'message' => 'Failed to fetch comments: '.$e->getMessage(),
+            ], 500);
         }
+    }
 
-        $comments = PostComment::with([
-            'user:id,user_name',
-            'user.masterUser:emp_id,user_id,fname',
-        ])
-            ->where('post_id', $postId)
-            ->orderBy('id', 'desc')
-            ->get()
-            ->map(function ($c) {
+    // =================================
+    // Get industries data
+    // ===============================
 
-                return [
-                    'id' => $c->id,
-                    'post_id' => $c->post_id,
-                    'user_id' => $c->user_id,
-                    'comment' => $c->comment,
-                    'parent_id' => $c->parent_id,
-
-                    'created_at' => $c->created_at,
-                    'created_at_human' => $c->created_at
-                        ? $c->created_at->diffForHumans()
-                        : null,
-
-                    'user' => [
-                        'id' => $c->user?->id,
-                        'user_name' => $c->user?->user_name,
-                        'fname' => $c->user?->masterUser?->fname,
-                    ],
-                ];
-            });
-
-        return response()->json([
-            'status' => true,
-            'message' => 'Post comments fetched successfully',
-            'data' => $comments,
-        ], 200);
-
-       } catch (\Exception $e) {
-           return response()->json([
-               'status' => false,
-               'message' => 'Failed to fetch comments: ' . $e->getMessage(),
-           ], 500);
-       }
-     }
-
-     //=================================
-     // Get industries data
-     //===============================
-
-     public function getIndustriesData()
+    public function getIndustriesData()
     {
         try {
             $industries = MasterIndustry::orderBy('id', 'desc')->get();
 
             return response()->json([
-                "status" => true,
-                "message" => "Industries fetched successfully",
-                "data" => $industries
+                'status' => true,
+                'message' => 'Industries fetched successfully',
+                'data' => $industries,
             ], 200);
 
         } catch (\Exception $e) {
             return response()->json([
-                "status" => false,
-                "message" => "Something went wrong",
-                "error" => $e->getMessage()
+                'status' => false,
+                'message' => 'Something went wrong',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
-
 
     // =========================
     // Helper: Full Post Response
@@ -1075,5 +1073,28 @@ class PostApiController extends Controller
             'share_count' => PostShare::where('post_id', $postId)->count(),
             'view_count' => PostView::where('post_id', $postId)->count(),
         ]);
+    }
+
+    public function getUserDetails($id)
+    {
+        $user = User::with([
+            'masterUser',
+            'masterUser.country',
+            'masterUser.state',
+            'masterUser.district',
+        ])->find($id);
+
+        if (! $user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'User not found',
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'User details fetched successfully',
+            'data' => $user,
+        ], 200);
     }
 }
