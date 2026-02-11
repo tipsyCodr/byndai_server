@@ -902,9 +902,9 @@ class PostApiController extends Controller
         }
     }
 
-    // =================================
+    // ===================================
     // Get industries data
-    // ===============================
+    // ===================================
 
     public function getIndustriesData()
     {
