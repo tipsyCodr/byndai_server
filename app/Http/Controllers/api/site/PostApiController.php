@@ -1041,7 +1041,7 @@ Rules:
             'success' => true,
             'data' => $final,
             'raw' => $result, // optional debug (remove in production)
-            'secrect-key' => $apiKey,
+            
         ]);
     }
 
