@@ -1002,8 +1002,7 @@ Rules:
         if ($response->failed()) {
             return response()->json([
                 'success' => false,
-                'message' => 'OpenAI API Error',
-                'secrect-key' => $apiKey,
+                'message' => 'OpenAI API Error',                
                 'error' => $response->json(),
             ], 500);
         }
@@ -1042,6 +1041,7 @@ Rules:
             'success' => true,
             'data' => $final,
             'raw' => $result, // optional debug (remove in production)
+            'secrect-key' => $apiKey,
         ]);
     }
 
