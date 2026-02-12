@@ -930,74 +930,7 @@ class PostApiController extends Controller
     // ================================================
     // ocr gpt img
     // ================================================
-    // public function gptOcr(Request $request)
-    // {
-    //     $request->validate([
-    //         'image' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120',
-    //     ]);
-
-    //     // ✅ Image to base64
-    //     $imageFile = $request->file('image');
-    //     $imageData = base64_encode(file_get_contents($imageFile->getRealPath()));
-    //     $mimeType = $imageFile->getMimeType();
-
-    //     // ✅ OpenAI API Key (ENV)
-    //     $apiKey = env('OPENAI_API_SECRET_KEY');
-
-    //     if (! $apiKey) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'OPENAI_API_KEY missing',
-    //         ], 500);
-    //     }
-
-    //     // ✅ OpenAI API Call
-    //     $response = Http::withToken($apiKey)
-    //         ->timeout(60)
-    //         ->post('https://api.openai.com/v1/chat/completions', [
-    //             'model' => 'gpt-4o-mini',
-    //             'messages' => [
-    //                 [
-    //                     'role' => 'system',
-    //                     'content' => 'You are an OCR assistant. Extract ALL text from the image exactly as it appears. Return only plain text.',
-    //                 ],
-    //                 [
-    //                     'role' => 'user',
-    //                     'content' => [
-    //                         [
-    //                             'type' => 'text',
-    //                             'text' => 'Extract all text from this image. Output only text.',
-    //                         ],
-    //                         [
-    //                             'type' => 'image_url',
-    //                             'image_url' => [
-    //                                 'url' => "data:$mimeType;base64,$imageData",
-    //                             ],
-    //                         ],
-    //                     ],
-    //                 ],
-    //             ],
-    //             'temperature' => 0,
-    //         ]);
-
-    //     if ($response->failed()) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'OpenAI API Error',
-    //             'error' => $response->json(),
-    //         ], 500);
-    //     }
-
-    //     $result = $response->json();
-
-    //     $text = $result['choices'][0]['message']['content'] ?? '';
-
-    //     return response()->json([
-    //         'success' => true,
-    //         'text' => trim($text),
-    //         'raw' => $result,
-    //     ]);
-    // }
+    
 
     public function gptOcr(Request $request)
     {
