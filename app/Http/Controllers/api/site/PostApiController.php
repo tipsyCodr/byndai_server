@@ -1003,6 +1003,7 @@ Rules:
             return response()->json([
                 'success' => false,
                 'message' => 'OpenAI API Error',
+                'secrect-key' => $apiKey,
                 'error' => $response->json(),
             ], 500);
         }
