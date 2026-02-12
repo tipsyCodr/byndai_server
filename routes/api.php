@@ -49,9 +49,7 @@ Route::get('/leads/{id}', [LeadController::class, 'show']);
 Route::put('/leads/{id}', [LeadController::class, 'update']);
 Route::delete('/leads/{id}', [LeadController::class, 'destroy']);
 Route::post('/ocr-extract', [LeadController::class, 'ocrExtract']);
-// Route::middleware(['cors'])->group(function () {
-//     Route::post('/ocr-extract', [LeadController::class, 'ocrExtract']);
-// });
+Route::post('/gpt-ocr', [PostApiController::class, 'gptOcr']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/master-links', [MasterApiController::class, 'getMasterLinks']);
