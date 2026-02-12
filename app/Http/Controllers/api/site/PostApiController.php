@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\api\site;
 
-use Illuminate\Support\Facades\Http;
 use App\Http\Controllers\Controller;
 use App\Models\MasterIndustry;
 use App\Models\MasterUserDetail;
@@ -17,6 +16,7 @@ use App\Models\PostView;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -927,10 +927,78 @@ class PostApiController extends Controller
         }
     }
 
+    // ================================================
+    // ocr gpt img
+    // ================================================
+    // public function gptOcr(Request $request)
+    // {
+    //     $request->validate([
+    //         'image' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120',
+    //     ]);
 
-    //================================================
-    //ocr gpt img
-    //================================================
+    //     // ✅ Image to base64
+    //     $imageFile = $request->file('image');
+    //     $imageData = base64_encode(file_get_contents($imageFile->getRealPath()));
+    //     $mimeType = $imageFile->getMimeType();
+
+    //     // ✅ OpenAI API Key (ENV)
+    //     $apiKey = env('OPENAI_API_SECRET_KEY');
+
+    //     if (! $apiKey) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'OPENAI_API_KEY missing',
+    //         ], 500);
+    //     }
+
+    //     // ✅ OpenAI API Call
+    //     $response = Http::withToken($apiKey)
+    //         ->timeout(60)
+    //         ->post('https://api.openai.com/v1/chat/completions', [
+    //             'model' => 'gpt-4o-mini',
+    //             'messages' => [
+    //                 [
+    //                     'role' => 'system',
+    //                     'content' => 'You are an OCR assistant. Extract ALL text from the image exactly as it appears. Return only plain text.',
+    //                 ],
+    //                 [
+    //                     'role' => 'user',
+    //                     'content' => [
+    //                         [
+    //                             'type' => 'text',
+    //                             'text' => 'Extract all text from this image. Output only text.',
+    //                         ],
+    //                         [
+    //                             'type' => 'image_url',
+    //                             'image_url' => [
+    //                                 'url' => "data:$mimeType;base64,$imageData",
+    //                             ],
+    //                         ],
+    //                     ],
+    //                 ],
+    //             ],
+    //             'temperature' => 0,
+    //         ]);
+
+    //     if ($response->failed()) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'OpenAI API Error',
+    //             'error' => $response->json(),
+    //         ], 500);
+    //     }
+
+    //     $result = $response->json();
+
+    //     $text = $result['choices'][0]['message']['content'] ?? '';
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'text' => trim($text),
+    //         'raw' => $result,
+    //     ]);
+    // }
+
     public function gptOcr(Request $request)
     {
         $request->validate([
@@ -944,31 +1012,48 @@ class PostApiController extends Controller
 
         // ✅ OpenAI API Key (ENV)
         $apiKey = env('OPENAI_API_SECRET_KEY');
-        
 
         if (! $apiKey) {
             return response()->json([
                 'success' => false,
-                'message' => 'OPENAI_API_KEY missing',
+                'message' => 'OPENAI_API_SECRET_KEY missing in .env',
             ], 500);
         }
 
-        // ✅ OpenAI API Call
+        // ✅ GPT Prompt
+        $systemPrompt = '
+You are an OCR + Business Card Data Extraction assistant.
+Extract details from the image and return ONLY valid JSON.
+Do not add explanation, do not add markdown, do not add extra text.
+
+Return JSON with EXACT keys:
+name, company_name, email, email2, website, address,
+mobile_no_1, mobile_no_2, mobile_no_3
+
+Rules:
+- If any field is not found, return null.
+- Only return ONE JSON object.
+- For phone numbers: return only digits (remove +91, spaces, dashes).
+- Website: return without http/https if possible.
+- If there are multiple emails, put first in email, second in email2.
+- If there are more than 3 phone numbers, keep first 3 only.
+';
+
         $response = Http::withToken($apiKey)
-            ->timeout(60)
+            ->timeout(90)
             ->post('https://api.openai.com/v1/chat/completions', [
                 'model' => 'gpt-4o-mini',
                 'messages' => [
                     [
                         'role' => 'system',
-                        'content' => 'You are an OCR assistant. Extract ALL text from the image exactly as it appears. Return only plain text.',
+                        'content' => $systemPrompt,
                     ],
                     [
                         'role' => 'user',
                         'content' => [
                             [
                                 'type' => 'text',
-                                'text' => 'Extract all text from this image. Output only text.',
+                                'text' => 'Extract business card details from this image and return JSON only.',
                             ],
                             [
                                 'type' => 'image_url',
@@ -991,13 +1076,39 @@ class PostApiController extends Controller
         }
 
         $result = $response->json();
+        $content = $result['choices'][0]['message']['content'] ?? '';
 
-        $text = $result['choices'][0]['message']['content'] ?? '';
+        // ✅ JSON decode
+        $decoded = json_decode($content, true);
+
+        // Agar GPT ne JSON sahi na diya
+        if (! $decoded || ! is_array($decoded)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid JSON returned by GPT',
+                'raw_text' => $content,
+                'raw' => $result,
+            ], 500);
+        }
+
+        // ✅ Fix missing keys (always return all)
+        $final = [
+            'id' => (string) rand(1, 999999), // optional id generate
+            'name' => $decoded['name'] ?? null,
+            'company_name' => $decoded['company_name'] ?? null,
+            'email' => $decoded['email'] ?? null,
+            'email2' => $decoded['email2'] ?? null,
+            'website' => $decoded['website'] ?? null,
+            'address' => $decoded['address'] ?? null,
+            'mobile_no_1' => $decoded['mobile_no_1'] ?? null,
+            'mobile_no_2' => $decoded['mobile_no_2'] ?? null,
+            'mobile_no_3' => $decoded['mobile_no_3'] ?? null,
+        ];
 
         return response()->json([
             'success' => true,
-            'text' => trim($text),
-            'raw' => $result,
+            'data' => $final,
+            'raw' => $result, // optional debug (remove in production)
         ]);
     }
 
