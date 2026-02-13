@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\api\site;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Models\MasterUserDetail;
 use App\Models\MasterLink;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -20,7 +19,7 @@ class MasterLinkController extends Controller
 
         return response()->json([
             'status' => true,
-            'data' => $links
+            'data' => $links,
         ]);
     }
 
@@ -28,29 +27,29 @@ class MasterLinkController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name'   => 'required|string|max:150',
-            'link'   => 'required|string|max:250',
+            'name' => 'required|string|max:150',
+            'link' => 'required|string|max:250',
             'status' => 'nullable|in:0,1',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'status' => false,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         $link = MasterLink::create([
             'user_id' => $request->user()->id, // ✅ important
-            'name'    => $request->name,
-            'link'    => $request->link,
-            'status'  => $request->status ?? 1,
+            'name' => $request->name,
+            'link' => $request->link,
+            'status' => $request->status ?? 1,
         ]);
 
         return response()->json([
             'status' => true,
             'message' => 'Master Link created successfully',
-            'data' => $link
+            'data' => $link,
         ]);
     }
 
@@ -61,16 +60,16 @@ class MasterLinkController extends Controller
             ->where('user_id', $request->user()->id)
             ->first();
 
-        if (!$link) {
+        if (! $link) {
             return response()->json([
                 'status' => false,
-                'message' => 'Master Link not found'
+                'message' => 'Master Link not found',
             ], 404);
         }
 
         return response()->json([
             'status' => true,
-            'data' => $link
+            'data' => $link,
         ]);
     }
 
@@ -81,36 +80,36 @@ class MasterLinkController extends Controller
             ->where('user_id', $request->user()->id)
             ->first();
 
-        if (!$link) {
+        if (! $link) {
             return response()->json([
                 'status' => false,
-                'message' => 'Master Link not found'
+                'message' => 'Master Link not found',
             ], 404);
         }
 
         $validator = Validator::make($request->all(), [
-            'name'   => 'required|string|max:150',
-            'link'   => 'required|string|max:250',
+            'name' => 'required|string|max:150',
+            'link' => 'required|string|max:250',
             'status' => 'nullable|in:0,1',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'status' => false,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         $link->update([
-            'name'   => $request->name,
-            'link'   => $request->link,
+            'name' => $request->name,
+            'link' => $request->link,
             'status' => $request->status ?? $link->status,
         ]);
 
         return response()->json([
             'status' => true,
             'message' => 'Master Link updated successfully',
-            'data' => $link
+            'data' => $link,
         ]);
     }
 
@@ -121,10 +120,10 @@ class MasterLinkController extends Controller
             ->where('user_id', $request->user()->id)
             ->first();
 
-        if (!$link) {
+        if (! $link) {
             return response()->json([
                 'status' => false,
-                'message' => 'Master Link not found'
+                'message' => 'Master Link not found',
             ], 404);
         }
 
@@ -132,7 +131,7 @@ class MasterLinkController extends Controller
 
         return response()->json([
             'status' => true,
-            'message' => 'Master Link deleted successfully'
+            'message' => 'Master Link deleted successfully',
         ]);
     }
 }
