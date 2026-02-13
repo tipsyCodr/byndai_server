@@ -9,6 +9,7 @@ use App\Http\Controllers\api\site\MasterApiController;
 use App\Http\Controllers\api\site\MasterCommentApiController;
 use App\Http\Controllers\api\site\MasterEventApiController;
 use App\Http\Controllers\api\site\MasterKeywordApiController;
+use App\Http\Controllers\api\site\MasterLinkController;
 use App\Http\Controllers\api\site\MasterPostApiController;
 use App\Http\Controllers\api\site\PostApiController;
 use App\Http\Controllers\api\site\ProductApiController;
@@ -428,13 +429,31 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'getUserDetails',
     ]);
 
-    
-
     Route::post('/update_profile', [
         AuthApiController::class,
         'profileUpdate',
     ]);
-
+    // api for links
+    Route::get('/master-links', [
+        MasterLinkController::class,
+        'index',
+    ]);
+    Route::post('/master-links', [
+        MasterLinkController::class,
+        'store',
+    ]);
+    Route::get('/master-links/{id}', [
+        MasterLinkController::class,
+        'show',
+    ]);
+    Route::post('/master-links/{id}', [
+        MasterLinkController::class,
+        'update',
+    ]);
+    Route::delete('/master-links/{id}', [
+        MasterLinkController::class,
+        'destroy',
+    ]);
 
     // api for post end..
 
