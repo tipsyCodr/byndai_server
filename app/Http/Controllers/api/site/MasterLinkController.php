@@ -1,7 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\api\site;
 
+use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Models\MasterUserDetail;
 use App\Models\MasterLink;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;

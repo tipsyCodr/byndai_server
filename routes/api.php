@@ -53,7 +53,7 @@ Route::post('/ocr-extract', [LeadController::class, 'ocrExtract']);
 Route::post('/gpt-ocr', [PostApiController::class, 'gptOcr']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
-    Route::get('/master-links', [MasterApiController::class, 'getMasterLinks']);
+    
     Route::get('/master-country', [MasterApiController::class, 'getCountry']);
     Route::get('/master-indus-type', [
         MasterApiController::class,
