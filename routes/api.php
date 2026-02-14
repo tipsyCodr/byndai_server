@@ -12,8 +12,7 @@ use App\Http\Controllers\api\site\MasterEventApiController;
 use App\Http\Controllers\api\site\MasterKeywordController;
 use App\Http\Controllers\api\site\MasterLinkController;
 use App\Http\Controllers\api\site\MasterPostApiController;
-// use App\Http\Controllers\api\site\PostApiController;
-use App\Http\Controllers\api\site\ProductApiController;
+use App\Http\Controllers\api\site\PostApiController;
 use App\Http\Controllers\api\site\ProductApiController;
 use App\Http\Controllers\api\site\ProfileApiController;
 use App\Http\Controllers\api\site\RestrictionApiController;
@@ -95,27 +94,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'BusinessInfo',
     ]);
 
-    Route::get('/product', [ProductApiController::class, 'product']);
-    Route::get('/product/update/{prod_id}', [
-        ProductApiController::class,
-        'getProductforUpdate',
-    ]);
-    Route::post('/product/create', [
-        ProductApiController::class,
-        'createProduct',
-    ]);
-    Route::post('/product/update/{prod_id}', [
-        ProductApiController::class,
-        'updateProduct',
-    ]);
-    Route::delete('/product/image/{img_id}', [
-        ProductApiController::class,
-        'deleteProductImage',
-    ]);
-    Route::delete('/product/link/{link_id}', [
-        ProductApiController::class,
-        'deleteProductLinks',
-    ]);
+   
 
     Route::post('/customer-master/index', [
         CustomerMasterApiController::class,
