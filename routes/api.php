@@ -477,32 +477,32 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'updateKeyword',
     ]);
 
-   
+    // GET all + POST create
     Route::match(['get', 'post'], '/business-info', [
         BusinessInfoApiController::class,
         'index',
     ]);
 
-   
+    // GET particular business info by id
     Route::get('/business-info/{id}', [
         BusinessInfoApiController::class,
         'show',
     ]);
 
-   
-    Route::post('/business-info/update/{id}', [
+    // UPDATE
+    Route::post('/business-info-update/{id}', [
         BusinessInfoApiController::class,
         'update',
     ]);
 
-   
-    Route::delete('/business-info/delete/{id}', [
+    // DELETE
+    Route::delete('/business-info-delete/{id}', [
         BusinessInfoApiController::class,
         'delete',
     ]);
 
-    // GET by user_id (optional)
-    Route::get('/business-info/user/{user_id}', [
+    // GET by user id (admin type)
+    Route::get('/business-info-by-user/{user_id}', [
         BusinessInfoApiController::class,
         'getByUserId',
     ]);
