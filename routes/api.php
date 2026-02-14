@@ -472,7 +472,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     ]);
 
     Route::put('/updated-user-keywords/{id}', [
-        MasterKeywordApiController::class,
+        MasterKeywordController::class,
         'updateKeyword',
     ]);
     // api for post end..
