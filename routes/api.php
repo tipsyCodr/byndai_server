@@ -8,7 +8,7 @@ use App\Http\Controllers\api\site\LeadController;
 use App\Http\Controllers\api\site\MasterApiController;
 use App\Http\Controllers\api\site\MasterCommentApiController;
 use App\Http\Controllers\api\site\MasterEventApiController;
-use App\Http\Controllers\api\site\MasterKeywordApiController;
+use App\Http\Controllers\api\site\MasterKeywordController;
 use App\Http\Controllers\api\site\MasterLinkController;
 use App\Http\Controllers\api\site\MasterPostApiController;
 use App\Http\Controllers\api\site\PostApiController;
@@ -53,7 +53,7 @@ Route::post('/ocr-extract', [LeadController::class, 'ocrExtract']);
 Route::post('/gpt-ocr', [PostApiController::class, 'gptOcr']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
-    
+
     Route::get('/master-country', [MasterApiController::class, 'getCountry']);
     Route::get('/master-indus-type', [
         MasterApiController::class,
@@ -453,6 +453,22 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::delete('/master-links/{id}', [
         MasterLinkController::class,
         'destroy',
+    ]);
+
+    Route::match(['get', 'post'], '/master-user-keywords', [
+        MasterKeywordController::class,
+        'index',
+    ]);
+
+    // Delete keyword
+    Route::delete('/master-user-keywords/{id}', [
+        MasterKeywordController::class,
+        'deleteKeyword',
+    ]);
+
+    Route::get('/user-keywords/{user_id}', [
+        MasterKeywordController::class,
+        'getKeywordsByUserId',
     ]);
 
     // api for post end..
