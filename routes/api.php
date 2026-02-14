@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\api\auth\AuthApiController;
+use App\Http\Controllers\api\site\BusinessInfoApiController;
 use App\Http\Controllers\api\site\ChatApiController;
 use App\Http\Controllers\api\site\ConnectionApiController;
 use App\Http\Controllers\api\site\CustomerMasterApiController;
@@ -475,6 +476,37 @@ Route::middleware(['auth:sanctum'])->group(function () {
         MasterKeywordController::class,
         'updateKeyword',
     ]);
+
+   
+    Route::match(['get', 'post'], '/business-info', [
+        BusinessInfoApiController::class,
+        'index',
+    ]);
+
+   
+    Route::get('/business-info/{id}', [
+        BusinessInfoApiController::class,
+        'show',
+    ]);
+
+   
+    Route::post('/business-info/update/{id}', [
+        BusinessInfoApiController::class,
+        'update',
+    ]);
+
+   
+    Route::delete('/business-info/delete/{id}', [
+        BusinessInfoApiController::class,
+        'delete',
+    ]);
+
+    // GET by user_id (optional)
+    Route::get('/business-info/user/{user_id}', [
+        BusinessInfoApiController::class,
+        'getByUserId',
+    ]);
+
     // api for post end..
 
     Route::post('/logout', [AuthApiController::class, 'logout']);
