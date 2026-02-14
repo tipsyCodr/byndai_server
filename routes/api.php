@@ -12,7 +12,8 @@ use App\Http\Controllers\api\site\MasterEventApiController;
 use App\Http\Controllers\api\site\MasterKeywordController;
 use App\Http\Controllers\api\site\MasterLinkController;
 use App\Http\Controllers\api\site\MasterPostApiController;
-use App\Http\Controllers\api\site\PostApiController;
+// use App\Http\Controllers\api\site\PostApiController;
+use App\Http\Controllers\api\site\ProductApiController;
 use App\Http\Controllers\api\site\ProductApiController;
 use App\Http\Controllers\api\site\ProfileApiController;
 use App\Http\Controllers\api\site\RestrictionApiController;
@@ -505,6 +506,42 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/business-info-by-user/{user_id}', [
         BusinessInfoApiController::class,
         'getByUserId',
+    ]);
+
+    // ✅ 1) GET all products (search + sort + pagination)
+    Route::get('/products', [
+        ProductApiController::class,
+        'index',
+    ]);
+
+    // ✅ 2) GET products by user_id (search + sort + pagination)
+    Route::get('/products-by-user/{user_id}', [
+        ProductApiController::class,
+        'productsByUser',
+    ]);
+
+    // ✅ 3) GET product by id (optional but useful)
+    Route::get('/products/{id}', [
+        ProductApiController::class,
+        'show',
+    ]);
+
+    // ✅ 4) ADD product
+    Route::post('/products', [
+        ProductApiController::class,
+        'store',
+    ]);
+
+    // ✅ 5) UPDATE product
+    Route::post('/products-update/{id}', [
+        ProductApiController::class,
+        'update',
+    ]);
+
+    // ✅ 6) DELETE product
+    Route::delete('/products-delete/{id}', [
+        ProductApiController::class,
+        'delete',
     ]);
 
     // api for post end..
