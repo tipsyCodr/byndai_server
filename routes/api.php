@@ -471,6 +471,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'getKeywordsByUserId',
     ]);
 
+    Route::put('/updated-user-keywords/{id}', [
+        MasterKeywordApiController::class,
+        'updateKeyword',
+    ]);
     // api for post end..
 
     Route::post('/logout', [AuthApiController::class, 'logout']);

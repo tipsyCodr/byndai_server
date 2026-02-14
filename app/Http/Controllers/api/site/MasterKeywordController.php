@@ -112,4 +112,49 @@ class MasterKeywordController extends Controller
             'data' => $keywords,
         ], 200);
     }
+
+    public function updateKeyword(Request $r, $id)
+    {
+        $user = Auth::user();
+
+        $data = $r->validate([
+            'title' => 'required|string|max:100',
+        ]);
+
+        // ✅ keyword find (only logged-in user)
+        $keyword = MasterKeyword::where('id', $id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (! $keyword) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Keyword not found',
+            ], 404);
+        }
+
+        // ✅ duplicate check (same user)
+        $alreadyExists = MasterKeyword::where('user_id', $user->id)
+            ->whereRaw('LOWER(keywords) = ?', [strtolower($data['title'])])
+            ->where('id', '!=', $id)
+            ->exists();
+
+        if ($alreadyExists) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Keyword already exists',
+            ], 409);
+        }
+
+        // ✅ update
+        $keyword->update([
+            'keywords' => $data['title'],
+        ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Keyword updated successfully',
+            'data' => $keyword,
+        ], 200);
+    }
 }
