@@ -12,6 +12,7 @@ use App\Http\Controllers\api\site\MasterEventApiController;
 use App\Http\Controllers\api\site\MasterKeywordController;
 use App\Http\Controllers\api\site\MasterLinkController;
 use App\Http\Controllers\api\site\MasterPostApiController;
+use App\Http\Controllers\api\site\UserReviewApiController;
 use App\Http\Controllers\api\site\PostApiController;
 use App\Http\Controllers\api\site\ProductApiController;
 use App\Http\Controllers\api\site\ProfileApiController;
@@ -93,8 +94,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
         ProfileApiController::class,
         'BusinessInfo',
     ]);
-
-   
 
     Route::post('/customer-master/index', [
         CustomerMasterApiController::class,
@@ -520,6 +519,36 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // ✅ 6) DELETE product
     Route::delete('/products-delete/{id}', [
         ProductApiController::class,
+        'delete',
+    ]);
+
+    // ✅ Add Review
+    Route::post('/user-reviews', [
+        UserReviewApiController::class,
+        'store',
+    ]);
+
+    // ✅ Get Reviews of a User (to_user_id)
+    Route::get('/user-reviews/{userId}', [
+        UserReviewApiController::class,
+        'getUserReviews',
+    ]);
+
+    // ✅ Get Average Rating of a User
+    Route::get('/user-reviews/{userId}/average', [
+        UserReviewApiController::class,
+        'getUserAverageRating',
+    ]);
+
+    // ✅ Get My Given Reviews
+    Route::get('/my-reviews', [
+        UserReviewApiController::class,
+        'myGivenReviews',
+    ]);
+
+    // ✅ Delete Review (optional)
+    Route::delete('/user-reviews/{id}', [
+        UserReviewApiController::class,
         'delete',
     ]);
 
