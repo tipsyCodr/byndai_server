@@ -50,7 +50,7 @@ class AuthApiController extends Controller
 
         // Send OTP via SMS
         $smsService = app(\App\Services\SmsService::class);
-        $message = "Your OTP is {$otp}. Please do not share it with anyone.";
+        $message = "Your OTP for ByndAI is {$otp}. Please do not share it with anyone.";
         $smsService->sendOtp($p->user_mobile, $message);
 
         return $p;
@@ -593,8 +593,8 @@ class AuthApiController extends Controller
 
         // ---------- Validation ----------
         $validator = Validator::make($request->all(), [
-            'user_name' => 'nullable|string|max:100',
-            'email' => 'nullable|email|max:150',
+            'user_name' => 'nullable|string|max:100|unique:users,user_name,' . $user->id,
+            'email' => 'nullable|email|max:150|unique:users,email,' . $user->id,
             'dob' => 'nullable|date',
             'gender' => 'nullable|string|max:20',
 

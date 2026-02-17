@@ -9,11 +9,25 @@ use Illuminate\Http\Request;
 
 class IndexController extends Controller
 {
-    public function index($user_id = 1)
+    public function index($username = null)
     {
-        $products = Product::where('user_id', $user_id)->get();
+        if ($username) {
+            $user = \App\Models\User::with(['masterUser', 'businessInfo'])->where('user_name', $username)->first();
+            if (!$user && is_numeric($username)) {
+                $user = \App\Models\User::with(['masterUser', 'businessInfo'])->find($username);
+            }
+        } else {
+            // Default fallback if needed, or 404
+            $user = \App\Models\User::with(['masterUser', 'businessInfo'])->find(1);
+        }
+
+        if (!$user) {
+            abort(404, 'User not found');
+        }
+
+        $products = Product::where('user_id', $user->id)->get();
         $productImages = ProductImage::whereIn('prod_id', $products->pluck('id'))->get();
-        return view('components.site.index', compact('products', 'productImages'));
+        return view('components.site.index', compact('user', 'products', 'productImages'));
     }
     public function product($id)
     {

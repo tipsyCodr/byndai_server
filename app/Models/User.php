@@ -53,4 +53,9 @@ class User extends Authenticatable
     {
         return $this->hasOne(MasterUserDetail::class, "user_id", "id");
     }
+
+    public function businessInfo()
+    {
+        return $this->hasOne(BusinessInfo::class, 'user_id', 'id');
+    }
 }
