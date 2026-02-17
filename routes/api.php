@@ -12,12 +12,12 @@ use App\Http\Controllers\api\site\MasterEventApiController;
 use App\Http\Controllers\api\site\MasterKeywordController;
 use App\Http\Controllers\api\site\MasterLinkController;
 use App\Http\Controllers\api\site\MasterPostApiController;
-use App\Http\Controllers\api\site\UserReviewApiController;
 use App\Http\Controllers\api\site\PostApiController;
 use App\Http\Controllers\api\site\ProductApiController;
 use App\Http\Controllers\api\site\ProfileApiController;
 use App\Http\Controllers\api\site\RestrictionApiController;
 use App\Http\Controllers\api\site\SubscriptionApiController;
+use App\Http\Controllers\api\site\UserReviewApiController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/check-mobile', [AuthApiController::class, 'checkMobile']);
@@ -534,7 +534,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'getUserReviews',
     ]);
 
-    // ✅ Get Average Rating of a User
+    // ✅ Get Average Rating of a User...
     Route::get('/user-reviews/{userId}/average', [
         UserReviewApiController::class,
         'getUserAverageRating',
@@ -550,6 +550,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::delete('/user-reviews/{id}', [
         UserReviewApiController::class,
         'delete',
+    ]);
+
+    Route::post('/profile-view/start', [
+        ProfileViewController::class,
+        'startView',
+    ]);
+    Route::post('/profile-view/end', [
+        ProfileViewController::class,
+        'endView',
     ]);
 
     // api for post end..
