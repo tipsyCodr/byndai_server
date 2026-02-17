@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'saakshisms' => [
+        'user' => env('SAAKSHI_USER'),
+        'password' => env('SAAKSHI_PASSWORD'),
+        'sender_id' => env('SAAKSHI_SENDER_ID'),
+        'channel' => env('SAAKSHI_CHANNEL', 'Promo'),
+        'route' => env('SAAKSHI_ROUTE', '##'),
+    ],
+
 ];
