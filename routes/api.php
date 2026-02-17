@@ -534,7 +534,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'getUserReviews',
     ]);
 
-    // ✅ Get Average Rating of a User
+    // ✅ Get Average Rating of a User...
     Route::get('/user-reviews/{userId}/average', [
         UserReviewApiController::class,
         'getUserAverageRating',
