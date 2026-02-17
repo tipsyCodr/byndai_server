@@ -562,7 +562,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'endView',
     ]);
 
-    // api for post end..
+    // api for post end....
 
     Route::post('/logout', [AuthApiController::class, 'logout']);
 
