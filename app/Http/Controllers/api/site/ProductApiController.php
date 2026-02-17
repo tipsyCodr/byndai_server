@@ -8,118 +8,368 @@ use App\Models\ProductImage;
 use App\Models\ProductLink;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Validator;
 
 class ProductApiController extends Controller
 {
-    public function product()
+    // ==========================================================
+    // 1) GET ALL PRODUCTS (search + sort + pagination)
+    // ==========================================================
+    public function index(Request $request)
     {
-        $users = Auth::user();
-        $product = Product::with(['productImage', 'productLink'])->where('user_id', $users->id)->orderBy('id', 'DESC')->get();
-        if (!$product) {
-            return response()->json(['status' => false, 'message' => 'No product found for this users!'], 404);
+        try {
+            $perPage = 10;
+
+            $search = $request->query('search');
+            $sortBy = $request->query('sort_by', 'id');
+            $sortOrder = $request->query('sort_order', 'desc');
+
+            $allowedSort = ['id', 'product_name', 'product_price', 'created_at', 'updated_at'];
+            if (! in_array($sortBy, $allowedSort)) {
+                $sortBy = 'id';
+            }
+            if (! in_array(strtolower($sortOrder), ['asc', 'desc'])) {
+                $sortOrder = 'desc';
+            }
+
+            $query = Product::with(['productImage', 'productLink']);
+
+            if (! empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('product_name', 'like', "%$search%")
+                        ->orWhere('category_name', 'like', "%$search%")
+                        ->orWhere('sku', 'like', "%$search%")
+                        ->orWhere('tags', 'like', "%$search%");
+                });
+            }
+
+            $products = $query->orderBy($sortBy, $sortOrder)->paginate($perPage);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Products fetched successfully',
+                'data' => $products,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage(),
+            ], 500);
         }
-        return response()->json(['status' => true, 'data' => $product]);
     }
-    public function productLinks($titles, $links, $p_id)
+
+    // ==========================================================
+    // 2) GET PRODUCTS BY USER ID
+    // ==========================================================
+    public function productsByUser(Request $request, $user_id)
     {
-        $createdLinks = [];
-        $titles_val = is_array($titles) ? $titles : [$titles];
-        $links_val = is_array($links) ? $links : [$links];
-        foreach ($titles_val as $key => $title) {
-            $linkValue = $links_val[$key] ?? null;
-            $createdLinks[] = ProductLink::create(['prod_id' => $p_id, 'title' => $title, 'links' => $linkValue]);
+        try {
+            $perPage = 10;
+
+            $search = $request->query('search');
+            $sortBy = $request->query('sort_by', 'id');
+            $sortOrder = $request->query('sort_order', 'desc');
+
+            $allowedSort = ['id', 'product_name', 'product_price', 'created_at', 'updated_at'];
+            if (! in_array($sortBy, $allowedSort)) {
+                $sortBy = 'id';
+            }
+            if (! in_array(strtolower($sortOrder), ['asc', 'desc'])) {
+                $sortOrder = 'desc';
+            }
+
+            $query = Product::with(['productImage', 'productLink'])
+                ->where('user_id', $user_id);
+
+            if (! empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('product_name', 'like', "%$search%")
+                        ->orWhere('category_name', 'like', "%$search%")
+                        ->orWhere('sku', 'like', "%$search%")
+                        ->orWhere('tags', 'like', "%$search%");
+                });
+            }
+
+            $products = $query->orderBy($sortBy, $sortOrder)->paginate($perPage);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'User products fetched successfully',
+                'data' => $products,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage(),
+            ], 500);
         }
-        return $createdLinks;
     }
-    public function productImage(Request $r, $title, $files, $p_id)
+
+    // ==========================================================
+    // 3) GET PRODUCT BY ID
+    // ==========================================================
+    public function show($id)
     {
-        foreach ($files as $fileInputName) {
-            if ($r->hasFile($fileInputName)) {
-                $fileArray = $r->file($fileInputName);
-                foreach ($fileArray as $f) {
-                    $fileName = time() . '_' . $f->getClientOriginalName();
-                    $f->move(public_path('assets/uploads/product/' . $title . '/'), $fileName);
-                    ProductImage::create(['prod_id' => $p_id, 'file_name' => $fileName]);
+        try {
+            $product = Product::with(['productImage', 'productLink'])->find($id);
+
+            if (! $product) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Product not found',
+                ], 404);
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Product fetched successfully',
+                'data' => $product,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    // ==========================================================
+    // 4) ADD PRODUCT
+    // ==========================================================
+    public function store(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            $validator = Validator::make($request->all(), [
+                'category_name' => 'nullable|string|max:255',
+                'product_name' => 'required|string|max:255',
+                'product_price' => 'required|numeric',
+                'description' => 'nullable|string',
+                'sku' => 'nullable|string|max:255',
+                'tags' => 'nullable|string|max:255',
+                'stock' => 'nullable|numeric',
+                'status' => 'nullable|in:0,1',
+                'product_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
+                'links' => 'nullable',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => $validator->errors()->first(),
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            $product = Product::create([
+                'user_id' => $user->id,
+                'category_name' => $request->category_name,
+                'product_name' => $request->product_name,
+                'product_price' => $request->product_price,
+                'description' => $request->description,
+                'sku' => $request->sku,
+                'tags' => $request->tags,
+                'stock' => $request->stock,
+                'status' => $request->status ?? 1,
+            ]);
+
+            // ✅ IMAGE SAVE (DB column = product_images)
+            if ($request->hasFile('product_image')) {
+
+                $file = $request->file('product_image');
+
+                $folder = public_path('uploads/products');
+                if (! File::exists($folder)) {
+                    File::makeDirectory($folder, 0777, true);
+                }
+
+                $fileName = time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
+                $file->move($folder, $fileName);
+
+                ProductImage::create([
+                    'prod_id' => $product->id,
+                    'product_images' => 'uploads/products/'.$fileName,
+                    'status' => 1,
+                ]);
+            }
+
+            // ✅ LINKS SAVE (no status column)
+            if ($request->links) {
+                $links = $request->links;
+
+                if (is_string($links)) {
+                    $links = json_decode($links, true);
+                }
+
+                if (is_array($links)) {
+                    foreach ($links as $l) {
+                        if (! empty($l['links'])) {
+                            ProductLink::create([
+                                'prod_id' => $product->id,
+                                'title' => $l['title'] ?? 'Link',
+                                'links' => $l['links'],
+                            ]);
+                        }
+                    }
                 }
             }
-        }
-    }
-    public function createProduct(Request $r)
-    {
-        $user = Auth::user();
-        $validate = $r->validate([
-            'product_name' => 'required|string|max:255',
-            'product_price' => 'required|numeric',
-            'description' => 'required|string',
-            'title_links' => 'nullable|array',
-            'links' => 'nullable|array',
-            'file_name' => 'nullable|array'
-        ]);
-        $validate['user_id'] = $user->id;
-        $product = Product::create($validate);
-        $p_id = $product->id;
-        if (!empty($r->title_links) && !empty($r->links)) {
-            $this->productLinks($r->title_links, $r->links, $p_id);
-        }
-        if (!empty($r->file_name)) {
-            $this->productImage($r, $r->product_name, $r->file_name, $p_id);
-        }
-        return response()->json(['status' => true, 'message' => 'Product created successfully', 'product' => $product], 201);
-    }
-    public function getProductforUpdate($prod_id)
-    {
-        $user = Auth::id();
-        $product = Product::with(['productImage', 'productLink'])->where('user_id', $user)->find($prod_id);
-        if (!$product) {
-            return response()->json(['status' => false, 'message' => 'Product not found!'], 404);
-        }
-        return response()->json(['status' => true, 'product' => $product], 200);
-    }
-    public function updateProduct(Request $r, $prod_id)
-    {
-        $user = Auth::id();
-        $product = Product::where('user_id', $user)->find($prod_id);
-        if (!$product) {
-            return response()->json(['status' => false, 'message' => 'Product not found!'], 404);
-        }
-        $validate = $r->validate([
-            'product_name' => 'required|string|max:255',
-            'product_price' => 'required|numeric',
-            'description' => 'required|string',
-            'title_links' => 'nullable|array',
-            'links' => 'nullable|array',
-            'file_name' => 'nullable|array'
-        ]);
-        $product->update([
-            'product_name' => $validate['product_name'],
-            'product_price' => $validate['product_price'],
-            'description' => $validate['description']
-        ]);
-        if (!empty($r->title_links) && !empty($r->links)) {
-            $this->productLinks($r->title_links, $r->links, $product->id);
-        }
 
-        if (!empty($r->file_name)) {
-            $this->productImage($r, $product->product_name, $r->file_name, $product->id);
+            $final = Product::with(['productImage', 'productLink'])->find($product->id);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Product created successfully',
+                'data' => $final,
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage(),
+            ], 500);
         }
-        return response()->json(['status' => true, 'message' => 'Product updated successfully!', 'product' => $product->load(['productImage', 'productLink'])], 200);
     }
-    public function deleteProductImage($img_id)
+
+    // ==========================================================
+    // 5) UPDATE PRODUCT
+    // ==========================================================
+    public function update(Request $request, $id)
     {
-        $image = ProductImage::find($img_id);
-        if (!$image) {
-            return response()->json(['status' => false, 'message' => 'No product image found!'], 404);
+        try {
+            $user = Auth::user();
+
+            $product = Product::where('id', $id)
+                ->where('user_id', $user->id)
+                ->first();
+
+            if (! $product) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Product not found',
+                ], 404);
+            }
+
+            $validator = Validator::make($request->all(), [
+                'category_name' => 'nullable|string|max:255',
+                'product_name' => 'required|string|max:255',
+                'product_price' => 'required|numeric',
+                'description' => 'nullable|string',
+                'sku' => 'nullable|string|max:255',
+                'tags' => 'nullable|string|max:255',
+                'stock' => 'nullable|numeric',
+                'status' => 'nullable|in:0,1',
+                'product_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => $validator->errors()->first(),
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            $product->update([
+                'category_name' => $request->category_name,
+                'product_name' => $request->product_name,
+                'product_price' => $request->product_price,
+                'description' => $request->description,
+                'sku' => $request->sku,
+                'tags' => $request->tags,
+                'stock' => $request->stock,
+                'status' => $request->status ?? $product->status,
+            ]);
+
+            // ✅ IMAGE UPDATE
+            if ($request->hasFile('product_image')) {
+
+                $oldImages = ProductImage::where('prod_id', $product->id)->get();
+
+                foreach ($oldImages as $img) {
+                    $path = public_path($img->product_images);
+                    if (File::exists($path)) {
+                        File::delete($path);
+                    }
+                    $img->delete();
+                }
+
+                $file = $request->file('product_image');
+
+                $folder = public_path('uploads/products');
+                if (! File::exists($folder)) {
+                    File::makeDirectory($folder, 0777, true);
+                }
+
+                $fileName = time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
+                $file->move($folder, $fileName);
+
+                ProductImage::create([
+                    'prod_id' => $product->id,
+                    'product_images' => 'uploads/products/'.$fileName,
+                    'status' => 1,
+                ]);
+            }
+
+            $final = Product::with(['productImage', 'productLink'])->find($product->id);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Product updated successfully',
+                'data' => $final,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage(),
+            ], 500);
         }
-        $image->delete();
-        return response()->json(['status' => true, 'message' => 'Product image deleted successfully!'], 200);
     }
-    public function deleteProductLinks($link_id)
+
+    // ==========================================================
+    // 6) DELETE PRODUCT
+    // ==========================================================
+    public function delete($id)
     {
-        $link = ProductLink::find($link_id);
-        if (!$link) {
-            return response()->json(['status' => false, 'message' => 'No product link found!'], 404);
+        try {
+            $user = Auth::user();
+
+            $product = Product::where('id', $id)
+                ->where('user_id', $user->id)
+                ->first();
+
+            if (! $product) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Product not found',
+                ], 404);
+            }
+
+            // delete images
+            $images = ProductImage::where('prod_id', $product->id)->get();
+            foreach ($images as $img) {
+                $path = public_path($img->product_images);
+                if (File::exists($path)) {
+                    File::delete($path);
+                }
+                $img->delete();
+            }
+
+            // delete links
+            ProductLink::where('prod_id', $product->id)->delete();
+
+            // delete product
+            $product->delete();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Product deleted successfully',
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage(),
+            ], 500);
         }
-        $link->delete();
-        return response()->json(['status' => true, 'message' => 'Product link deleted successfully!'], 200);
     }
 }

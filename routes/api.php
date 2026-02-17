@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\api\auth\AuthApiController;
+use App\Http\Controllers\api\site\BusinessInfoApiController;
 use App\Http\Controllers\api\site\ChatApiController;
 use App\Http\Controllers\api\site\ConnectionApiController;
 use App\Http\Controllers\api\site\CustomerMasterApiController;
@@ -8,8 +9,10 @@ use App\Http\Controllers\api\site\LeadController;
 use App\Http\Controllers\api\site\MasterApiController;
 use App\Http\Controllers\api\site\MasterCommentApiController;
 use App\Http\Controllers\api\site\MasterEventApiController;
-use App\Http\Controllers\api\site\MasterKeywordApiController;
+use App\Http\Controllers\api\site\MasterKeywordController;
+use App\Http\Controllers\api\site\MasterLinkController;
 use App\Http\Controllers\api\site\MasterPostApiController;
+use App\Http\Controllers\api\site\UserReviewApiController;
 use App\Http\Controllers\api\site\PostApiController;
 use App\Http\Controllers\api\site\ProductApiController;
 use App\Http\Controllers\api\site\ProfileApiController;
@@ -52,7 +55,7 @@ Route::post('/ocr-extract', [LeadController::class, 'ocrExtract']);
 Route::post('/gpt-ocr', [PostApiController::class, 'gptOcr']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
-    Route::get('/master-links', [MasterApiController::class, 'getMasterLinks']);
+
     Route::get('/master-country', [MasterApiController::class, 'getCountry']);
     Route::get('/master-indus-type', [
         MasterApiController::class,
@@ -90,28 +93,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::match(['get', 'post'], '/business-info', [
         ProfileApiController::class,
         'BusinessInfo',
-    ]);
-
-    Route::get('/product', [ProductApiController::class, 'product']);
-    Route::get('/product/update/{prod_id}', [
-        ProductApiController::class,
-        'getProductforUpdate',
-    ]);
-    Route::post('/product/create', [
-        ProductApiController::class,
-        'createProduct',
-    ]);
-    Route::post('/product/update/{prod_id}', [
-        ProductApiController::class,
-        'updateProduct',
-    ]);
-    Route::delete('/product/image/{img_id}', [
-        ProductApiController::class,
-        'deleteProductImage',
-    ]);
-    Route::delete('/product/link/{link_id}', [
-        ProductApiController::class,
-        'deleteProductLinks',
     ]);
 
     Route::post('/customer-master/index', [
@@ -428,13 +409,148 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'getUserDetails',
     ]);
 
-    
-
     Route::post('/update_profile', [
         AuthApiController::class,
         'profileUpdate',
     ]);
+    // api for links
+    Route::get('/master-links', [
+        MasterLinkController::class,
+        'index',
+    ]);
+    Route::post('/master-links', [
+        MasterLinkController::class,
+        'store',
+    ]);
+    Route::get('/master-links/{id}', [
+        MasterLinkController::class,
+        'show',
+    ]);
+    Route::post('/master-links/{id}', [
+        MasterLinkController::class,
+        'update',
+    ]);
+    Route::delete('/master-links/{id}', [
+        MasterLinkController::class,
+        'destroy',
+    ]);
 
+    Route::match(['get', 'post'], '/master-user-keywords', [
+        MasterKeywordController::class,
+        'index',
+    ]);
+
+    // Delete keyword
+    Route::delete('/master-user-keywords/{id}', [
+        MasterKeywordController::class,
+        'deleteKeyword',
+    ]);
+
+    Route::get('/user-keywords/{user_id}', [
+        MasterKeywordController::class,
+        'getKeywordsByUserId',
+    ]);
+
+    Route::put('/updated-user-keywords/{id}', [
+        MasterKeywordController::class,
+        'updateKeyword',
+    ]);
+
+    // GET all + POST create
+    Route::match(['get', 'post'], '/business-info', [
+        BusinessInfoApiController::class,
+        'index',
+    ]);
+
+    // GET particular business info by id
+    Route::get('/business-info/{id}', [
+        BusinessInfoApiController::class,
+        'show',
+    ]);
+
+    // UPDATE
+    Route::post('/business-info-update/{id}', [
+        BusinessInfoApiController::class,
+        'update',
+    ]);
+
+    // DELETE
+    Route::delete('/business-info-delete/{id}', [
+        BusinessInfoApiController::class,
+        'delete',
+    ]);
+
+    // GET by user id (admin type)
+    Route::get('/business-info-by-user/{user_id}', [
+        BusinessInfoApiController::class,
+        'getByUserId',
+    ]);
+
+    // ✅ 1) GET all products (search + sort + pagination)
+    Route::get('/products', [
+        ProductApiController::class,
+        'index',
+    ]);
+
+    // ✅ 2) GET products by user_id (search + sort + pagination)
+    Route::get('/products-by-user/{user_id}', [
+        ProductApiController::class,
+        'productsByUser',
+    ]);
+
+    // ✅ 3) GET product by id (optional but useful)
+    Route::get('/products/{id}', [
+        ProductApiController::class,
+        'show',
+    ]);
+
+    // ✅ 4) ADD product
+    Route::post('/products', [
+        ProductApiController::class,
+        'store',
+    ]);
+
+    // ✅ 5) UPDATE product
+    Route::post('/products-update/{id}', [
+        ProductApiController::class,
+        'update',
+    ]);
+
+    // ✅ 6) DELETE product
+    Route::delete('/products-delete/{id}', [
+        ProductApiController::class,
+        'delete',
+    ]);
+
+    // ✅ Add Review
+    Route::post('/user-reviews', [
+        UserReviewApiController::class,
+        'store',
+    ]);
+
+    // ✅ Get Reviews of a User (to_user_id)
+    Route::get('/user-reviews/{userId}', [
+        UserReviewApiController::class,
+        'getUserReviews',
+    ]);
+
+    // ✅ Get Average Rating of a User
+    Route::get('/user-reviews/{userId}/average', [
+        UserReviewApiController::class,
+        'getUserAverageRating',
+    ]);
+
+    // ✅ Get My Given Reviews
+    Route::get('/my-reviews', [
+        UserReviewApiController::class,
+        'myGivenReviews',
+    ]);
+
+    // ✅ Delete Review (optional)
+    Route::delete('/user-reviews/{id}', [
+        UserReviewApiController::class,
+        'delete',
+    ]);
 
     // api for post end..
 

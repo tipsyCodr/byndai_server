@@ -6,5 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class ProductLink extends Model
 {
-    protected $fillable = ['prod_id', 'title', 'links', 'status'];
+    protected $fillable = ['prod_id', 'title', 'links'];
 }
