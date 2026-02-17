@@ -1,4 +1,4 @@
-<x-site.main :title="$user->masterUser?->fname ?? $user->user_name">
+<x-site.main :title="$user->masterUser?->fname ?? $user->user_name" :user="$user">
 
     <!-- Hero Section -->
     <div class="hero-section">
@@ -79,12 +79,7 @@
                     <i class="fas fa-user-astronaut"></i> About Me
                 </div>
                 <p class="about-text">
-                    {{ "Hello! I'm " . ($user->masterUser?->fname ?? $user->user_name) . '. Welcome to my profile.' }}
-                    <br><br>
-                    @if ($user->businessInfo?->description)
-                        <strong>Business Description:</strong><br>
-                        {{ $user->businessInfo->description }}
-                    @endif
+                    {{ $user->businessInfo?->description ?? "Hello! I'm " . ($user->masterUser?->fname ?? $user->user_name) . '. Welcome to my profile.' }}
                     <br><br>
                     <strong>Location:</strong> {{ $user->masterUser?->address ?? 'Not provided' }}
                 </p>
@@ -150,14 +145,17 @@
                 <ul class="contact-list">
                     <li><span>Owner</span> <strong>{{ $user->masterUser?->fname ?? $user->user_name }}</strong></li>
                     <li><span>Phone</span> <strong>{{ $user->masterUser?->mobile_one ?? 'N/A' }}</strong></li>
-                    <li><span>Email</span> <strong>{{ $user->masterUser?->email_one ?? 'N/A' }}</strong></li>
+                    <li><span>Email</span>
+                        <strong>{{ $user->businessInfo?->contact_email ?? ($user->masterUser?->email_one ?? 'N/A') }}</strong>
+                    </li>
                 </ul>
 
                 <div class="btn-block">
                     <a href="tel:{{ $user->masterUser?->mobile_one }}" class="btn-glow btn-primary">
                         <i class="fas fa-phone"></i> Call
                     </a>
-                    <a href="mailto:{{ $user->masterUser?->email_one }}" class="btn-glow btn-glass">
+                    <a href="mailto:{{ $user->businessInfo?->contact_email ?? $user->masterUser?->email_one }}"
+                        class="btn-glow btn-glass">
                         <i class="fas fa-envelope"></i> Email
                     </a>
                 </div>

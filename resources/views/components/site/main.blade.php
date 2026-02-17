@@ -1,3 +1,4 @@
+@props(['user', 'title'])
 <!DOCTYPE html>
 <html lang="en">
 
@@ -14,7 +15,7 @@
 <body>
     <div class="profile-container">
         {{ $slot }}
-        <x-site.footer></x-site.footer>
+        <x-site.footer :user="$user"></x-site.footer>
     </div>
 
     <script src="{{ asset('assets/js/bootstrap.bundle.min.js') }}"></script>
