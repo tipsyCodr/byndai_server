@@ -14,6 +14,7 @@ use App\Http\Controllers\api\site\MasterLinkController;
 use App\Http\Controllers\api\site\MasterPostApiController;
 use App\Http\Controllers\api\site\PostApiController;
 use App\Http\Controllers\api\site\ProductApiController;
+use App\Http\Controllers\api\site\ProfileViewController;
 use App\Http\Controllers\api\site\ProfileApiController;
 use App\Http\Controllers\api\site\RestrictionApiController;
 use App\Http\Controllers\api\site\SubscriptionApiController;
@@ -561,7 +562,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'endView',
     ]);
 
-    // api for post end..
+    // api for post end....
 
     Route::post('/logout', [AuthApiController::class, 'logout']);
 
