@@ -19,6 +19,7 @@ use App\Http\Controllers\api\site\ProfileLinkClickController;
 use App\Http\Controllers\api\site\ProfileViewController;
 use App\Http\Controllers\api\site\RestrictionApiController;
 use App\Http\Controllers\api\site\SubscriptionApiController;
+use App\Http\Controllers\api\site\UserAnalyticsController;
 use App\Http\Controllers\api\site\UserReviewApiController;
 use Illuminate\Support\Facades\Route;
 
@@ -572,6 +573,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/check-friendship/{userId}/{viewerId}', [
         ConnectionApiController::class,
         'checkFriendship',
+    ]);
+
+    Route::post('/user-analytics', [
+        UserAnalyticsController::class,
+        'userAnalytics',
     ]);
 
     // api for post end....

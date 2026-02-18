@@ -16,4 +16,9 @@ class ProfileLinkClick extends Model
         'click_count',
         'last_clicked_at',
     ];
+
+    public function viewer()
+    {
+        return $this->belongsTo(User::class, 'viewer_id', 'id');
+    }
 }
