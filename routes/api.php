@@ -55,6 +55,8 @@ Route::put('/leads/{id}', [LeadController::class, 'update']);
 Route::delete('/leads/{id}', [LeadController::class, 'destroy']);
 Route::post('/ocr-extract', [LeadController::class, 'ocrExtract']);
 Route::post('/gpt-ocr', [PostApiController::class, 'gptOcr']);
+Route::get('/user/{id}/master-links', [MasterLinkController::class,'getUserLinksById',]);
+
 
 Route::middleware(['auth:sanctum'])->group(function () {
 

@@ -6,5 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class MasterLink extends Model
 {
-    protected $fillable = ['name', 'image', 'link', 'user_id'];
+    protected $fillable = ['name', 'image', 'link', 'status', 'user_id'];
 }
