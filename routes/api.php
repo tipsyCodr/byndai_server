@@ -20,6 +20,7 @@ use App\Http\Controllers\api\site\ProfileViewController;
 use App\Http\Controllers\api\site\RestrictionApiController;
 use App\Http\Controllers\api\site\SubscriptionApiController;
 use App\Http\Controllers\api\site\UserAnalyticsController;
+use App\Http\Controllers\api\site\UserListController;
 use App\Http\Controllers\api\site\UserReviewApiController;
 use Illuminate\Support\Facades\Route;
 
@@ -578,6 +579,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/user-analytics', [
         UserAnalyticsController::class,
         'userAnalytics',
+    ]);
+
+    Route::post('/users-with-business/list', [
+        UserListController::class,
+        'listUsers',
     ]);
 
     // api for post end....

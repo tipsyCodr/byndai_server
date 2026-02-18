@@ -22,6 +22,7 @@ class MasterUserDetail extends Model
     {
         return $this->belongsTo(MasterState::class, 'state_id', 'id');
     }
+    
     public function district()
     {
         return $this->belongsTo(MasterDistrict::class, 'district_id', 'id');
