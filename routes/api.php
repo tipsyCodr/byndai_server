@@ -14,8 +14,9 @@ use App\Http\Controllers\api\site\MasterLinkController;
 use App\Http\Controllers\api\site\MasterPostApiController;
 use App\Http\Controllers\api\site\PostApiController;
 use App\Http\Controllers\api\site\ProductApiController;
-use App\Http\Controllers\api\site\ProfileViewController;
 use App\Http\Controllers\api\site\ProfileApiController;
+use App\Http\Controllers\api\site\ProfileLinkClickController;
+use App\Http\Controllers\api\site\ProfileViewController;
 use App\Http\Controllers\api\site\RestrictionApiController;
 use App\Http\Controllers\api\site\SubscriptionApiController;
 use App\Http\Controllers\api\site\UserReviewApiController;
@@ -560,6 +561,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/profile-view/end', [
         ProfileViewController::class,
         'endView',
+    ]);
+
+    Route::post('/profile-link/click', [
+        ProfileLinkClickController::class,
+        'click',
     ]);
 
     // api for post end....
