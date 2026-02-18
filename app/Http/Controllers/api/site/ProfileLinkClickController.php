@@ -29,7 +29,7 @@ class ProfileLinkClickController extends Controller
         $profileId = (int) $request->profile_id;
         $platform = strtolower(trim($request->platform));
 
-        // self ignore
+        // self ignore.......
         if ($viewerId === $profileId) {
             return response()->json([
                 "status" => true,
