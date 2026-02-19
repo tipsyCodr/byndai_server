@@ -64,19 +64,19 @@ class LeadController extends Controller
         $leads->getCollection()->transform(function ($lead) {
 
             if ($lead->lead_image) {
-                $lead->image_url = asset('storage/' . $lead->lead_image);
+                $lead->image_url = asset('storage/'.$lead->lead_image);
             }
 
             if ($lead->selfy_image_1) {
-                $lead->selfy_image_1_url = asset('storage/' . $lead->selfy_image_1);
+                $lead->selfy_image_1_url = asset('storage/'.$lead->selfy_image_1);
             }
 
             if ($lead->selfy_image_2) {
-                $lead->selfy_image_2_url = asset('storage/' . $lead->selfy_image_2);
+                $lead->selfy_image_2_url = asset('storage/'.$lead->selfy_image_2);
             }
 
             if ($lead->selfy_video) {
-                $lead->selfy_video_url = asset('storage/' . $lead->selfy_video);
+                $lead->selfy_video_url = asset('storage/'.$lead->selfy_video);
             }
 
             return $lead;
@@ -146,7 +146,7 @@ class LeadController extends Controller
         // =============================
         // Lead Image (Business Card Scan)
         // =============================
-        if ($request->has('lead_image') && !empty($request->lead_image)) {
+        if ($request->has('lead_image') && ! empty($request->lead_image)) {
             $imagePath = $this->saveBase64Image(
                 $request->lead_image,
                 $request->image_filename ?? 'scanned_image.jpg',
@@ -204,10 +204,18 @@ class LeadController extends Controller
         $lead = Lead::create($leadData);
 
         // return urls
-        if ($lead->lead_image) $lead->image_url = asset('storage/' . $lead->lead_image);
-        if ($lead->selfy_image_1) $lead->selfy_image_1_url = asset('storage/' . $lead->selfy_image_1);
-        if ($lead->selfy_image_2) $lead->selfy_image_2_url = asset('storage/' . $lead->selfy_image_2);
-        if ($lead->selfy_video) $lead->selfy_video_url = asset('storage/' . $lead->selfy_video);
+        if ($lead->lead_image) {
+            $lead->image_url = asset('storage/'.$lead->lead_image);
+        }
+        if ($lead->selfy_image_1) {
+            $lead->selfy_image_1_url = asset('storage/'.$lead->selfy_image_1);
+        }
+        if ($lead->selfy_image_2) {
+            $lead->selfy_image_2_url = asset('storage/'.$lead->selfy_image_2);
+        }
+        if ($lead->selfy_video) {
+            $lead->selfy_video_url = asset('storage/'.$lead->selfy_video);
+        }
 
         return response()->json([
             'success' => true,
@@ -223,10 +231,18 @@ class LeadController extends Controller
     {
         $lead = Lead::findOrFail($id);
 
-        if ($lead->lead_image) $lead->image_url = asset('storage/' . $lead->lead_image);
-        if ($lead->selfy_image_1) $lead->selfy_image_1_url = asset('storage/' . $lead->selfy_image_1);
-        if ($lead->selfy_image_2) $lead->selfy_image_2_url = asset('storage/' . $lead->selfy_image_2);
-        if ($lead->selfy_video) $lead->selfy_video_url = asset('storage/' . $lead->selfy_video);
+        if ($lead->lead_image) {
+            $lead->image_url = asset('storage/'.$lead->lead_image);
+        }
+        if ($lead->selfy_image_1) {
+            $lead->selfy_image_1_url = asset('storage/'.$lead->selfy_image_1);
+        }
+        if ($lead->selfy_image_2) {
+            $lead->selfy_image_2_url = asset('storage/'.$lead->selfy_image_2);
+        }
+        if ($lead->selfy_video) {
+            $lead->selfy_video_url = asset('storage/'.$lead->selfy_video);
+        }
 
         return response()->json([
             'success' => true,
@@ -364,10 +380,18 @@ class LeadController extends Controller
 
         $lead->update($updateData);
 
-        if ($lead->lead_image) $lead->image_url = asset('storage/' . $lead->lead_image);
-        if ($lead->selfy_image_1) $lead->selfy_image_1_url = asset('storage/' . $lead->selfy_image_1);
-        if ($lead->selfy_image_2) $lead->selfy_image_2_url = asset('storage/' . $lead->selfy_image_2);
-        if ($lead->selfy_video) $lead->selfy_video_url = asset('storage/' . $lead->selfy_video);
+        if ($lead->lead_image) {
+            $lead->image_url = asset('storage/'.$lead->lead_image);
+        }
+        if ($lead->selfy_image_1) {
+            $lead->selfy_image_1_url = asset('storage/'.$lead->selfy_image_1);
+        }
+        if ($lead->selfy_image_2) {
+            $lead->selfy_image_2_url = asset('storage/'.$lead->selfy_image_2);
+        }
+        if ($lead->selfy_video) {
+            $lead->selfy_video_url = asset('storage/'.$lead->selfy_video);
+        }
 
         return response()->json([
             'success' => true,
@@ -384,10 +408,18 @@ class LeadController extends Controller
         $lead = Lead::findOrFail($id);
 
         // delete images/videos
-        if ($lead->lead_image) $this->deleteStoredFile($lead->lead_image);
-        if ($lead->selfy_image_1) $this->deleteStoredFile($lead->selfy_image_1);
-        if ($lead->selfy_image_2) $this->deleteStoredFile($lead->selfy_image_2);
-        if ($lead->selfy_video) $this->deleteStoredFile($lead->selfy_video);
+        if ($lead->lead_image) {
+            $this->deleteStoredFile($lead->lead_image);
+        }
+        if ($lead->selfy_image_1) {
+            $this->deleteStoredFile($lead->selfy_image_1);
+        }
+        if ($lead->selfy_image_2) {
+            $this->deleteStoredFile($lead->selfy_image_2);
+        }
+        if ($lead->selfy_video) {
+            $this->deleteStoredFile($lead->selfy_video);
+        }
 
         $lead->delete();
 
@@ -407,14 +439,14 @@ class LeadController extends Controller
         $finalText = '';
         $uploadPath = public_path('uploads/ocr');
 
-        if (!file_exists($uploadPath)) {
+        if (! file_exists($uploadPath)) {
             mkdir($uploadPath, 0777, true);
         }
 
         foreach ($request->file('images') as $image) {
 
-            $filename = uniqid() . '.' . $image->getClientOriginalExtension();
-            $fullPath = $uploadPath . DIRECTORY_SEPARATOR . $filename;
+            $filename = uniqid().'.'.$image->getClientOriginalExtension();
+            $fullPath = $uploadPath.DIRECTORY_SEPARATOR.$filename;
 
             $image->move($uploadPath, $filename);
 
@@ -423,7 +455,7 @@ class LeadController extends Controller
                     ->lang('eng')
                     ->run();
 
-                $finalText .= "\n" . $text;
+                $finalText .= "\n".$text;
 
             } catch (\Exception $e) {
                 return response()->json([
@@ -443,6 +475,52 @@ class LeadController extends Controller
         ]);
     }
 
+    public function getByUserId(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|integer',
+            'per_page' => 'nullable|integer|min:1|max:100',
+        ]);
+
+        $perPage = $request->get('per_page', 10);
+        $userId = $request->user_id;
+
+        $leads = Lead::where('user_id', $userId)
+            ->latest()
+            ->paginate($perPage);
+
+        // Add URLs for images and videos
+        $leads->getCollection()->transform(function ($lead) {
+            if ($lead->lead_image) {
+                $lead->image_url = asset('storage/'.$lead->lead_image);
+            }
+            if ($lead->selfy_image_1) {
+                $lead->selfy_image_1_url = asset('storage/'.$lead->selfy_image_1);
+            }
+            if ($lead->selfy_image_2) {
+                $lead->selfy_image_2_url = asset('storage/'.$lead->selfy_image_2);
+            }
+            if ($lead->selfy_video) {
+                $lead->selfy_video_url = asset('storage/'.$lead->selfy_video);
+            }
+
+            return $lead;
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $leads->items(),
+            'meta' => [
+                'current_page' => $leads->currentPage(),
+                'per_page' => $leads->perPage(),
+                'total' => $leads->total(),
+                'last_page' => $leads->lastPage(),
+                'next_page_url' => $leads->nextPageUrl(),
+                'prev_page_url' => $leads->previousPageUrl(),
+            ],
+        ]);
+    }
+
     // ==========================
     // HELPERS
     // ==========================
@@ -459,24 +537,26 @@ class LeadController extends Controller
 
             if ($imageData === false) {
                 Log::error('Failed to decode base64 image');
+
                 return null;
             }
 
             $directory = storage_path("app/public/$folder");
 
-            if (!file_exists($directory)) {
+            if (! file_exists($directory)) {
                 mkdir($directory, 0777, true);
             }
 
-            $uniqueFilename = time() . '_' . uniqid() . '_' . $filename;
-            $filePath = $directory . '/' . $uniqueFilename;
+            $uniqueFilename = time().'_'.uniqid().'_'.$filename;
+            $filePath = $directory.'/'.$uniqueFilename;
 
             file_put_contents($filePath, $imageData);
 
-            return "$folder/" . $uniqueFilename;
+            return "$folder/".$uniqueFilename;
 
         } catch (\Exception $e) {
-            Log::error('Error saving base64 image: ' . $e->getMessage());
+            Log::error('Error saving base64 image: '.$e->getMessage());
+
             return null;
         }
     }
@@ -493,45 +573,47 @@ class LeadController extends Controller
 
             if ($videoData === false) {
                 Log::error('Failed to decode base64 video');
+
                 return null;
             }
 
             $directory = storage_path("app/public/$folder");
-            if (!file_exists($directory)) {
+            if (! file_exists($directory)) {
                 mkdir($directory, 0777, true);
             }
 
-            $uniqueFilename = time() . '_' . uniqid() . '_' . $filename;
+            $uniqueFilename = time().'_'.uniqid().'_'.$filename;
 
             // original path
-            $originalPath = $directory . '/ORIGINAL_' . $uniqueFilename;
+            $originalPath = $directory.'/ORIGINAL_'.$uniqueFilename;
             file_put_contents($originalPath, $videoData);
 
             // compressed path
-            $compressedPath = $directory . '/' . $uniqueFilename;
+            $compressedPath = $directory.'/'.$uniqueFilename;
 
             // if already <= 5MB
             if (filesize($originalPath) <= (5 * 1024 * 1024)) {
                 rename($originalPath, $compressedPath);
-                return "$folder/" . $uniqueFilename;
+
+                return "$folder/".$uniqueFilename;
             }
 
             // =============================
             // COMPRESS USING FFMPEG
             // =============================
-            $cmd = "ffmpeg -y -i " . escapeshellarg($originalPath) .
-                " -t 10 -vf scale=640:-2 -r 24 -b:v 600k -b:a 64k " .
-                escapeshellarg($compressedPath) . " 2>&1";
+            $cmd = 'ffmpeg -y -i '.escapeshellarg($originalPath).
+                ' -t 10 -vf scale=640:-2 -r 24 -b:v 600k -b:a 64k '.
+                escapeshellarg($compressedPath).' 2>&1';
 
             exec($cmd, $output, $status);
 
             if ($status !== 0) {
-                Log::error("FFMPEG compression failed: " . implode("\n", $output));
+                Log::error('FFMPEG compression failed: '.implode("\n", $output));
 
                 // fallback original
                 rename($originalPath, $compressedPath);
 
-                return "$folder/" . $uniqueFilename;
+                return "$folder/".$uniqueFilename;
             }
 
             // remove original
@@ -540,10 +622,11 @@ class LeadController extends Controller
             }
 
             // final size check (still > 5MB then keep compressed anyway)
-            return "$folder/" . $uniqueFilename;
+            return "$folder/".$uniqueFilename;
 
         } catch (\Exception $e) {
-            Log::error('Error saving base64 video: ' . $e->getMessage());
+            Log::error('Error saving base64 video: '.$e->getMessage());
+
             return null;
         }
     }
@@ -552,13 +635,13 @@ class LeadController extends Controller
     private function deleteStoredFile($relativePath)
     {
         try {
-            $fullPath = storage_path('app/public/' . $relativePath);
+            $fullPath = storage_path('app/public/'.$relativePath);
 
             if (file_exists($fullPath)) {
                 unlink($fullPath);
             }
         } catch (\Exception $e) {
-            Log::error("File delete error: " . $e->getMessage());
+            Log::error('File delete error: '.$e->getMessage());
         }
     }
 
@@ -587,11 +670,14 @@ class LeadController extends Controller
 
         foreach ($lines as $line) {
             $line = trim($line);
-            if (!$line) continue;
+            if (! $line) {
+                continue;
+            }
 
             // 📧 Email
             if (preg_match('/[\w\.-]+@[\w\.-]+\.\w+/', $line, $m)) {
                 $emails[] = $m[0];
+
                 continue;
             }
 
@@ -603,24 +689,28 @@ class LeadController extends Controller
                         $mobiles[] = $phone;
                     }
                 }
+
                 continue;
             }
 
             // 🌐 Website
-            if (!$data['website'] && preg_match('/(www\.)?[a-z0-9\-]+\.(com|in|io|net|org)/i', $line, $m)) {
+            if (! $data['website'] && preg_match('/(www\.)?[a-z0-9\-]+\.(com|in|io|net|org)/i', $line, $m)) {
                 $data['website'] = $m[0];
+
                 continue;
             }
 
             // 🏢 Company
-            if (!$data['company'] && $this->isCompanyName($line)) {
+            if (! $data['company'] && $this->isCompanyName($line)) {
                 $data['company'] = $line;
+
                 continue;
             }
 
             // 👤 Name
-            if (!$data['name'] && $this->isPersonName($line)) {
+            if (! $data['name'] && $this->isPersonName($line)) {
                 $data['name'] = $line;
+
                 continue;
             }
 
@@ -658,10 +748,14 @@ class LeadController extends Controller
         $textLower = strtolower($text);
 
         foreach ($keywords as $k) {
-            if (str_contains($textLower, $k)) return true;
+            if (str_contains($textLower, $k)) {
+                return true;
+            }
         }
 
-        if (strtoupper($text) === $text && str_word_count($text) > 1) return true;
+        if (strtoupper($text) === $text && str_word_count($text) > 1) {
+            return true;
+        }
 
         return false;
     }
@@ -669,10 +763,14 @@ class LeadController extends Controller
     private function isPersonName($text)
     {
         $words = explode(' ', $text);
-        if (count($words) > 3) return false;
+        if (count($words) > 3) {
+            return false;
+        }
 
         foreach ($words as $w) {
-            if (!preg_match('/^[A-Z][a-z]+$/', $w)) return false;
+            if (! preg_match('/^[A-Z][a-z]+$/', $w)) {
+                return false;
+            }
         }
 
         return true;
@@ -688,7 +786,9 @@ class LeadController extends Controller
         $lower = strtolower($text);
 
         foreach ($keywords as $k) {
-            if (str_contains($lower, $k)) return true;
+            if (str_contains($lower, $k)) {
+                return true;
+            }
         }
 
         return preg_match('/\d+/', $text) && preg_match('/[a-zA-Z]/', $text);
