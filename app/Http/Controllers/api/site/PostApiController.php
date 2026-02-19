@@ -1050,100 +1050,52 @@ class PostApiController extends Controller
         $request->validate([
             'image' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120',
 
-            // ✅ NEW FIELDS
+            // ✅ NEW OPTIONAL FIELDS
             'user_id' => 'nullable|integer',
             'category' => 'nullable|string|max:255',
 
-            // ✅ base64 selfy images (optional)
-            'selfy_image_1' => 'nullable|string',
-            'selfy_image_2' => 'nullable|string',
+            'selfy_image_1' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'selfy_image_2' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
 
-            // ✅ base64 video (optional)
-            'selfy_video' => 'nullable|string',
-            'selfy_video_filename' => 'nullable|string|max:255',
+            'selfy_video' => 'nullable|file|mimes:mp4,mov,avi,webm|max:20480', // 20MB
         ]);
 
-        // ✅ Upload Folder (same as leads images)
-        $uploadPath = public_path('uploads/leads');
+        // ✅ Save selfy files in SAME folder as lead images
+        $selfyImage1Name = null;
+        $selfyImage2Name = null;
+        $selfyVideoName = null;
 
-        if (! file_exists($uploadPath)) {
-            mkdir($uploadPath, 0777, true);
+        // 👇 SAME folder
+        $folder = public_path('uploads/leads');
+
+        if (! file_exists($folder)) {
+            mkdir($folder, 0777, true);
         }
 
-        // ===============================
-        // 1️⃣ Save Main Lead Card Image
-        // ===============================
-        $imageFile = $request->file('image');
-        $imageFilename = 'lead_'.time().'_'.uniqid().'.'.$imageFile->getClientOriginalExtension();
-        $imageFile->move($uploadPath, $imageFilename);
+        if ($request->hasFile('selfy_image_1')) {
+            $file = $request->file('selfy_image_1');
+            $selfyImage1Name = 'selfy_1_'.time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
+            $file->move($folder, $selfyImage1Name);
+        }
 
-        // OCR image base64 for OpenAI
-        $imageData = base64_encode(file_get_contents($uploadPath.'/'.$imageFilename));
+        if ($request->hasFile('selfy_image_2')) {
+            $file = $request->file('selfy_image_2');
+            $selfyImage2Name = 'selfy_2_'.time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
+            $file->move($folder, $selfyImage2Name);
+        }
+
+        if ($request->hasFile('selfy_video')) {
+            $file = $request->file('selfy_video');
+            $selfyVideoName = 'selfy_video_'.time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
+            $file->move($folder, $selfyVideoName);
+        }
+
+        // ✅ Image to base64 (EXISTING)
+        $imageFile = $request->file('image');
+        $imageData = base64_encode(file_get_contents($imageFile->getRealPath()));
         $mimeType = $imageFile->getMimeType();
 
-        // ===============================
-        // 2️⃣ Save Selfy Images (base64)
-        // ===============================
-        $selfyImage1Filename = null;
-        $selfyImage2Filename = null;
-
-        // helper function for base64 image save
-        $saveBase64Image = function ($base64, $prefix) use ($uploadPath) {
-            if (! $base64) {
-                return null;
-            }
-
-            // remove "data:image/jpeg;base64,"
-            if (str_contains($base64, 'base64,')) {
-                $base64 = explode('base64,', $base64)[1];
-            }
-
-            $decoded = base64_decode($base64);
-            if (! $decoded) {
-                return null;
-            }
-
-            $filename = $prefix.'_'.time().'_'.uniqid().'.jpg';
-            file_put_contents($uploadPath.'/'.$filename, $decoded);
-
-            return $filename;
-        };
-
-        $selfyImage1Filename = $saveBase64Image($request->selfy_image_1, 'selfy_1');
-        $selfyImage2Filename = $saveBase64Image($request->selfy_image_2, 'selfy_2');
-
-        // ===============================
-        // 3️⃣ Save Selfy Video (base64)
-        // ===============================
-        $selfyVideoFilename = null;
-
-        if ($request->selfy_video) {
-            $videoBase64 = $request->selfy_video;
-
-            // remove "data:video/mp4;base64,"
-            if (str_contains($videoBase64, 'base64,')) {
-                $videoBase64 = explode('base64,', $videoBase64)[1];
-            }
-
-            $videoDecoded = base64_decode($videoBase64);
-
-            if ($videoDecoded) {
-                $ext = 'mp4';
-
-                // If frontend sent filename use it
-                if ($request->selfy_video_filename) {
-                    $ext = pathinfo($request->selfy_video_filename, PATHINFO_EXTENSION) ?: 'mp4';
-                }
-
-                $selfyVideoFilename = 'selfy_video_'.time().'_'.uniqid().'.'.$ext;
-
-                file_put_contents($uploadPath.'/'.$selfyVideoFilename, $videoDecoded);
-            }
-        }
-
-        // ===============================
-        // 4️⃣ OpenAI API Call (OCR)
-        // ===============================
+        // ✅ OpenAI API Key (ENV)
         $apiKey = env('OPENAI_API_SECRET_KEY');
 
         if (! $apiKey) {
@@ -1153,6 +1105,7 @@ class PostApiController extends Controller
             ], 500);
         }
 
+        // ✅ GPT Prompt (EXISTING)
         $systemPrompt = '
 You are an OCR + Business Card Data Extraction assistant.
 Extract details from the image and return ONLY valid JSON.
@@ -1210,6 +1163,7 @@ Rules:
         $result = $response->json();
         $content = $result['choices'][0]['message']['content'] ?? '';
 
+        // ✅ JSON decode (EXISTING)
         $decoded = json_decode($content, true);
 
         if (! $decoded || ! is_array($decoded)) {
@@ -1221,14 +1175,11 @@ Rules:
             ], 500);
         }
 
-        // ===============================
-        // 5️⃣ Final Response + Save Data
-        // ===============================
-
+        // ✅ Fix missing keys (EXISTING)
         $final = [
             'id' => (string) rand(1, 999999),
 
-            // OCR extracted
+            // OCR
             'name' => $decoded['name'] ?? null,
             'company_name' => $decoded['company_name'] ?? null,
             'email' => $decoded['email'] ?? null,
@@ -1239,33 +1190,19 @@ Rules:
             'mobile_no_2' => $decoded['mobile_no_2'] ?? null,
             'mobile_no_3' => $decoded['mobile_no_3'] ?? null,
 
-            // NEW
+            // ✅ NEW fields (saved + returned)
             'user_id' => $request->user_id,
             'category' => $request->category,
 
-            // main lead image
-            'lead_image' => $imageFilename,
-
-            // selfy
-            'selfy_image_1' => $selfyImage1Filename,
-            'selfy_image_2' => $selfyImage2Filename,
-            'selfy_video' => $selfyVideoFilename,
+            'selfy_image_1' => $selfyImage1Name,
+            'selfy_image_2' => $selfyImage2Name,
+            'selfy_video' => $selfyVideoName,
         ];
-
-        /**
-         * ✅ IMPORTANT:
-         * Agar tu chahta hai ki yahi function direct DB me save kare
-         * to yaha Lead::create($final) kar sakta hai
-         *
-         * Abhi main response me data de raha hu (same existing functionality)
-         */
 
         return response()->json([
             'success' => true,
             'data' => $final,
-
-            // debug
-            'raw' => $result,
+            'raw' => $result, // optional debug
         ]);
     }
 
