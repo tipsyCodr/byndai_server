@@ -931,18 +931,219 @@ class PostApiController extends Controller
     // ocr gpt img
     // ================================================
 
+    //     public function gptOcr(Request $request)
+    //     {
+    //         $request->validate([
+    //             'image' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120',
+    //         ]);
+
+    //         // ✅ Image to base64
+    //         $imageFile = $request->file('image');
+    //         $imageData = base64_encode(file_get_contents($imageFile->getRealPath()));
+    //         $mimeType = $imageFile->getMimeType();
+
+    //         // ✅ OpenAI API Key (ENV)
+    //         $apiKey = env('OPENAI_API_SECRET_KEY');
+
+    //         if (! $apiKey) {
+    //             return response()->json([
+    //                 'success' => false,
+    //                 'message' => 'OPENAI_API_SECRET_KEY missing in .env',
+    //             ], 500);
+    //         }
+
+    //         // ✅ GPT Prompt
+    //         $systemPrompt = '
+    // You are an OCR + Business Card Data Extraction assistant.
+    // Extract details from the image and return ONLY valid JSON.
+    // Do not add explanation, do not add markdown, do not add extra text.
+
+    // Return JSON with EXACT keys:
+    // name, company_name, email, email2, website, address,
+    // mobile_no_1, mobile_no_2, mobile_no_3
+
+    // Rules:
+    // - If any field is not found, return null.
+    // - Only return ONE JSON object.
+    // - For phone numbers: return only digits (remove +91, spaces, dashes).
+    // - Website: return without http/https if possible.
+    // - If there are multiple emails, put first in email, second in email2.
+    // - If there are more than 3 phone numbers, keep first 3 only.
+    // ';
+
+    //         $response = Http::withToken($apiKey)
+    //             ->timeout(90)
+    //             ->post('https://api.openai.com/v1/chat/completions', [
+    //                 'model' => 'gpt-4o-mini',
+    //                 'messages' => [
+    //                     [
+    //                         'role' => 'system',
+    //                         'content' => $systemPrompt,
+    //                     ],
+    //                     [
+    //                         'role' => 'user',
+    //                         'content' => [
+    //                             [
+    //                                 'type' => 'text',
+    //                                 'text' => 'Extract business card details from this image and return JSON only.',
+    //                             ],
+    //                             [
+    //                                 'type' => 'image_url',
+    //                                 'image_url' => [
+    //                                     'url' => "data:$mimeType;base64,$imageData",
+    //                                 ],
+    //                             ],
+    //                         ],
+    //                     ],
+    //                 ],
+    //                 'temperature' => 0,
+    //             ]);
+
+    //         if ($response->failed()) {
+    //             return response()->json([
+    //                 'success' => false,
+    //                 'message' => 'OpenAI API Error',
+    //                 'error' => $response->json(),
+    //             ], 500);
+    //         }
+
+    //         $result = $response->json();
+    //         $content = $result['choices'][0]['message']['content'] ?? '';
+
+    //         // ✅ JSON decode
+    //         $decoded = json_decode($content, true);
+
+    //         // Agar GPT ne JSON sahi na diya
+    //         if (! $decoded || ! is_array($decoded)) {
+    //             return response()->json([
+    //                 'success' => false,
+    //                 'message' => 'Invalid JSON returned by GPT',
+    //                 'raw_text' => $content,
+    //                 'raw' => $result,
+    //             ], 500);
+    //         }
+
+    //         // ✅ Fix missing keys (always return all)
+    //         $final = [
+    //             'id' => (string) rand(1, 999999), // optional id generate
+    //             'name' => $decoded['name'] ?? null,
+    //             'company_name' => $decoded['company_name'] ?? null,
+    //             'email' => $decoded['email'] ?? null,
+    //             'email2' => $decoded['email2'] ?? null,
+    //             'website' => $decoded['website'] ?? null,
+    //             'address' => $decoded['address'] ?? null,
+    //             'mobile_no_1' => $decoded['mobile_no_1'] ?? null,
+    //             'mobile_no_2' => $decoded['mobile_no_2'] ?? null,
+    //             'mobile_no_3' => $decoded['mobile_no_3'] ?? null,
+    //         ];
+
+    //         return response()->json([
+    //             'success' => true,
+    //             'data' => $final,
+    //             'raw' => $result, // optional debug (remove in production)
+
+    //         ]);
+    //     }
+
     public function gptOcr(Request $request)
     {
         $request->validate([
             'image' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120',
+
+            // ✅ NEW FIELDS
+            'user_id' => 'nullable|integer',
+            'category' => 'nullable|string|max:255',
+
+            // ✅ base64 selfy images (optional)
+            'selfy_image_1' => 'nullable|string',
+            'selfy_image_2' => 'nullable|string',
+
+            // ✅ base64 video (optional)
+            'selfy_video' => 'nullable|string',
+            'selfy_video_filename' => 'nullable|string|max:255',
         ]);
 
-        // ✅ Image to base64
+        // ✅ Upload Folder (same as leads images)
+        $uploadPath = public_path('uploads/leads');
+
+        if (! file_exists($uploadPath)) {
+            mkdir($uploadPath, 0777, true);
+        }
+
+        // ===============================
+        // 1️⃣ Save Main Lead Card Image
+        // ===============================
         $imageFile = $request->file('image');
-        $imageData = base64_encode(file_get_contents($imageFile->getRealPath()));
+        $imageFilename = 'lead_'.time().'_'.uniqid().'.'.$imageFile->getClientOriginalExtension();
+        $imageFile->move($uploadPath, $imageFilename);
+
+        // OCR image base64 for OpenAI
+        $imageData = base64_encode(file_get_contents($uploadPath.'/'.$imageFilename));
         $mimeType = $imageFile->getMimeType();
 
-        // ✅ OpenAI API Key (ENV)
+        // ===============================
+        // 2️⃣ Save Selfy Images (base64)
+        // ===============================
+        $selfyImage1Filename = null;
+        $selfyImage2Filename = null;
+
+        // helper function for base64 image save
+        $saveBase64Image = function ($base64, $prefix) use ($uploadPath) {
+            if (! $base64) {
+                return null;
+            }
+
+            // remove "data:image/jpeg;base64,"
+            if (str_contains($base64, 'base64,')) {
+                $base64 = explode('base64,', $base64)[1];
+            }
+
+            $decoded = base64_decode($base64);
+            if (! $decoded) {
+                return null;
+            }
+
+            $filename = $prefix.'_'.time().'_'.uniqid().'.jpg';
+            file_put_contents($uploadPath.'/'.$filename, $decoded);
+
+            return $filename;
+        };
+
+        $selfyImage1Filename = $saveBase64Image($request->selfy_image_1, 'selfy_1');
+        $selfyImage2Filename = $saveBase64Image($request->selfy_image_2, 'selfy_2');
+
+        // ===============================
+        // 3️⃣ Save Selfy Video (base64)
+        // ===============================
+        $selfyVideoFilename = null;
+
+        if ($request->selfy_video) {
+            $videoBase64 = $request->selfy_video;
+
+            // remove "data:video/mp4;base64,"
+            if (str_contains($videoBase64, 'base64,')) {
+                $videoBase64 = explode('base64,', $videoBase64)[1];
+            }
+
+            $videoDecoded = base64_decode($videoBase64);
+
+            if ($videoDecoded) {
+                $ext = 'mp4';
+
+                // If frontend sent filename use it
+                if ($request->selfy_video_filename) {
+                    $ext = pathinfo($request->selfy_video_filename, PATHINFO_EXTENSION) ?: 'mp4';
+                }
+
+                $selfyVideoFilename = 'selfy_video_'.time().'_'.uniqid().'.'.$ext;
+
+                file_put_contents($uploadPath.'/'.$selfyVideoFilename, $videoDecoded);
+            }
+        }
+
+        // ===============================
+        // 4️⃣ OpenAI API Call (OCR)
+        // ===============================
         $apiKey = env('OPENAI_API_SECRET_KEY');
 
         if (! $apiKey) {
@@ -952,7 +1153,6 @@ class PostApiController extends Controller
             ], 500);
         }
 
-        // ✅ GPT Prompt
         $systemPrompt = '
 You are an OCR + Business Card Data Extraction assistant.
 Extract details from the image and return ONLY valid JSON.
@@ -1002,7 +1202,7 @@ Rules:
         if ($response->failed()) {
             return response()->json([
                 'success' => false,
-                'message' => 'OpenAI API Error',                
+                'message' => 'OpenAI API Error',
                 'error' => $response->json(),
             ], 500);
         }
@@ -1010,10 +1210,8 @@ Rules:
         $result = $response->json();
         $content = $result['choices'][0]['message']['content'] ?? '';
 
-        // ✅ JSON decode
         $decoded = json_decode($content, true);
 
-        // Agar GPT ne JSON sahi na diya
         if (! $decoded || ! is_array($decoded)) {
             return response()->json([
                 'success' => false,
@@ -1023,9 +1221,14 @@ Rules:
             ], 500);
         }
 
-        // ✅ Fix missing keys (always return all)
+        // ===============================
+        // 5️⃣ Final Response + Save Data
+        // ===============================
+
         $final = [
-            'id' => (string) rand(1, 999999), // optional id generate
+            'id' => (string) rand(1, 999999),
+
+            // OCR extracted
             'name' => $decoded['name'] ?? null,
             'company_name' => $decoded['company_name'] ?? null,
             'email' => $decoded['email'] ?? null,
@@ -1035,13 +1238,34 @@ Rules:
             'mobile_no_1' => $decoded['mobile_no_1'] ?? null,
             'mobile_no_2' => $decoded['mobile_no_2'] ?? null,
             'mobile_no_3' => $decoded['mobile_no_3'] ?? null,
+
+            // NEW
+            'user_id' => $request->user_id,
+            'category' => $request->category,
+
+            // main lead image
+            'lead_image' => $imageFilename,
+
+            // selfy
+            'selfy_image_1' => $selfyImage1Filename,
+            'selfy_image_2' => $selfyImage2Filename,
+            'selfy_video' => $selfyVideoFilename,
         ];
+
+        /**
+         * ✅ IMPORTANT:
+         * Agar tu chahta hai ki yahi function direct DB me save kare
+         * to yaha Lead::create($final) kar sakta hai
+         *
+         * Abhi main response me data de raha hu (same existing functionality)
+         */
 
         return response()->json([
             'success' => true,
             'data' => $final,
-            'raw' => $result, // optional debug (remove in production)
-            
+
+            // debug
+            'raw' => $result,
         ]);
     }
 
