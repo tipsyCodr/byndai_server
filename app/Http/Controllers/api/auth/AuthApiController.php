@@ -50,8 +50,15 @@ class AuthApiController extends Controller
 
         // Send OTP via SMS
         $smsService = app(\App\Services\SmsService::class);
-        $message = "Your OTP for ByndAI is {$otp}. Please do not share it with anyone.";
-        $smsService->sendOtp($p->user_mobile, $message);
+        $message = "Dear User, Your otp is {$otp} do not share with anyone. PATHDM";
+        $response = $smsService->sendOtp($p->user_mobile, $message);
+
+        // Store response and JobId
+        $p->sms_response = json_encode($response);
+        if (isset($response['JobId'])) {
+            $p->job_id = $response['JobId'];
+        }
+        $p->save();
 
         return $p;
     }
@@ -714,5 +721,32 @@ class AuthApiController extends Controller
                 'master_user' => $detail,
             ],
         ]);
+    }
+    public function checkSmsDelivery(Request $request)
+    {
+        $request->validate([
+            'phone_no' => 'required|digits:10',
+        ]);
+
+        $p = PhoneVerification::where('user_mobile', $request->phone_no)
+            ->whereNotNull('job_id')
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        if (!$p) {
+            return response()->json([
+                'status' => false,
+                'message' => 'No SMS record found for this number with a Job ID.',
+            ], 404);
+        }
+
+        $smsService = app(\App\Services\SmsService::class);
+        $deliveryStatus = $smsService->checkDelivery($p->job_id);
+
+        return response()->json([
+            'status' => true,
+            'job_id' => $p->job_id,
+            'delivery_status' => $deliveryStatus,
+        ], 200);
     }
 }

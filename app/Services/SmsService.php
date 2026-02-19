@@ -46,9 +46,25 @@ class SmsService
 
             Log::info('SMS Response: ' . $response->body());
 
-            return $response->json();
+            return $jsonResponse = $response->json();
         } catch (\Exception $e) {
             Log::error('SMS Send Failed: ' . $e->getMessage());
+            return ['status' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    public function checkDelivery($jobId)
+    {
+        try {
+            $response = Http::get('http://bulksms.saakshisoftware.com/api/mt/GetDelivery', [
+                'user' => $this->user,
+                'password' => $this->password,
+                'jobid' => $jobId,
+            ]);
+
+            return $response->json();
+        } catch (\Exception $e) {
+            Log::error('SMS Delivery Check Failed: ' . $e->getMessage());
             return ['status' => false, 'message' => $e->getMessage()];
         }
     }
