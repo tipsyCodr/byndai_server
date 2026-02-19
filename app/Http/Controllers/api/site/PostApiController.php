@@ -1050,47 +1050,20 @@ class PostApiController extends Controller
         $request->validate([
             'image' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120',
 
-            // ✅ NEW OPTIONAL FIELDS
+            // ✅ New optional fields (frontend se aa sakte)
             'user_id' => 'nullable|integer',
             'category' => 'nullable|string|max:255',
 
-            'selfy_image_1' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
-            'selfy_image_2' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            // Flutter base64 images
+            'selfy_images' => 'nullable|array',
+            'selfy_images.*' => 'nullable|string',
 
-            'selfy_video' => 'nullable|file|mimes:mp4,mov,avi,webm|max:20480', // 20MB
+            // Flutter base64 video
+            'selfy_video' => 'nullable|string',
+            'selfy_video_filename' => 'nullable|string|max:255',
         ]);
 
-        // ✅ Save selfy files in SAME folder as lead images
-        $selfyImage1Name = null;
-        $selfyImage2Name = null;
-        $selfyVideoName = null;
-
-        // 👇 SAME folder
-        $folder = public_path('uploads/leads');
-
-        if (! file_exists($folder)) {
-            mkdir($folder, 0777, true);
-        }
-
-        if ($request->hasFile('selfy_image_1')) {
-            $file = $request->file('selfy_image_1');
-            $selfyImage1Name = 'selfy_1_'.time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
-            $file->move($folder, $selfyImage1Name);
-        }
-
-        if ($request->hasFile('selfy_image_2')) {
-            $file = $request->file('selfy_image_2');
-            $selfyImage2Name = 'selfy_2_'.time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
-            $file->move($folder, $selfyImage2Name);
-        }
-
-        if ($request->hasFile('selfy_video')) {
-            $file = $request->file('selfy_video');
-            $selfyVideoName = 'selfy_video_'.time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
-            $file->move($folder, $selfyVideoName);
-        }
-
-        // ✅ Image to base64 (EXISTING)
+        // ✅ Image to base64 (business card image)
         $imageFile = $request->file('image');
         $imageData = base64_encode(file_get_contents($imageFile->getRealPath()));
         $mimeType = $imageFile->getMimeType();
@@ -1105,7 +1078,7 @@ class PostApiController extends Controller
             ], 500);
         }
 
-        // ✅ GPT Prompt (EXISTING)
+        // ✅ GPT Prompt
         $systemPrompt = '
 You are an OCR + Business Card Data Extraction assistant.
 Extract details from the image and return ONLY valid JSON.
@@ -1163,9 +1136,10 @@ Rules:
         $result = $response->json();
         $content = $result['choices'][0]['message']['content'] ?? '';
 
-        // ✅ JSON decode (EXISTING)
+        // ✅ JSON decode
         $decoded = json_decode($content, true);
 
+        // Agar GPT ne JSON sahi na diya
         if (! $decoded || ! is_array($decoded)) {
             return response()->json([
                 'success' => false,
@@ -1175,11 +1149,9 @@ Rules:
             ], 500);
         }
 
-        // ✅ Fix missing keys (EXISTING)
+        // ✅ Fix missing keys (always return all)
         $final = [
             'id' => (string) rand(1, 999999),
-
-            // OCR
             'name' => $decoded['name'] ?? null,
             'company_name' => $decoded['company_name'] ?? null,
             'email' => $decoded['email'] ?? null,
@@ -1189,21 +1161,118 @@ Rules:
             'mobile_no_1' => $decoded['mobile_no_1'] ?? null,
             'mobile_no_2' => $decoded['mobile_no_2'] ?? null,
             'mobile_no_3' => $decoded['mobile_no_3'] ?? null,
-
-            // ✅ NEW fields (saved + returned)
-            'user_id' => $request->user_id,
-            'category' => $request->category,
-
-            'selfy_image_1' => $selfyImage1Name,
-            'selfy_image_2' => $selfyImage2Name,
-            'selfy_video' => $selfyVideoName,
         ];
 
-        return response()->json([
-            'success' => true,
-            'data' => $final,
-            'raw' => $result, // optional debug
-        ]);
+        // ============================================================
+        // ✅ NEW PART: Save Lead with user_id, category, selfy images/video
+        // ============================================================
+
+        try {
+            // 🔥 You must import Lead model:
+            // use App\Models\Lead;
+
+            $lead = new \App\Models\Lead;
+
+            // OCR extracted data
+            $lead->name = $final['name'];
+            $lead->company_name = $final['company_name'];
+            $lead->email = $final['email'];
+            $lead->email2 = $final['email2'];
+            $lead->website = $final['website'];
+            $lead->address = $final['address'];
+            $lead->mobile_no_1 = $final['mobile_no_1'];
+            $lead->mobile_no_2 = $final['mobile_no_2'];
+            $lead->mobile_no_3 = $final['mobile_no_3'];
+
+            // ✅ New fields
+            $lead->user_id = $request->user_id ?? null;
+            $lead->category = $request->category ?? null;
+
+            // ✅ Folder path (same as lead_image folder)
+            $folderPath = public_path('uploads/leads');
+
+            if (! file_exists($folderPath)) {
+                mkdir($folderPath, 0777, true);
+            }
+
+            // =========================
+            // ✅ Save selfy images
+            // =========================
+            $selfyImages = $request->selfy_images ?? [];
+
+            // helper function
+            $saveBase64Image = function ($base64, $prefix) use ($folderPath) {
+                if (! $base64) {
+                    return null;
+                }
+
+                // remove data:image/...;base64,
+                if (str_contains($base64, 'base64,')) {
+                    $base64 = explode('base64,', $base64)[1];
+                }
+
+                $imageData = base64_decode($base64);
+
+                if (! $imageData) {
+                    return null;
+                }
+
+                $fileName = $prefix.'_'.time().'_'.rand(1000, 9999).'.jpg';
+                file_put_contents($folderPath.'/'.$fileName, $imageData);
+
+                return 'uploads/leads/'.$fileName;
+            };
+
+            $lead->selfy_image_1 = isset($selfyImages[0])
+                ? $saveBase64Image($selfyImages[0], 'selfy_1')
+                : null;
+
+            $lead->selfy_image_2 = isset($selfyImages[1])
+                ? $saveBase64Image($selfyImages[1], 'selfy_2')
+                : null;
+
+            // =========================
+            // ✅ Save selfy video
+            // =========================
+            $selfyVideo = $request->selfy_video;
+
+            if ($selfyVideo) {
+                if (str_contains($selfyVideo, 'base64,')) {
+                    $selfyVideo = explode('base64,', $selfyVideo)[1];
+                }
+
+                $videoData = base64_decode($selfyVideo);
+
+                if ($videoData) {
+                    $videoFileName = $request->selfy_video_filename
+                        ?? ('selfy_video_'.time().'_'.rand(1000, 9999).'.mp4');
+
+                    file_put_contents($folderPath.'/'.$videoFileName, $videoData);
+
+                    $lead->selfy_video = 'uploads/leads/'.$videoFileName;
+                }
+            }
+
+            // ✅ Save lead
+            $lead->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'OCR Done + Lead Saved Successfully',
+                'data' => $final,
+                'lead_saved' => true,
+                'lead_id' => $lead->id,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => true,
+                'message' => 'OCR Done BUT lead save failed',
+                'data' => $final,
+                'lead_saved' => false,
+                'save_error' => $e->getMessage(),
+            ], 200);
+        }
     }
 
     // =========================
