@@ -41,6 +41,7 @@ return [
         'sender_id' => env('SAAKSHI_SENDER_ID'),
         'channel' => env('SAAKSHI_CHANNEL', 'Promo'),
         'route' => env('SAAKSHI_ROUTE', '##'),
+        'default_peid' => env('SAAKSHI_DEFAULT_PEID'),
     ],
 
 ];
