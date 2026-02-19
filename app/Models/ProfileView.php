@@ -16,4 +16,9 @@ class ProfileView extends Model
         'total_time_seconds',
         'last_viewed_at',
     ];
+
+    public function viewer()
+    {
+        return $this->belongsTo(User::class, 'viewer_user_id', 'id');
+    }
 }

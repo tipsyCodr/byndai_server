@@ -134,4 +134,28 @@ class MasterLinkController extends Controller
             'message' => 'Master Link deleted successfully',
         ]);
     }
+
+    public function getUserLinksById($id)
+    {
+        // user exist check
+        $user = User::find($id);
+
+        if (! $user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'User not found',
+            ], 404);
+        }
+
+        // links fetch
+        $links = MasterLink::where('user_id', $id)
+            ->orderBy('id', 'desc')
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'user_id' => $id,
+            'data' => $links,
+        ]);
+    }
 }

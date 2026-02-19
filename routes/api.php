@@ -14,10 +14,13 @@ use App\Http\Controllers\api\site\MasterLinkController;
 use App\Http\Controllers\api\site\MasterPostApiController;
 use App\Http\Controllers\api\site\PostApiController;
 use App\Http\Controllers\api\site\ProductApiController;
-use App\Http\Controllers\api\site\ProfileViewController;
 use App\Http\Controllers\api\site\ProfileApiController;
+use App\Http\Controllers\api\site\ProfileLinkClickController;
+use App\Http\Controllers\api\site\ProfileViewController;
 use App\Http\Controllers\api\site\RestrictionApiController;
 use App\Http\Controllers\api\site\SubscriptionApiController;
+use App\Http\Controllers\api\site\UserAnalyticsController;
+use App\Http\Controllers\api\site\UserListController;
 use App\Http\Controllers\api\site\UserReviewApiController;
 use Illuminate\Support\Facades\Route;
 
@@ -55,6 +58,7 @@ Route::put('/leads/{id}', [LeadController::class, 'update']);
 Route::delete('/leads/{id}', [LeadController::class, 'destroy']);
 Route::post('/ocr-extract', [LeadController::class, 'ocrExtract']);
 Route::post('/gpt-ocr', [PostApiController::class, 'gptOcr']);
+Route::get('/user/{id}/master-links', [MasterLinkController::class, 'getUserLinksById']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
 
@@ -561,6 +565,26 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/profile-view/end', [
         ProfileViewController::class,
         'endView',
+    ]);
+
+    Route::post('/profile-link/click', [
+        ProfileLinkClickController::class,
+        'click',
+    ]);
+
+    Route::get('/check-friendship/{userId}/{viewerId}', [
+        ConnectionApiController::class,
+        'checkFriendship',
+    ]);
+
+    Route::post('/user-analytics', [
+        UserAnalyticsController::class,
+        'userAnalytics',
+    ]);
+
+    Route::post('/users-with-business/list', [
+        UserListController::class,
+        'listUsers',
     ]);
 
     // api for post end....
