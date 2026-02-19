@@ -50,7 +50,7 @@ class AuthApiController extends Controller
 
         // Send OTP via SMS
         $smsService = app(\App\Services\SmsService::class);
-        $message = "Dear User, Your otp is {$otp} do not share with anyone. PATHDM";
+        $message = "Your verification code is {$otp} for login authentication. This code is confidential and valid for limited time only. Do not disclose it. – Path Idea Multiskill";
         $response = $smsService->sendOtp($p->user_mobile, $message);
 
         // Store response and JobId
