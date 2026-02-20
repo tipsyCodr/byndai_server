@@ -50,6 +50,8 @@ Route::post('/login/pin/check', [AuthApiController::class, 'checkPin']);
 Route::post('/login/pin/set', [AuthApiController::class, 'setPin']);
 Route::post('/login/pin', [AuthApiController::class, 'loginWithPin']);
 Route::post('/login/{phone}', [AuthApiController::class, 'login']);
+Route::post('/check-email', [AuthApiController::class, 'checkEmail']);
+
 
 Route::get('/leads', [LeadController::class, 'index']);
 Route::post('/leads', [LeadController::class, 'store']);
