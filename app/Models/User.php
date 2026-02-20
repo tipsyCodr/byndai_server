@@ -19,14 +19,14 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        "user_mobile",
-        "user_name",
-        "email",
-        "password",
-        "otp",
-        "created_ip",
-        "status",
-        "remember_token",
+        'user_mobile',
+        'user_name',
+        'email',
+        'password',
+        'otp',
+        'created_ip',
+        'status',
+        'remember_token',
     ];
 
     /**
@@ -34,7 +34,7 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-    protected $hidden = ["password", "remember_token"];
+    protected $hidden = ['password', 'remember_token'];
 
     /**
      * Get the attributes that should be cast.
@@ -44,19 +44,31 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            "email_verified_at" => "datetime",
-            "password" => "hashed",
-            "pin" => "hashed",
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+            'pin' => 'hashed',
         ];
     }
+
     public function masterUser()
     {
-        return $this->hasOne(MasterUserDetail::class, "user_id", "id");
+        return $this->hasOne(MasterUserDetail::class, 'user_id', 'id');
     }
-    
 
     public function businessInfo()
     {
         return $this->hasOne(BusinessInfo::class, 'user_id', 'id');
     }
+
+    public function connectionsAsUser()
+    {
+        return $this->hasMany(Connection::class, 'user_id', 'id');
+    }
+
+    public function connectionsAsFriend()
+    {
+        return $this->hasMany(Connection::class, 'friend_id', 'id');
+    }
+
+   
 }
