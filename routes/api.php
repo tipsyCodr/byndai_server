@@ -22,6 +22,7 @@ use App\Http\Controllers\api\site\SubscriptionApiController;
 use App\Http\Controllers\api\site\UserAnalyticsController;
 use App\Http\Controllers\api\site\UserListController;
 use App\Http\Controllers\api\site\UserReviewApiController;
+use App\Http\Controllers\api\site\ProfileMilestoneController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/check-mobile', [AuthApiController::class, 'checkMobile']);
@@ -589,6 +590,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
         UserListController::class,
         'listUsers',
     ]);
+
+    Route::post('/profile-completion', [
+    ProfileMilestoneController::class,
+    'profileCompletion',
+]);
 
     // api for post end......
 
