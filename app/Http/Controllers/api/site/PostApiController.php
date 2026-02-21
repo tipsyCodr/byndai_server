@@ -783,6 +783,7 @@ class PostApiController extends Controller
                     'user' => [
                         'user_name' => $post->user ? $post->user->user_name : null,
                         'fname' => $post->userDetail ? $post->userDetail->fname : null,
+                        'profile_pic' => $post->userDetail ? $post->userDetail->profile_pic : null,
                     ],
 
                     'title' => $post->title,
