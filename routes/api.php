@@ -596,7 +596,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     'profileCompletion',
 ]);
 
-    // api for post end......
+    // api for post end..........
 
     Route::post('/logout', [AuthApiController::class, 'logout']);
 
