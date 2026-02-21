@@ -66,4 +66,9 @@ class Post extends Model
     {
         return $this->hasMany(PostReport::class, 'post_id');
     }
+
+    public function industry()
+    {
+        return $this->belongsTo(MasterIndustry::class, 'industry_id');
+    }
 }

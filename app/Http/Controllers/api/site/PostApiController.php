@@ -749,6 +749,7 @@ class PostApiController extends Controller
                 'media',
                 'user',
                 'userDetail',
+                'industry',
             ])
                 ->where('status', 'active')
                 ->orderBy('id', 'desc')
@@ -789,6 +790,8 @@ class PostApiController extends Controller
                     'title' => $post->title,
                     'description' => $post->description,
                     'industry_id' => $post->industry_id,
+                    'industry_title' => $post->industry ? $post->industry->title : null,
+                    'industry_icon' => $post->industry ? $post->industry->icons : null,
                     'status' => $post->status,
                     'created_at' => $post->created_at,
                     'updated_at' => $post->updated_at,
