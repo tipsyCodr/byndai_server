@@ -22,7 +22,6 @@ use App\Http\Controllers\api\site\SubscriptionApiController;
 use App\Http\Controllers\api\site\UserAnalyticsController;
 use App\Http\Controllers\api\site\UserListController;
 use App\Http\Controllers\api\site\UserReviewApiController;
-use App\Http\Controllers\api\site\ProfileMilestoneController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/check-mobile', [AuthApiController::class, 'checkMobile']);
@@ -52,7 +51,6 @@ Route::post('/login/pin/set', [AuthApiController::class, 'setPin']);
 Route::post('/login/pin', [AuthApiController::class, 'loginWithPin']);
 Route::post('/login/{phone}', [AuthApiController::class, 'login']);
 Route::post('/check-email', [AuthApiController::class, 'checkEmail']);
-
 
 Route::get('/leads', [LeadController::class, 'index']);
 Route::post('/leads', [LeadController::class, 'store']);
@@ -592,9 +590,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     ]);
 
     Route::post('/profile-completion', [
-    ProfileMilestoneController::class,
-    'profileCompletion',
-]);
+        UserListController::class,
+        'profileCompletion',
+    ]);
 
     // api for post end..........
 
