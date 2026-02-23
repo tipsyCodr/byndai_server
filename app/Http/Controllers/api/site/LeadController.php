@@ -475,21 +475,76 @@ class LeadController extends Controller
         ]);
     }
 
+    // public function getByUserId(Request $request)
+    // {
+    //     $request->validate([
+    //         'user_id' => 'required|integer',
+    //         'per_page' => 'nullable|integer|min:1|max:100',
+    //     ]);
+
+    //     $perPage = $request->get('per_page', 10);
+    //     $userId = $request->user_id;
+
+    //     $leads = Lead::where('user_id', $userId)
+    //         ->latest()
+    //         ->paginate($perPage);
+
+    //     // Add URLs for images and videos
+    //     $leads->getCollection()->transform(function ($lead) {
+    //         if ($lead->lead_image) {
+    //             $lead->image_url = asset('storage/'.$lead->lead_image);
+    //         }
+    //         if ($lead->selfy_image_1) {
+    //             $lead->selfy_image_1_url = asset('storage/'.$lead->selfy_image_1);
+    //         }
+    //         if ($lead->selfy_image_2) {
+    //             $lead->selfy_image_2_url = asset('storage/'.$lead->selfy_image_2);
+    //         }
+    //         if ($lead->selfy_video) {
+    //             $lead->selfy_video_url = asset('storage/'.$lead->selfy_video);
+    //         }
+
+    //         return $lead;
+    //     });
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'data' => $leads->items(),
+    //         'meta' => [
+    //             'current_page' => $leads->currentPage(),
+    //             'per_page' => $leads->perPage(),
+    //             'total' => $leads->total(),
+    //             'last_page' => $leads->lastPage(),
+    //             'next_page_url' => $leads->nextPageUrl(),
+    //             'prev_page_url' => $leads->previousPageUrl(),
+    //         ],
+    //     ]);
+    // }
+
     public function getByUserId(Request $request)
     {
         $request->validate([
             'user_id' => 'required|integer',
+            'category' => 'nullable|string',
             'per_page' => 'nullable|integer|min:1|max:100',
         ]);
 
         $perPage = $request->get('per_page', 10);
         $userId = $request->user_id;
+        $category = $request->category;
 
-        $leads = Lead::where('user_id', $userId)
-            ->latest()
-            ->paginate($perPage);
+        // Base Query
+        $query = Lead::where('user_id', $userId);
 
-        // Add URLs for images and videos
+        // ✅ Category Filter (only if selected)
+        if (! empty($category)) {
+            $query->where('category', $category);
+        }
+
+        // Latest + Pagination
+        $leads = $query->latest()->paginate($perPage);
+
+        // Add URLs
         $leads->getCollection()->transform(function ($lead) {
             if ($lead->lead_image) {
                 $lead->image_url = asset('storage/'.$lead->lead_image);
