@@ -525,7 +525,7 @@ class LeadController extends Controller
     {
         $request->validate([
             'user_id' => 'required|integer',
-            'category' => 'nullable|string',
+            'category' => 'nullable|integer',
             'per_page' => 'nullable|integer|min:1|max:100',
         ]);
 
