@@ -5,6 +5,7 @@ use App\Http\Controllers\api\site\BusinessInfoApiController;
 use App\Http\Controllers\api\site\ChatApiController;
 use App\Http\Controllers\api\site\ConnectionApiController;
 use App\Http\Controllers\api\site\CustomerMasterApiController;
+use App\Http\Controllers\api\site\LeadCategoryController;
 use App\Http\Controllers\api\site\LeadController;
 use App\Http\Controllers\api\site\MasterApiController;
 use App\Http\Controllers\api\site\MasterCommentApiController;
@@ -592,6 +593,23 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/profile-completion', [
         UserListController::class,
         'profileCompletion',
+    ]);
+
+    Route::post('/lead-category-create', [
+        LeadCategoryController::class,
+        'create',
+    ]);
+    Route::put('/lead-category-update/{id}', [
+        LeadCategoryController::class,
+        'update',
+    ]);
+    Route::delete('/lead-category-delete/{id}', [
+        LeadCategoryController::class,
+        'delete',
+    ]);``
+    Route::get('/lead-category-user/{user_id}', [
+        LeadCategoryController::class,
+        'getByUserId',
     ]);
 
     // api for post end..........
