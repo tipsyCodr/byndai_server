@@ -108,7 +108,7 @@ class LeadController extends Controller
             'company_name' => 'nullable|string',
             'address' => 'nullable|string',
 
-            'category' => 'nullable|string',
+            'category' => 'nullable|integer',
             'user_id' => 'required|integer',
 
             'lead_image' => 'nullable|string',
