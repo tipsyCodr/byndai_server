@@ -606,7 +606,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::delete('/lead-category-delete/{id}', [
         LeadCategoryController::class,
         'delete',
-    ]);``
+    ]);
     Route::get('/lead-category-user/{user_id}', [
         LeadCategoryController::class,
         'getByUserId',
