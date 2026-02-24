@@ -1363,6 +1363,29 @@ Rules:
         ]);
     }
 
+    // public function getUserDetails($id)
+    // {
+    //     $user = User::with([
+    //         'masterUser',
+    //         'masterUser.country',
+    //         'masterUser.state',
+    //         'masterUser.district',
+    //     ])->find($id);
+
+    //     if (! $user) {
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => 'User not found',
+    //         ], 404);
+    //     }
+
+    //     return response()->json([
+    //         'status' => true,
+    //         'message' => 'User details fetched successfully',
+    //         'data' => $user,
+    //     ], 200);
+    // }
+
     public function getUserDetails($id)
     {
         $user = User::with([
@@ -1370,6 +1393,8 @@ Rules:
             'masterUser.country',
             'masterUser.state',
             'masterUser.district',
+            'businessInfo', // <-- ye add kiya
+            'businessInfo.industry', // <-- agar industry details bhi chahiye
         ])->find($id);
 
         if (! $user) {
