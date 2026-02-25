@@ -841,34 +841,28 @@ class PostApiController extends Controller
     {
         try {
 
+            $search = $request->query('search');       // ?search=water
+            $industryId = $request->query('industry_id'); // ?industry_id=104
             $perPage = 10;
 
             $query = Post::with([
                 'user:id,user_name,fname,profile_pic',
                 'media',
+                'industry:id,title,icon',
             ])
-                ->withCount(['likes', 'dislikes', 'comments', 'saves', 'shares', 'views'])
                 ->where('status', 'active');
 
-            // =========================
-            // 🔎 SEARCH FILTER
-            // =========================
-            if ($request->filled('search')) {
-
-                $search = $request->search;
-
-                $query->where(function ($q) use ($search) {
-                    $q->where('title', 'LIKE', "%$search%")
-                        ->orWhere('description', 'LIKE', "%$search%")
-                        ->orWhere('industry_title', 'LIKE', "%$search%");
-                });
+            // ✅ Industry Filter
+            if (! empty($industryId)) {
+                $query->where('industry_id', $industryId);
             }
 
-            // =========================
-            // 🏭 INDUSTRY FILTER
-            // =========================
-            if ($request->filled('industry_id')) {
-                $query->where('industry_id', $request->industry_id);
+            // ✅ Search Filter (title + description)
+            if (! empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('title', 'LIKE', "%{$search}%")
+                        ->orWhere('description', 'LIKE', "%{$search}%");
+                });
             }
 
             $posts = $query->orderBy('created_at', 'desc')
@@ -876,7 +870,7 @@ class PostApiController extends Controller
 
             return response()->json([
                 'status' => true,
-                'message' => 'Posts fetched successfully',
+                'message' => 'Filtered posts fetched successfully',
                 'data' => $posts->items(),
                 'pagination' => [
                     'current_page' => $posts->currentPage(),
@@ -889,11 +883,9 @@ class PostApiController extends Controller
             ]);
 
         } catch (\Exception $e) {
-
             return response()->json([
                 'status' => false,
-                'message' => 'Something went wrong',
-                'error' => $e->getMessage(),
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
