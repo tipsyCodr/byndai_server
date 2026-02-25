@@ -839,55 +839,101 @@ class PostApiController extends Controller
 
     public function listAllPosts(Request $request)
     {
-        try {
+        $user = auth()->user();
 
-            $search = $request->query('search');       // ?search=water
-            $industryId = $request->query('industry_id'); // ?industry_id=104
-            $perPage = 10;
+        $search = $request->query('search');
+        $industryId = $request->query('industry_id');
+        $perPage = $request->query('per_page', 10);
 
-            $query = Post::with([
-                'user:id,user_name,fname,profile_pic',
-                'media',
-                'industry:id,title,icon',
-            ])
-                ->where('status', 'active');
+        $query = Post::with([
+            'user.masterUser',
+            'media',
+            'industry',
+        ])
+            ->where('status', 'active');
 
-            // ✅ Industry Filter
-            if (! empty($industryId)) {
-                $query->where('industry_id', $industryId);
-            }
-
-            // ✅ Search Filter (title + description)
-            if (! empty($search)) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('title', 'LIKE', "%{$search}%")
-                        ->orWhere('description', 'LIKE', "%{$search}%");
-                });
-            }
-
-            $posts = $query->orderBy('created_at', 'desc')
-                ->paginate($perPage);
-
-            return response()->json([
-                'status' => true,
-                'message' => 'Filtered posts fetched successfully',
-                'data' => $posts->items(),
-                'pagination' => [
-                    'current_page' => $posts->currentPage(),
-                    'last_page' => $posts->lastPage(),
-                    'per_page' => $posts->perPage(),
-                    'total' => $posts->total(),
-                    'next_page_url' => $posts->nextPageUrl(),
-                    'prev_page_url' => $posts->previousPageUrl(),
-                ],
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => $e->getMessage(),
-            ], 500);
+        // ================= INDUSTRY FILTER =================
+        if (! empty($industryId)) {
+            $query->where('industry_id', $industryId);
         }
+
+        // ================= SEARCH FILTER =================
+        if (! empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'LIKE', "%{$search}%")
+                    ->orWhere('description', 'LIKE', "%{$search}%")
+                    ->orWhereHas('user', function ($uq) use ($search) {
+                        $uq->where('user_name', 'LIKE', "%{$search}%");
+                    })
+                    ->orWhereHas('user.masterUser', function ($mq) use ($search) {
+                        $mq->where('fname', 'LIKE', "%{$search}%");
+                    });
+            });
+        }
+
+        $posts = $query->latest()->paginate($perPage);
+
+        $formattedPosts = $posts->getCollection()->map(function ($post) use ($user) {
+
+            return [
+                'id' => $post->id,
+                'user_id' => $post->user_id,
+
+                'user' => [
+                    'user_name' => $post->user->user_name ?? null,
+                    'fname' => $post->user->masterUser->fname ?? null,
+                    'profile_pic' => $post->user->masterUser->profile_pic ?? null,
+                ],
+
+                'title' => $post->title,
+                'description' => $post->description,
+
+                'industry_id' => $post->industry_id,
+                'industry_title' => $post->industry->title ?? null,
+                'industry_icon' => $post->industry->icon ?? null,
+
+                'status' => $post->status,
+                'created_at' => $post->created_at,
+                'updated_at' => $post->updated_at,
+
+                'media' => $post->media,
+
+                'counts' => [
+                    'likes' => $post->reactions()->where('reaction_type', 'like')->count(),
+                    'dislikes' => $post->reactions()->where('reaction_type', 'dislike')->count(),
+                    'comments' => $post->comments()->count(),
+                    'saves' => $post->saves()->count(),
+                    'shares' => $post->shares()->count(),
+                    'views' => $post->views()->count(),
+                ],
+
+                'my' => [
+                    'reaction' => optional(
+                        $post->reactions()
+                            ->where('user_id', $user->id)
+                            ->first()
+                    )->type ?? 'none',
+
+                    'saved' => $post->saves()
+                        ->where('user_id', $user->id)
+                        ->exists(),
+                ],
+            ];
+        });
+
+        return response()->json([
+            'status' => true,
+            'message' => 'All posts fetched successfully',
+            'data' => $formattedPosts,
+            'pagination' => [
+                'current_page' => $posts->currentPage(),
+                'last_page' => $posts->lastPage(),
+                'per_page' => $posts->perPage(),
+                'total' => $posts->total(),
+                'next_page_url' => $posts->nextPageUrl(),
+                'prev_page_url' => $posts->previousPageUrl(),
+            ],
+        ]);
     }
 
     // =========================
