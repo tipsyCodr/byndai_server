@@ -698,26 +698,111 @@ class PostApiController extends Controller
     // 13) User Active Status Post List
     // =========================
 
+    // public function userPosts(Request $request, $user_id)
+    // {
+    //     try {
+    //         $viewerUserId = $request->user()->id;
+
+    //         $posts = Post::where('user_id', $user_id)
+    //             ->where('status', 'active')
+    //             ->orderBy('id', 'desc')
+    //             ->paginate(10);
+
+    //         $data = [];
+
+    //         foreach ($posts->items() as $post) {
+    //             $data[] = $this->postFullResponse($post->id, $viewerUserId);
+    //         }
+
+    //         return response()->json([
+    //             'status' => true,
+    //             'message' => 'User posts fetched successfully',
+    //             'data' => $data,
+    //             'pagination' => [
+    //                 'current_page' => $posts->currentPage(),
+    //                 'last_page' => $posts->lastPage(),
+    //                 'per_page' => $posts->perPage(),
+    //                 'total' => $posts->total(),
+    //                 'next_page_url' => $posts->nextPageUrl(),
+    //                 'prev_page_url' => $posts->previousPageUrl(),
+    //             ],
+    //         ], 200);
+
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => 'Failed to fetch user posts: '.$e->getMessage(),
+    //         ], 500);
+    //     }
+    // }
+
     public function userPosts(Request $request, $user_id)
     {
         try {
-            $viewerUserId = $request->user()->id;
+            $viewer = $request->user();
+            $viewerUserId = $viewer->id;
 
-            $posts = Post::where('user_id', $user_id)
+            $posts = Post::with([
+                'user.masterUser',
+                'media',
+                'industry',
+            ])
+                ->where('user_id', $user_id)
                 ->where('status', 'active')
                 ->orderBy('id', 'desc')
                 ->paginate(10);
 
-            $data = [];
+            $formattedPosts = $posts->getCollection()->map(function ($post) use ($viewerUserId) {
+                return [
+                    'id' => $post->id,
+                    'user_id' => $post->user_id,
 
-            foreach ($posts->items() as $post) {
-                $data[] = $this->postFullResponse($post->id, $viewerUserId);
-            }
+                    'user' => [
+                        'user_name' => $post->user->user_name ?? null,
+                        'fname' => $post->user->masterUser->fname ?? null,
+                        'profile_pic' => $post->user->masterUser->profile_pic ?? null,
+                    ],
+
+                    'title' => $post->title,
+                    'description' => $post->description,
+
+                    'industry_id' => $post->industry_id,
+                    'industry_title' => $post->industry->title ?? null,
+                    'industry_icon' => $post->industry ? $post->industry->icons : null,
+
+                    'status' => $post->status,
+                    'created_at' => $post->created_at,
+                    'updated_at' => $post->updated_at,
+
+                    'media' => $post->media,
+
+                    'counts' => [
+                        'likes' => $post->reactions()->where('reaction_type', 'like')->count(),
+                        'dislikes' => $post->reactions()->where('reaction_type', 'dislike')->count(),
+                        'comments' => $post->comments()->count(),
+                        'saves' => $post->saves()->count(),
+                        'shares' => $post->shares()->count(),
+                        'views' => $post->views()->count(),
+                    ],
+
+                    'my' => [
+                        'reaction' => optional(
+                            $post->reactions()
+                                ->where('user_id', $viewerUserId)
+                                ->first()
+                        )->type ?? 'none',
+
+                        'saved' => $post->saves()
+                            ->where('user_id', $viewerUserId)
+                            ->exists(),
+                    ],
+                ];
+            });
 
             return response()->json([
                 'status' => true,
                 'message' => 'User posts fetched successfully',
-                'data' => $data,
+                'data' => $formattedPosts,
                 'pagination' => [
                     'current_page' => $posts->currentPage(),
                     'last_page' => $posts->lastPage(),
