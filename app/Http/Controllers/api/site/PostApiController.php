@@ -890,7 +890,7 @@ class PostApiController extends Controller
 
                 'industry_id' => $post->industry_id,
                 'industry_title' => $post->industry->title ?? null,
-                'industry_icon' => $post->industry->icon ?? null,
+                'industry_icon' => $post->industry ? $post->industry->icons : null,
 
                 'status' => $post->status,
                 'created_at' => $post->created_at,
