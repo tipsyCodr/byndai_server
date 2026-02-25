@@ -208,11 +208,43 @@ class PostApiController extends Controller
     // =========================
     // 3) DELETE POST
     // =========================
+    // public function deletePost(Request $request, $post_id)
+    // {
+    //     try {
+    //         $userId = $request->user()->id;
+
+    //         $post = Post::where('id', $post_id)
+    //             ->where('user_id', $userId)
+    //             ->first();
+
+    //         if (! $post) {
+    //             return response()->json([
+    //                 'status' => false,
+    //                 'message' => 'Post not found or unauthorized',
+    //             ], 404);
+    //         }
+
+    //         $post->update(['status' => 'deleted']);
+
+    //         return response()->json([
+    //             'status' => true,
+    //             'message' => 'Post deleted successfully',
+    //         ], 200);
+
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => 'Failed to delete post: '.$e->getMessage(),
+    //         ], 500);
+    //     }
+    // }
+
     public function deletePost(Request $request, $post_id)
     {
         try {
             $userId = $request->user()->id;
 
+            // Find the post belonging to the user
             $post = Post::where('id', $post_id)
                 ->where('user_id', $userId)
                 ->first();
@@ -224,14 +256,72 @@ class PostApiController extends Controller
                 ], 404);
             }
 
-            $post->update(['status' => 'deleted']);
+            DB::beginTransaction();
+
+            // 1. Delete media files from storage and media records
+            foreach ($post->media as $media) {
+                // Extract relative path from media_url
+                // Example: "/storage/uploads/posts/filename.jpg" -> "uploads/posts/filename.jpg"
+                $relativePath = null;
+                if (! empty($media->media_url)) {
+                    // Remove leading "/storage/" if present
+                    if (str_starts_with($media->media_url, '/storage/')) {
+                        $relativePath = substr($media->media_url, 9); // remove '/storage/'
+                    } else {
+                        $relativePath = $media->media_url; // assume already relative
+                    }
+
+                    // Delete the file if it exists
+                    if (Storage::disk('public')->exists($relativePath)) {
+                        Storage::disk('public')->delete($relativePath);
+                    }
+                }
+
+                // Delete thumbnail if exists
+                if (! empty($media->thumbnail_url)) {
+                    $thumbPath = null;
+                    if (str_starts_with($media->thumbnail_url, '/storage/')) {
+                        $thumbPath = substr($media->thumbnail_url, 9);
+                    } else {
+                        $thumbPath = $media->thumbnail_url;
+                    }
+                    if (Storage::disk('public')->exists($thumbPath)) {
+                        Storage::disk('public')->delete($thumbPath);
+                    }
+                }
+
+                // Delete the media record
+                $media->delete();
+            }
+
+            // 2. Delete all reactions
+            $post->reactions()->delete();
+
+            // 3. Delete all comments (including replies – they all belong to the post)
+            $post->comments()->delete();
+
+            // 4. Delete all saves
+            $post->saves()->delete();
+
+            // 5. Delete all views
+            $post->views()->delete();
+
+            // 6. Delete all reports
+            $post->reports()->delete();
+
+            // 7. Finally delete the post itself
+            $post->delete();
+
+            DB::commit();
 
             return response()->json([
                 'status' => true,
-                'message' => 'Post deleted successfully',
+                'message' => 'Post and all associated data deleted successfully',
             ], 200);
 
         } catch (\Exception $e) {
+            DB::rollBack();
+
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to delete post: '.$e->getMessage(),
