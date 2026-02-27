@@ -47,6 +47,7 @@ Route::post('/check-username', [
     AuthApiController::class,
     'checkUsername',
 ]);
+
 Route::get('/page/{slug}', [PageController::class, 'show']);
 Route::post('/login/phone/check', [AuthApiController::class, 'checkPhone']);
 Route::post('/login/pin/check', [AuthApiController::class, 'checkPin']);
