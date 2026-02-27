@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             PlanSeeder::class,
             RestrictionSeeder::class,
             SubscriptionSeeder::class,
+            SupportPageSeeder::class,
         ]);
     }
 }
