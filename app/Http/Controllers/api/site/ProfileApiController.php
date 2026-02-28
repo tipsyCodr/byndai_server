@@ -244,33 +244,32 @@ class ProfileApiController extends Controller
 
     // public function usersNameProfileData($user_name)
     // {
-
     //     $data1 = User::where('user_name', $user_name)->first();
 
-    //     if (!$data1) {
+    //     if (! $data1) {
     //         return response()->json([
     //             'status' => false,
-    //             'message' => 'Profile not found'
+    //             'message' => 'Profile not found',
     //         ], 404);
     //     }
 
-    //    $user_id = $data1->id;
+    //     $user_id = $data1->id;
 
-    //      $data = MasterUserDetail::with('user')
+    //     $data = MasterUserDetail::with(['user.businessInfo'])
     //         ->where('user_id', $user_id)
     //         ->first();
 
-    //     if (!$data) {
+    //     if (! $data) {
     //         return response()->json([
     //             'status' => false,
-    //             'message' => 'Profile not found'
+    //             'message' => 'Profile not found',
     //         ], 404);
     //     }
 
     //     return response()->json([
     //         'status' => true,
     //         'message' => 'User profile fetched successfully',
-    //         'data' => $data
+    //         'data' => $data,
     //     ], 200);
     // }
 
@@ -287,8 +286,9 @@ class ProfileApiController extends Controller
 
         $user_id = $data1->id;
 
-        $data = MasterUserDetail::with(['user.businessInfo'])
-            ->where('user_id', $user_id)
+        $data = MasterUserDetail::with([
+            'user.businessInfo.industry',
+        ])->where('user_id', $user_id)
             ->first();
 
         if (! $data) {
