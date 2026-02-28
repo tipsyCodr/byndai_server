@@ -19,42 +19,43 @@ class ProfileApiController extends Controller
             ->whereHas('user', function ($q) use ($users) {
                 $q->where('id', $users);
             })->first();
-        if (!$users_detail) {
+        if (! $users_detail) {
             return response()->json(['message' => 'Users not found'], 404);
         }
         if ($r->isMethod('get')) {
-            $users_detail->profile_pic = $users_detail->profile_pic ? asset('assets/uploads/profile_pics/' . $users_detail->profile_pic) : null;
-            $users_detail->profile_video = $users_detail->profile_video ? asset('assets/uploads/profile_videos/' . $users_detail->profile_video) : null;
-            $users_detail->profile_logo = $users_detail->profile_logo ? asset('assets/uploads/profile_logos/' . $users_detail->profile_logo) : null;
-            $users_detail->profile_banner = $users_detail->profile_banner ? asset('assets/uploads/profile_banners/' . $users_detail->profile_banner) : null;
+            $users_detail->profile_pic = $users_detail->profile_pic ? asset('assets/uploads/profile_pics/'.$users_detail->profile_pic) : null;
+            $users_detail->profile_video = $users_detail->profile_video ? asset('assets/uploads/profile_videos/'.$users_detail->profile_video) : null;
+            $users_detail->profile_logo = $users_detail->profile_logo ? asset('assets/uploads/profile_logos/'.$users_detail->profile_logo) : null;
+            $users_detail->profile_banner = $users_detail->profile_banner ? asset('assets/uploads/profile_banners/'.$users_detail->profile_banner) : null;
             $busi_info = BusinessInfo::with('user')
                 ->whereHas('user', function ($q) use ($users) {
                     $q->where('id', $users);
                 })->first();
+
             return response()->json(['users_detail' => $users_detail, 'business' => $busi_info]);
         }
         if ($r->isMethod('post')) {
             if ($r->hasFile('profile_pic')) {
                 $file = $r->file('profile_pic');
-                $fileName = time() . '_' . $file->getClientOriginalName();
+                $fileName = time().'_'.$file->getClientOriginalName();
                 $file->move(public_path('assets/uploads/profile_pics'), $fileName);
                 $users_detail->profile_pic = $fileName;
             }
             if ($r->hasFile('profile_video')) {
                 $file = $r->file('profile_video');
-                $fileName = time() . '_' . $file->getClientOriginalName();
+                $fileName = time().'_'.$file->getClientOriginalName();
                 $file->move(public_path('assets/uploads/profile_videos'), $fileName);
                 $users_detail->profile_video = $fileName;
             }
             if ($r->hasFile('profile_logo')) {
                 $file = $r->file('profile_logo');
-                $fileName = time() . '_' . $file->getClientOriginalName();
+                $fileName = time().'_'.$file->getClientOriginalName();
                 $file->move(public_path('assets/uploads/profile_logos'), $fileName);
                 $users_detail->profile_logo = $fileName;
             }
             if ($r->hasFile('profile_banner')) {
                 $file = $r->file('profile_banner');
-                $fileName = time() . '_' . $file->getClientOriginalName();
+                $fileName = time().'_'.$file->getClientOriginalName();
                 $file->move(public_path('assets/uploads/profile_banners'), $fileName);
                 $users_detail->profile_banner = $fileName;
             }
@@ -65,15 +66,18 @@ class ProfileApiController extends Controller
                 ['user_id' => $users],
                 ['legal_name' => $r->company_name ?? '', 'description' => $r->description ?? '']
             );
+
             return response()->json(['message' => 'Profile updated successfully', 'data' => ['users_detail' => $users_detail, 'business' => $busi_info]]);
         }
     }
+
     public function UserLinks(Request $r)
     {
         $users = Auth::user();
         if ($r->isMethod('get')) {
             $userLinks = UserLink::with('links')->where('user_id', $users->id)->get()->groupBy('link_id')->map(function ($group) {
                 $first = $group->first();
+
                 return [
                     'user_id' => $first->user_id,
                     'link_id' => $first->link_id,
@@ -92,6 +96,7 @@ class ProfileApiController extends Controller
             if ($userLinks->isEmpty()) {
                 return response()->json(['status' => false, 'message' => 'No links found for this user'], 404);
             }
+
             return response()->json(['status' => true, 'data' => $userLinks], 200);
         }
 
@@ -102,7 +107,7 @@ class ProfileApiController extends Controller
                 'link_data' => 'nullable|string|max:255',
             ]);
 
-            $link = new UserLink();
+            $link = new UserLink;
             $link->user_id = $users->id;
             $link->link_id = $r->link_id;
             $link->title = $r->title;
@@ -110,6 +115,7 @@ class ProfileApiController extends Controller
             $link->save();
 
             $userLinks = UserLink::with('links')->where('user_id', $users->id)->get();
+
             return response()->json(['status' => true, 'message' => 'Link created successfully', 'data' => $userLinks], 201);
         }
 
@@ -121,13 +127,14 @@ class ProfileApiController extends Controller
             ]);
 
             $link = UserLink::where('user_id', $users->id)->where('id', $r->id)->first();
-            if (!$link) {
+            if (! $link) {
                 return response()->json(['status' => false, 'message' => 'Link not found'], 404);
             }
             $link->title = $r->title ?? $link->title;
             $link->link_data = $r->link_data ?? $link->link_data;
             $link->save();
             $userLinks = UserLink::with('links')->where('user_id', $users->id)->get();
+
             return response()->json(['status' => true, 'message' => 'Link updated successfully', 'data' => $userLinks], 200);
         }
 
@@ -136,26 +143,30 @@ class ProfileApiController extends Controller
                 'id' => 'required|integer',
             ]);
             $link = UserLink::where('user_id', $users->id)->where('id', $r->id)->first();
-            if (!$link) {
+            if (! $link) {
                 return response()->json(['status' => false, 'message' => 'Link not found'], 404);
             }
             $link->delete();
             $userLinks = UserLink::with('links')->where('user_id', $users->id)->get();
+
             return response()->json(['status' => true, 'message' => 'Link deleted successfully', 'data' => $userLinks], 200);
         }
+
         return response()->json(['status' => false, 'message' => 'Invalid request method'], 405);
     }
+
     public function BusinessInfo(Request $r)
     {
         $users = Auth::user();
         if ($r->isMethod('get')) {
             $busi_info = BusinessInfo::where('user_id', $users->id)->first();
-            if (!$busi_info) {
+            if (! $busi_info) {
                 return response()->json(['status' => false, 'message' => 'No Business Info found for this user'], 404);
             }
             if ($busi_info->payment_qr) {
-                $busi_info->payment_qr = asset('assets/uploads/payment_qrcode/' . $busi_info->payment_qr);
+                $busi_info->payment_qr = asset('assets/uploads/payment_qrcode/'.$busi_info->payment_qr);
             }
+
             return response()->json(['status' => true, 'data' => $busi_info]);
         }
         if ($r->isMethod('post')) {
@@ -166,32 +177,35 @@ class ProfileApiController extends Controller
                 'bank_acc_no' => 'nullable|string|max:50',
                 'ifsc_code' => 'nullable|string|max:50',
                 'branch_name' => 'nullable|string|max:100',
-                'payment_qr' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+                'payment_qr' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             ]);
             $busi_info = BusinessInfo::updateOrCreate(['user_id' => $users->id], ['legal_name' => $r->company_name ?? '', 'gst_no' => $r->gst_no ?? '', 'address' => $r->address ?? '', 'bank_acc_no' => $r->bank_acc_no ?? '', 'ifsc_code' => $r->ifsc_code ?? '', 'branch_name' => $r->branch_name ?? '']);
             if ($r->hasFile('payment_qr')) {
                 $file = $r->file('payment_qr');
-                $fileName = time() . '_' . $file->getClientOriginalName();
+                $fileName = time().'_'.$file->getClientOriginalName();
                 $file->move(public_path('assets/uploads/payment_qrcode'), $fileName);
                 $busi_info->payment_qr = $fileName;
                 $busi_info->save();
             }
+
             return response()->json(['status' => true, 'message' => 'Business info saved successfully', 'data' => $busi_info]);
         }
+
         return response()->json(['status' => false, 'message' => 'Invalid request method'], 405);
     }
+
     public function usersProfileCard()
     {
         $userId = Auth::id();
         $data = MasterUserDetail::with('user')->where('user_id', $userId)->first();
 
-        if (!$data) {
+        if (! $data) {
             return response()->json(['status' => false, 'message' => 'Profile not found'], 404);
         }
 
-        $data->profile_pic = $data->profile_pic ? asset('assets/uploads/profile_pics/' . $data->profile_pic) : null;
-        $data->profile_logo = $data->profile_logo ? asset('assets/uploads/profile_logos/' . $data->profile_logo) : null;
-        $data->profile_banner = $data->profile_banner ? asset('assets/uploads/profile_banners/' . $data->profile_banner) : null;
+        $data->profile_pic = $data->profile_pic ? asset('assets/uploads/profile_pics/'.$data->profile_pic) : null;
+        $data->profile_logo = $data->profile_logo ? asset('assets/uploads/profile_logos/'.$data->profile_logo) : null;
+        $data->profile_banner = $data->profile_banner ? asset('assets/uploads/profile_banners/'.$data->profile_banner) : null;
 
         return response()->json(['status' => true, 'message' => 'User profile card fetched successfully', 'data' => $data], 200);
     }
@@ -201,62 +215,93 @@ class ProfileApiController extends Controller
         $data = MasterUserDetail::with('user')
             ->where('user_id', $user_id)
             ->first();
-    
-        if (!$data) {
+
+        if (! $data) {
             return response()->json([
                 'status' => false,
-                'message' => 'Profile not found'
+                'message' => 'Profile not found',
             ], 404);
         }
-    
-        $data->profile_pic = $data->profile_pic 
-            ? asset('assets/uploads/profile_pics/' . $data->profile_pic) 
+
+        $data->profile_pic = $data->profile_pic
+            ? asset('assets/uploads/profile_pics/'.$data->profile_pic)
             : null;
-    
-        $data->profile_logo = $data->profile_logo 
-            ? asset('assets/uploads/profile_logos/' . $data->profile_logo) 
+
+        $data->profile_logo = $data->profile_logo
+            ? asset('assets/uploads/profile_logos/'.$data->profile_logo)
             : null;
-    
-        $data->profile_banner = $data->profile_banner 
-            ? asset('assets/uploads/profile_banners/' . $data->profile_banner) 
+
+        $data->profile_banner = $data->profile_banner
+            ? asset('assets/uploads/profile_banners/'.$data->profile_banner)
             : null;
-    
+
         return response()->json([
             'status' => true,
             'message' => 'User profile card fetched successfully',
-            'data' => $data
+            'data' => $data,
         ], 200);
     }
 
+    // public function usersNameProfileData($user_name)
+    // {
+
+    //     $data1 = User::where('user_name', $user_name)->first();
+
+    //     if (!$data1) {
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => 'Profile not found'
+    //         ], 404);
+    //     }
+
+    //    $user_id = $data1->id;
+
+    //      $data = MasterUserDetail::with('user')
+    //         ->where('user_id', $user_id)
+    //         ->first();
+
+    //     if (!$data) {
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => 'Profile not found'
+    //         ], 404);
+    //     }
+
+    //     return response()->json([
+    //         'status' => true,
+    //         'message' => 'User profile fetched successfully',
+    //         'data' => $data
+    //     ], 200);
+    // }
+
     public function usersNameProfileData($user_name)
     {
-        
         $data1 = User::where('user_name', $user_name)->first();
-    
-        if (!$data1) {
+
+        if (! $data1) {
             return response()->json([
                 'status' => false,
-                'message' => 'Profile not found'
+                'message' => 'Profile not found',
             ], 404);
         }
-    
-       $user_id = $data1->id;
 
-         $data = MasterUserDetail::with('user')
+        $user_id = $data1->id;
+
+        $data = MasterUserDetail::with(['user.businessInfo'])
             ->where('user_id', $user_id)
             ->first();
-    
-        if (!$data) {
+
+        if (! $data) {
             return response()->json([
                 'status' => false,
-                'message' => 'Profile not found'
+                'message' => 'Profile not found',
             ], 404);
         }
-    
+
         return response()->json([
             'status' => true,
             'message' => 'User profile fetched successfully',
-            'data' => $data
+            'data' => $data,
         ], 200);
     }
 }
