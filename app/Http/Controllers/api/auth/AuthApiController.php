@@ -763,4 +763,152 @@ class AuthApiController extends Controller
             'delivery_status' => $deliveryStatus,
         ], 200);
     }
+
+    /**
+     * Google Login — verify id_token via Firebase, then check if user exists with mobile.
+     */
+    public function googleLogin(Request $request)
+    {
+        $request->validate([
+            'id_token' => 'required|string',
+            'email' => 'required|email',
+            'name' => 'required|string',
+        ]);
+
+        try {
+            // Verify the Firebase id_token
+            $serviceAccountPath = storage_path('app/firebase/service-account.json');
+
+            if (!file_exists($serviceAccountPath)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Firebase service account not configured.',
+                ], 500);
+            }
+
+            $factory = (new \Kreait\Firebase\Factory)->withServiceAccount($serviceAccountPath);
+            $auth = $factory->createAuth();
+            $verifiedToken = $auth->verifyIdToken($request->id_token);
+            $firebaseUid = $verifiedToken->claims()->get('sub');
+
+            // Look for existing user by email with a mobile number set
+            $user = User::where('email', $request->email)
+                ->whereNotNull('user_mobile')
+                ->where('user_mobile', '!=', '')
+                ->with('masterUser')
+                ->first();
+
+            if ($user) {
+                // Update google_id if not set
+                if (empty($user->google_id)) {
+                    $user->google_id = $firebaseUid;
+                    $user->save();
+                }
+
+                $token = $user->createToken('Api Token')->plainTextToken;
+
+                return response()->json([
+                    'status' => true,
+                    'token' => $token,
+                    'user' => $user,
+                ], 200);
+            }
+
+            // User not found or has no mobile — send to registration
+            return response()->json([
+                'status' => true,
+                'process' => 'register',
+                'data' => [
+                    'email' => $request->email,
+                    'name' => $request->name,
+                    'firebase_uid' => $firebaseUid,
+                ],
+            ], 200);
+
+        } catch (\Kreait\Firebase\Exception\Auth\FailedToVerifyToken $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Invalid Google token: ' . $e->getMessage(),
+            ], 401);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Google login failed: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Google Register — create user from Google data + mobile number.
+     */
+    public function googleRegister(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string',
+            'user_name' => 'required|string|unique:users,user_name',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string',
+            'mobile' => 'required|digits:10|unique:users,user_mobile',
+            'id_token' => 'required|string',
+        ]);
+
+        try {
+            // Verify the Firebase id_token
+            $serviceAccountPath = storage_path('app/firebase/service-account.json');
+
+            if (!file_exists($serviceAccountPath)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Firebase service account not configured.',
+                ], 500);
+            }
+
+            $factory = (new \Kreait\Firebase\Factory)->withServiceAccount($serviceAccountPath);
+            $auth = $factory->createAuth();
+            $verifiedToken = $auth->verifyIdToken($request->id_token);
+            $firebaseUid = $verifiedToken->claims()->get('sub');
+
+            DB::beginTransaction();
+
+            $user = new User;
+            $user->user_mobile = $request->mobile;
+            $user->user_name = $request->user_name;
+            $user->email = $request->email;
+            $user->password = bcrypt($request->password);
+            $user->google_id = $firebaseUid;
+            $user->remember_token = Str::random(40);
+            $user->save();
+
+            $master = new MasterUserDetail;
+            $master->fname = $request->name;
+            $master->mobile_one = $request->mobile;
+            $master->email_one = $request->email;
+            $master->user_id = $user->id;
+            $master->save();
+
+            DB::commit();
+
+            Auth::login($user);
+            $token = $user->createToken('Api Token')->plainTextToken;
+
+            return response()->json([
+                'status' => true,
+                'token' => $token,
+                'user' => $user,
+            ], 200);
+
+        } catch (\Kreait\Firebase\Exception\Auth\FailedToVerifyToken $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => 'Invalid Google token: ' . $e->getMessage(),
+            ], 401);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => 'Google registration failed: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
 }

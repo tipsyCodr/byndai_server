@@ -27,6 +27,7 @@ class User extends Authenticatable
         "created_ip",
         "status",
         "remember_token",
+        "google_id",
     ];
 
     /**
@@ -53,7 +54,7 @@ class User extends Authenticatable
     {
         return $this->hasOne(MasterUserDetail::class, "user_id", "id");
     }
-    
+
 
     public function businessInfo()
     {
