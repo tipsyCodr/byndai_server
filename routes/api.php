@@ -5,6 +5,7 @@ use App\Http\Controllers\api\site\BusinessInfoApiController;
 use App\Http\Controllers\api\site\ChatApiController;
 use App\Http\Controllers\api\site\ConnectionApiController;
 use App\Http\Controllers\api\site\CustomerMasterApiController;
+use App\Http\Controllers\api\site\LeadCategoryController;
 use App\Http\Controllers\api\site\LeadController;
 use App\Http\Controllers\api\site\MasterApiController;
 use App\Http\Controllers\api\site\MasterCommentApiController;
@@ -22,6 +23,7 @@ use App\Http\Controllers\api\site\SubscriptionApiController;
 use App\Http\Controllers\api\site\UserAnalyticsController;
 use App\Http\Controllers\api\site\UserListController;
 use App\Http\Controllers\api\site\UserReviewApiController;
+use App\Http\Controllers\api\site\PageController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/check-mobile', [AuthApiController::class, 'checkMobile']);
@@ -45,6 +47,8 @@ Route::post('/check-username', [
     AuthApiController::class,
     'checkUsername',
 ]);
+
+Route::get('/page/{slug}', [PageController::class, 'show']);
 Route::post('/login/phone/check', [AuthApiController::class, 'checkPhone']);
 Route::post('/login/pin/check', [AuthApiController::class, 'checkPin']);
 Route::post('/login/pin/set', [AuthApiController::class, 'setPin']);
@@ -52,12 +56,14 @@ Route::post('/login/pin', [AuthApiController::class, 'loginWithPin']);
 Route::post('/login/{phone}', [AuthApiController::class, 'login']);
 Route::post('/google-login', [AuthApiController::class, 'googleLogin']);
 Route::post('/google-register', [AuthApiController::class, 'googleRegister']);
+Route::post('/check-email', [AuthApiController::class, 'checkEmail']);
 
 Route::get('/leads', [LeadController::class, 'index']);
 Route::post('/leads', [LeadController::class, 'store']);
 Route::get('/leads/{id}', [LeadController::class, 'show']);
 Route::put('/leads/{id}', [LeadController::class, 'update']);
 Route::delete('/leads/{id}', [LeadController::class, 'destroy']);
+Route::get('/leads-list-by-user-id', [LeadController::class, 'getByUserId']);
 Route::post('/ocr-extract', [LeadController::class, 'ocrExtract']);
 Route::post('/gpt-ocr', [PostApiController::class, 'gptOcr']);
 Route::get('/user/{id}/master-links', [MasterLinkController::class, 'getUserLinksById']);
@@ -589,7 +595,29 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'listUsers',
     ]);
 
-    // api for post end....
+    Route::post('/profile-completion', [
+        UserListController::class,
+        'profileCompletion',
+    ]);
+
+    Route::post('/lead-category-create', [
+        LeadCategoryController::class,
+        'create',
+    ]);
+    Route::put('/lead-category-update/{id}', [
+        LeadCategoryController::class,
+        'update',
+    ]);
+    Route::delete('/lead-category-delete/{id}', [
+        LeadCategoryController::class,
+        'delete',
+    ]);
+    Route::get('/lead-category-user/{user_id}', [
+        LeadCategoryController::class,
+        'getByUserId',
+    ]);
+
+    // api for post end..........
 
     Route::post('/logout', [AuthApiController::class, 'logout']);
 

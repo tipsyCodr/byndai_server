@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 class Lead extends Model
 {
      protected $fillable = [
+        'user_id',
+        'category',
         'name',
         'company_name',
         'email',
@@ -17,7 +19,11 @@ class Lead extends Model
         'mobile_no_1',
         'mobile_no_2',
         'mobile_no_3',
-        'lead_image',      // ✅ Add this
-        'image_filename',  // ✅ Add this
+        'lead_image',      
+        'image_filename',  
+        'selfy_image_1',
+        'selfy_image_2',
+        'selfy_video',
     ];
 }
+
