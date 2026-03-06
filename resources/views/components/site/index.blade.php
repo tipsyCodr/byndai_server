@@ -34,18 +34,19 @@
 
         <!-- Social Bar -->
         <div class="social-bar">
-            @if ($user->masterUser?->social_links)
-                @foreach (json_decode($user->masterUser?->social_links, true) ?? [] as $platform => $link)
-                    <a href="{{ $link }}" class="social-link" target="_blank">
-                        <i class="fab fa-{{ $platform }}"></i>
-                    </a>
-                @endforeach
-            @else
-                <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
-                <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
-                <a href="#" class="social-link"><i class="fab fa-github"></i></a>
-                <a href="#" class="social-link"><i class="fas fa-globe"></i></a>
-            @endif
+            @php
+                $socials = json_decode($user->masterUser?->link, true) ?: [
+                    'twitter' => '#',
+                    'linkedin-in' => '#',
+                    'github' => '#',
+                    'globe' => '#'
+                ];
+            @endphp
+            @foreach ($socials as $platform => $link)
+                <a href="{{ $link }}" class="social-link {{ $platform }}" target="_blank">
+                    <i class="{{ in_array($platform, ['globe', 'link']) ? 'fas' : 'fab' }} fa-{{ $platform }}"></i>
+                </a>
+            @endforeach
         </div>
 
         <!-- Stats -->
@@ -119,8 +120,7 @@
                                     <i class="fas fa-star"></i>
                                     <i class="fas fa-star"></i> 5.0
                                 </div>
-                                <a href="{{ route('single-product', ['id' => encrypt($value->id)]) }}"
-                                    class="prod-title">
+                                <a href="{{ route('single-product', ['id' => encrypt($value->id)]) }}" class="prod-title">
                                     {{ $value->product_name }}
                                 </a>
                                 <button class="btn-buy">

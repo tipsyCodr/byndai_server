@@ -206,36 +206,53 @@ body {
     font-weight: 600;
 }
 
-/* Social Links - Floating Bar */
+/* Social Links - Separate Buttons */
 .social-bar {
     display: flex;
-    gap: 16px;
-    background: rgba(30, 41, 59, 0.6);
-    padding: 12px 24px;
-    border-radius: 100px;
-    border: 1px solid var(--border-color);
-    backdrop-filter: blur(10px);
+    gap: 12px;
     margin-bottom: 60px;
-    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 .social-link {
-    font-size: 1.25rem;
-    color: var(--text-muted);
-    transition: all 0.3s ease;
-    width: 40px;
-    height: 40px;
+    font-size: 1.2rem;
+    color: #fff;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 48px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
+    border-radius: 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    text-decoration: none;
 }
 
 .social-link:hover {
     color: #fff;
-    background: var(--primary);
-    box-shadow: 0 0 20px var(--primary-glow);
-    transform: scale(1.1);
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+/* Brand Colors */
+.social-link.twitter, .social-link.fa-twitter { background: #1DA1F2; border-color: #1DA1F2; }
+.social-link.twitter-x, .social-link.fa-twitter-x { background: #000000; border-color: #333; }
+.social-link.facebook, .social-link.fa-facebook { background: #1877F2; border-color: #1877F2; }
+.social-link.instagram, .social-link.fa-instagram { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); border-color: #e6683c; }
+.social-link.linkedin-in, .social-link.fa-linkedin-in { background: #0077B5; border-color: #0077B5; }
+.social-link.github, .social-link.fa-github { background: #24292e; border-color: #24292e; }
+.social-link.youtube, .social-link.fa-youtube { background: #FF0000; border-color: #FF0000; }
+.social-link.whatsapp, .social-link.fa-whatsapp { background: #25D366; border-color: #25D366; }
+.social-link.threads, .social-link.fa-threads { background: #000000; border-color: #000000; }
+.social-link.tiktok, .social-link.fa-tiktok { background: #010101; border-color: #010101; }
+.social-link.globe, .social-link.link { background: var(--primary); border-color: var(--primary); }
+
+.social-link.twitter:hover, .social-link.facebook:hover, .social-link.linkedin-in:hover, .social-link.github:hover, .social-link.youtube:hover, .social-link.whatsapp:hover, .social-link.threads:hover, .social-link.tiktok:hover, .social-link.globe:hover {
+    filter: brightness(1.1);
+    box-shadow: 0 10px 20px -5px currentColor;
 }
 
 /* Grid Layout for Content */
