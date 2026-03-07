@@ -72,5 +72,15 @@ class User extends Authenticatable
         return $this->hasMany(Connection::class, 'friend_id', 'id');
     }
 
-   
+    public function masterLinks()
+    {
+        return $this->hasMany(MasterLink::class, 'user_id', 'id');
+    }
+
+    public function userLinks()
+    {
+        return $this->hasMany(UserLink::class, 'user_id', 'id');
+    }
+
+
 }

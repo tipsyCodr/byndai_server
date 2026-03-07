@@ -8,8 +8,8 @@ class UserLink extends Model
 {
     protected $fillable = ['user_id', 'link_id', 'tittle', 'link_data'];
 
-    public function links()
+    public function masterLink()
     {
-        return $this->hasMany(MasterLink::class, 'id', 'link_id');
+        return $this->belongsTo(MasterLink::class, 'link_id', 'id');
     }
 }

@@ -34,19 +34,52 @@
 
         <!-- Social Bar -->
         <div class="social-bar">
-            @php
-                $socials = json_decode($user->masterUser?->link, true) ?: [
-                    'twitter' => '#',
-                    'linkedin-in' => '#',
-                    'github' => '#',
-                    'globe' => '#'
-                ];
-            @endphp
-            @foreach ($socials as $platform => $link)
-                <a href="{{ $link }}" class="social-link {{ $platform }}" target="_blank">
-                    <i class="{{ in_array($platform, ['globe', 'link']) ? 'fas' : 'fab' }} fa-{{ $platform }}"></i>
-                </a>
-            @endforeach
+            {{-- Prioritize UserLinks from user_links table (linked to master_links for icons) --}}
+            @if($user->userLinks && $user->userLinks->count() > 0)
+                @foreach ($user->userLinks as $link)
+                    @php
+                        $platform = strtolower($link->masterLink?->name ?? 'link');
+                        if (str_contains($platform, 'twitter') || $platform == 'x')
+                            $class = 'twitter';
+                        elseif (str_contains($platform, 'linkedin'))
+                            $class = 'linkedin-in';
+                        elseif (str_contains($platform, 'facebook'))
+                            $class = 'facebook';
+                        elseif (str_contains($platform, 'instagram'))
+                            $class = 'instagram';
+                        elseif (str_contains($platform, 'github'))
+                            $class = 'github';
+                        elseif (str_contains($platform, 'youtube'))
+                            $class = 'youtube';
+                        elseif (str_contains($platform, 'whatsapp'))
+                            $class = 'whatsapp';
+                        elseif (str_contains($platform, 'globe') || str_contains($platform, 'website'))
+                            $class = 'globe';
+                        else
+                            $class = 'link';
+                    @endphp
+                    <a href="{{ $link->link_data }}" class="social-link {{ $class }}" target="_blank"
+                        title="{{ $link->title }}">
+                        <i class="{{ in_array($class, ['globe', 'link']) ? 'fas' : 'fab' }} fa-{{ $class }}"></i>
+                    </a>
+                @endforeach
+            @else
+                {{-- Fallback to MasterUserDetail social_links JSON or static links if everything else is empty --}}
+                @php
+                    $jsonSocials = json_decode($user->masterUser?->social_links ?? $user->masterUser?->link ?? '[]', true) ?: [];
+                    $fallbacks = count($jsonSocials) > 0 ? $jsonSocials : [
+                        'twitter' => '#',
+                        'linkedin-in' => '#',
+                        'facebook' => '#',
+                        'whatsapp' => 'https://wa.me/' . ($user->masterUser?->mobile_one ?? ''),
+                    ];
+                @endphp
+                @foreach ($fallbacks as $platform => $url)
+                    <a href="{{ $url }}" class="social-link {{ $platform }}" target="_blank">
+                        <i class="{{ in_array($platform, ['globe', 'link']) ? 'fas' : 'fab' }} fa-{{ $platform }}"></i>
+                    </a>
+                @endforeach
+            @endif
         </div>
 
         <!-- Stats -->
