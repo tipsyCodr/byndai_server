@@ -207,21 +207,10 @@ class PostApiController extends Controller
 
     public function updatePost(Request $request, $post_id)
     {
-        // 📝 LOGGING - pahle check karein ki kya aa raha hai
-        \Log::info('=== UPDATE POST REQUEST ===', [
-            'post_id' => $post_id,
-            'all_input' => $request->all(),
-            'all_files' => $request->allFiles(),
-            'has_new_images' => $request->hasFile('new_images'),
-            'has_new_images[]' => $request->hasFile('new_images[]'),
-        ]);
-
         $validator = Validator::make($request->all(), [
             'title' => 'nullable|string|max:150',
             'description' => 'nullable|string|max:5000',
-            'industry_id' => 'nullable|integer|exists:master_industries,id',
-            'existing_images' => 'nullable|array',
-            'existing_images.*' => 'integer|exists:post_media,id',
+
             'new_images' => 'nullable|array|max:5',
             'new_images.*' => 'file|mimes:jpg,jpeg,png,webp|max:10240',
         ]);
@@ -230,13 +219,16 @@ class PostApiController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => $validator->errors()->first(),
-                'errors' => $validator->errors(),
             ], 422);
         }
 
         try {
+
             $userId = $request->user()->id;
-            $post = Post::where('id', $post_id)->where('user_id', $userId)->first();
+
+            $post = Post::where('id', $post_id)
+                ->where('user_id', $userId)
+                ->first();
 
             if (! $post) {
                 return response()->json([
@@ -247,73 +239,56 @@ class PostApiController extends Controller
 
             DB::beginTransaction();
 
-            // 1. Post details update
+            // update text fields
             $post->update([
                 'title' => $request->title ?? $post->title,
                 'description' => $request->description ?? $post->description,
                 'industry_id' => $request->industry_id ?? $post->industry_id,
             ]);
 
-            // 2. Existing images management
-            $keepImageIds = $request->input('existing_images', []);
-            if (! empty($keepImageIds)) {
-                PostMedia::where('post_id', $post->id)
-                    ->whereNotIn('id', $keepImageIds)
-                    ->delete();
-            } else {
-                PostMedia::where('post_id', $post->id)->delete();
-            }
+            // -------------------------
+            // DELETE REMOVED IMAGES
+            // -------------------------
+            if ($request->has('removed_images')) {
+                $removedIds = $request->removed_images;
 
-            // 3. Count kept images (for limit check)
-            $keptCount = PostMedia::where('post_id', $post->id)->count();
+                foreach ($removedIds as $mediaId) {
 
-            // 4. 🔥 Handle new images – sabse important part
-            $newImages = $request->file('new_images');
+                    $media = PostMedia::where('id', $mediaId)
+                        ->where('post_id', $post_id)
+                        ->first();
 
-            // Agar upar se nahi mila to allFiles() mein dekho (kabhi kabhi [] ki wajah se)
-            if (! $newImages) {
-                $allFiles = $request->allFiles();
-                foreach ($allFiles as $key => $files) {
-                    if (str_contains($key, 'new_images')) {
-                        $newImages = $files;
-                        break;
+                    if ($media) {
+
+                        // delete file from storage
+                        $filePath = str_replace('/storage/', '', $media->media_url);
+                        Storage::disk('public')->delete($filePath);
+
+                        $media->delete();
                     }
                 }
             }
 
-            if ($newImages) {
-                // Ensure it's an array
-                if (! is_array($newImages)) {
-                    $newImages = [$newImages];
-                }
+            // -------------------------
+            // ADD NEW IMAGES
+            // -------------------------
+            if ($request->hasFile('new_images')) {
 
-                // Check total images limit (max 5)
-                if (($keptCount + count($newImages)) > 5) {
-                    DB::rollBack();
+                $position = PostMedia::where('post_id', $post_id)->max('position') + 1;
 
-                    return response()->json([
-                        'status' => false,
-                        'message' => 'Total images cannot exceed 5',
-                    ], 422);
-                }
+                foreach ($request->file('new_images') as $file) {
 
-                $maxPosition = PostMedia::where('post_id', $post->id)->max('position') ?? 0;
-                $position = $maxPosition;
+                    $fileName = time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
 
-                foreach ($newImages as $file) {
-                    if ($file && $file->isValid()) {
-                        $position++;
-                        $fileName = time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
-                        $path = $file->storeAs('uploads/posts', $fileName, 'public');
+                    $path = $file->storeAs('uploads/posts', $fileName, 'public');
 
-                        PostMedia::create([
-                            'post_id' => $post->id,
-                            'media_type' => 'image',
-                            'media_url' => '/storage/'.$path,
-                            'thumbnail_url' => null,
-                            'position' => $position,
-                        ]);
-                    }
+                    PostMedia::create([
+                        'post_id' => $post->id,
+                        'media_type' => 'image',
+                        'media_url' => '/storage/'.$path,
+                        'thumbnail_url' => null,
+                        'position' => $position++,
+                    ]);
                 }
             }
 
@@ -322,16 +297,17 @@ class PostApiController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Post updated successfully',
-                'data' => $this->postFullResponse($post->id, $userId),
+                'data' => $this->postFullResponse($post_id, $userId),
             ], 200);
 
         } catch (\Exception $e) {
+
             DB::rollBack();
-            \Log::error('Update post error: '.$e->getMessage());
 
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to update post: '.$e->getMessage(),
+                'message' => 'Failed to update post',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
