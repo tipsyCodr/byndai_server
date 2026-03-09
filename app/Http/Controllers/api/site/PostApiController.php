@@ -210,16 +210,15 @@ class PostApiController extends Controller
         $validator = Validator::make($request->all(), [
             'title' => 'nullable|string|max:150',
             'description' => 'nullable|string|max:5000',
-            'industry_id' => 'nullable|integer',
+            'industry_id' => 'nullable|integer|exists:master_industries,id',
 
+            // images (new files)
+            'new_images' => 'nullable|array|max:5',
+            'new_images.*' => 'file|mimes:jpg,jpeg,png,webp|max:10240', // 10MB each
+
+            // IDs of existing images to keep
             'existing_images' => 'nullable|array',
-            'existing_images.*' => 'integer',
-
-            'removed_images' => 'nullable|array',
-            'removed_images.*' => 'integer',
-
-            'new_images' => 'nullable',
-            'new_images.*' => 'file|mimes:jpg,jpeg,png,webp|max:10240',
+            'existing_images.*' => 'integer|exists:post_media,id,post_id,'.$post_id,
         ]);
 
         if ($validator->fails()) {
@@ -230,9 +229,9 @@ class PostApiController extends Controller
         }
 
         try {
-
             $userId = $request->user()->id;
 
+            // Find the post belonging to the user
             $post = Post::where('id', $post_id)
                 ->where('user_id', $userId)
                 ->first();
@@ -246,62 +245,41 @@ class PostApiController extends Controller
 
             DB::beginTransaction();
 
-            // update text fields
+            // 1. Update basic post data
             $post->update([
                 'title' => $request->title ?? $post->title,
                 'description' => $request->description ?? $post->description,
                 'industry_id' => $request->industry_id ?? $post->industry_id,
             ]);
 
-            // -------------------------
-            // DELETE REMOVED IMAGES
-            // -------------------------
-            if ($request->filled('removed_images')) {
+            // 2. Handle existing media (images) – delete those not in the "keep" list
+            $keepMediaIds = $request->input('existing_images', []);
+            // Delete all media belonging to this post that are NOT in $keepMediaIds
+            PostMedia::where('post_id', $post->id)
+                ->whereNotIn('id', $keepMediaIds)
+                ->delete();
 
-                $removedIds = $request->removed_images;
+            // 3. Handle new images
+            $position = $post->media()->max('position') ?? 0; // start after highest position
 
-                $medias = PostMedia::whereIn('id', $removedIds)
-                    ->where('post_id', $post_id)
-                    ->get();
-
-                foreach ($medias as $media) {
-
-                    if ($media->media_url) {
-
-                        $filePath = str_replace('/storage/', '', $media->media_url);
-
-                        Storage::disk('public')->delete($filePath);
-                    }
-
-                    $media->delete();
-                }
-            }
-
-            // -------------------------
-            // ADD NEW IMAGES
-            // -------------------------
             if ($request->hasFile('new_images')) {
+                $newImages = $request->file('new_images');
 
-                $existingCount = PostMedia::where('post_id', $post_id)->count();
-                $newFiles = $request->file('new_images');
-
-                if (($existingCount + count($newFiles)) > 5) {
-
+                // Optional: enforce max count (including kept ones)
+                $totalAfterAdd = count($keepMediaIds) + count($newImages);
+                if ($totalAfterAdd > 5) {
                     DB::rollBack();
 
                     return response()->json([
                         'status' => false,
-                        'message' => 'Maximum 5 images allowed per post',
+                        'message' => 'Maximum 5 images allowed in total',
                     ], 422);
                 }
 
-                $position = PostMedia::where('post_id', $post_id)->max('position') ?? 0;
-                $position++;
-
-                foreach ($newFiles as $file) {
+                foreach ($newImages as $file) {
+                    $position++;
 
                     $fileName = time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
-
                     $path = $file->storeAs('uploads/posts', $fileName, 'public');
 
                     PostMedia::create([
@@ -309,7 +287,7 @@ class PostApiController extends Controller
                         'media_type' => 'image',
                         'media_url' => '/storage/'.$path,
                         'thumbnail_url' => null,
-                        'position' => $position++,
+                        'position' => $position,
                     ]);
                 }
             }
@@ -319,17 +297,15 @@ class PostApiController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Post updated successfully',
-                'data' => $this->postFullResponse($post_id, $userId),
+                'data' => $this->postFullResponse($post->id, $userId),
             ], 200);
 
         } catch (\Exception $e) {
-
             DB::rollBack();
 
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to update post',
-                'error' => $e->getMessage(),
+                'message' => 'Failed to update post: '.$e->getMessage(),
             ], 500);
         }
     }
