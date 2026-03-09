@@ -207,17 +207,20 @@ class PostApiController extends Controller
 
     public function updatePost(Request $request, $post_id)
     {
-        // 1. Validation - सभी fields को validate करें
+        // 📝 LOGGING - pahle check karein ki kya aa raha hai
+        \Log::info('=== UPDATE POST REQUEST ===', [
+            'post_id' => $post_id,
+            'all_input' => $request->all(),
+            'all_files' => array_keys($request->allFiles()),
+            'has_new_images' => $request->hasFile('new_images'),
+        ]);
+
         $validator = Validator::make($request->all(), [
             'title' => 'nullable|string|max:150',
             'description' => 'nullable|string|max:5000',
             'industry_id' => 'nullable|integer|exists:master_industries,id',
-
-            // Existing images को keep करने के लिए (IDs की array)
             'existing_images' => 'nullable|array',
             'existing_images.*' => 'integer|exists:post_media,id',
-
-            // नई images के लिए (files की array)
             'new_images' => 'nullable|array|max:5',
             'new_images.*' => 'file|mimes:jpg,jpeg,png,webp|max:10240',
         ]);
@@ -232,11 +235,7 @@ class PostApiController extends Controller
 
         try {
             $userId = $request->user()->id;
-
-            // 2. Post ढूंढें और verify करें कि user का ही है
-            $post = Post::where('id', $post_id)
-                ->where('user_id', $userId)
-                ->first();
+            $post = Post::where('id', $post_id)->where('user_id', $userId)->first();
 
             if (! $post) {
                 return response()->json([
@@ -247,45 +246,53 @@ class PostApiController extends Controller
 
             DB::beginTransaction();
 
-            // 3. Basic post details update करें
+            // 1. Post details update
             $post->update([
                 'title' => $request->title ?? $post->title,
                 'description' => $request->description ?? $post->description,
                 'industry_id' => $request->industry_id ?? $post->industry_id,
             ]);
 
-            // 4. Existing images handle करें
+            // 2. Existing images management
             $keepImageIds = $request->input('existing_images', []);
-
-            // जो images keep list में नहीं हैं, उन्हें delete करें
             if (! empty($keepImageIds)) {
                 PostMedia::where('post_id', $post->id)
                     ->whereNotIn('id', $keepImageIds)
                     ->delete();
             } else {
-                // अगर कोई ID नहीं भेजी, तो सभी delete कर दें
                 PostMedia::where('post_id', $post->id)->delete();
             }
 
-            // 5. नई images upload करें
-            if ($request->hasFile('new_images')) {
-                $newImages = $request->file('new_images');
+            // 3. Count kept images (for limit check)
+            $keptCount = PostMedia::where('post_id', $post->id)->count();
 
-                // Current max position पता करें
+            // 4. Handle new images (supports both 'new_images' and 'new_images[]')
+            $newImages = $request->file('new_images') ?? $request->file('new_images[]');
+            if ($newImages) {
+                // Ensure it's an array (single file case)
+                if (! is_array($newImages)) {
+                    $newImages = [$newImages];
+                }
+
+                // Check total images limit (max 5)
+                if (($keptCount + count($newImages)) > 5) {
+                    DB::rollBack();
+
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Total images cannot exceed 5',
+                    ], 422);
+                }
+
                 $maxPosition = PostMedia::where('post_id', $post->id)->max('position') ?? 0;
                 $position = $maxPosition;
 
                 foreach ($newImages as $file) {
-                    if ($file->isValid()) {
+                    if ($file && $file->isValid()) {
                         $position++;
-
-                        // Unique filename generate करें
                         $fileName = time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
-
-                        // File store करें
                         $path = $file->storeAs('uploads/posts', $fileName, 'public');
 
-                        // Database में entry बनाएं
                         PostMedia::create([
                             'post_id' => $post->id,
                             'media_type' => 'image',
@@ -299,7 +306,9 @@ class PostApiController extends Controller
 
             DB::commit();
 
-            // 6. Updated post return करें
+            // Log success
+            \Log::info('Post updated successfully', ['post_id' => $post->id]);
+
             return response()->json([
                 'status' => true,
                 'message' => 'Post updated successfully',
@@ -308,6 +317,7 @@ class PostApiController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('Update post error: '.$e->getMessage());
 
             return response()->json([
                 'status' => false,
