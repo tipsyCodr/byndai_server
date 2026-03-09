@@ -210,8 +210,15 @@ class PostApiController extends Controller
         $validator = Validator::make($request->all(), [
             'title' => 'nullable|string|max:150',
             'description' => 'nullable|string|max:5000',
+            'industry_id' => 'nullable|integer',
 
-            'new_images' => 'nullable|array|max:5',
+            'existing_images' => 'nullable|array',
+            'existing_images.*' => 'integer',
+
+            'removed_images' => 'nullable|array',
+            'removed_images.*' => 'integer',
+
+            'new_images' => 'nullable',
             'new_images.*' => 'file|mimes:jpg,jpeg,png,webp|max:10240',
         ]);
 
@@ -249,34 +256,49 @@ class PostApiController extends Controller
             // -------------------------
             // DELETE REMOVED IMAGES
             // -------------------------
-            if ($request->has('removed_images')) {
+            if ($request->filled('removed_images')) {
+
                 $removedIds = $request->removed_images;
 
-                foreach ($removedIds as $mediaId) {
+                $medias = PostMedia::whereIn('id', $removedIds)
+                    ->where('post_id', $post_id)
+                    ->get();
 
-                    $media = PostMedia::where('id', $mediaId)
-                        ->where('post_id', $post_id)
-                        ->first();
+                foreach ($medias as $media) {
 
-                    if ($media) {
+                    if ($media->media_url) {
 
-                        // delete file from storage
                         $filePath = str_replace('/storage/', '', $media->media_url);
-                        Storage::disk('public')->delete($filePath);
 
-                        $media->delete();
+                        Storage::disk('public')->delete($filePath);
                     }
+
+                    $media->delete();
                 }
             }
 
-            // ----------------------------
+            // -------------------------
             // ADD NEW IMAGES
-            // -----------------------------
+            // -------------------------
             if ($request->hasFile('new_images')) {
 
-                $position = PostMedia::where('post_id', $post_id)->max('position') + 1;
+                $existingCount = PostMedia::where('post_id', $post_id)->count();
+                $newFiles = $request->file('new_images');
 
-                foreach ($request->file('new_images') as $file) {
+                if (($existingCount + count($newFiles)) > 5) {
+
+                    DB::rollBack();
+
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Maximum 5 images allowed per post',
+                    ], 422);
+                }
+
+                $position = PostMedia::where('post_id', $post_id)->max('position') ?? 0;
+                $position++;
+
+                foreach ($newFiles as $file) {
 
                     $fileName = time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
 
