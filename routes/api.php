@@ -54,6 +54,8 @@ Route::post('/login/pin/check', [AuthApiController::class, 'checkPin']);
 Route::post('/login/pin/set', [AuthApiController::class, 'setPin']);
 Route::post('/login/pin', [AuthApiController::class, 'loginWithPin']);
 Route::post('/login/{phone}', [AuthApiController::class, 'login']);
+Route::post('/google-login', [AuthApiController::class, 'googleLogin']);
+Route::post('/google-register', [AuthApiController::class, 'googleRegister']);
 Route::post('/check-email', [AuthApiController::class, 'checkEmail']);
 
 Route::get('/leads', [LeadController::class, 'index']);

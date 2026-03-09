@@ -19,14 +19,15 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'user_mobile',
-        'user_name',
-        'email',
-        'password',
-        'otp',
-        'created_ip',
-        'status',
-        'remember_token',
+        "user_mobile",
+        "user_name",
+        "email",
+        "password",
+        "otp",
+        "created_ip",
+        "status",
+        "remember_token",
+        "google_id",
     ];
 
     /**
@@ -55,6 +56,7 @@ class User extends Authenticatable
         return $this->hasOne(MasterUserDetail::class, 'user_id', 'id');
     }
 
+
     public function businessInfo()
     {
         return $this->hasOne(BusinessInfo::class, 'user_id', 'id');
@@ -70,5 +72,15 @@ class User extends Authenticatable
         return $this->hasMany(Connection::class, 'friend_id', 'id');
     }
 
-   
+    public function masterLinks()
+    {
+        return $this->hasMany(MasterLink::class, 'user_id', 'id');
+    }
+
+    public function userLinks()
+    {
+        return $this->hasMany(UserLink::class, 'user_id', 'id');
+    }
+
+
 }

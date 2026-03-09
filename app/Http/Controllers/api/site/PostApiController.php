@@ -269,9 +269,9 @@ class PostApiController extends Controller
                 }
             }
 
-            // -------------------------
+            // ----------------------------
             // ADD NEW IMAGES
-            // -------------------------
+            // -----------------------------
             if ($request->hasFile('new_images')) {
 
                 $position = PostMedia::where('post_id', $post_id)->max('position') + 1;
