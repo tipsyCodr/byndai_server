@@ -211,8 +211,9 @@ class PostApiController extends Controller
         \Log::info('=== UPDATE POST REQUEST ===', [
             'post_id' => $post_id,
             'all_input' => $request->all(),
-            'all_files' => array_keys($request->allFiles()),
+            'all_files' => $request->allFiles(),
             'has_new_images' => $request->hasFile('new_images'),
+            'has_new_images[]' => $request->hasFile('new_images[]'),
         ]);
 
         $validator = Validator::make($request->all(), [
@@ -266,10 +267,22 @@ class PostApiController extends Controller
             // 3. Count kept images (for limit check)
             $keptCount = PostMedia::where('post_id', $post->id)->count();
 
-            // 4. Handle new images (supports both 'new_images' and 'new_images[]')
-            $newImages = $request->file('new_images') ?? $request->file('new_images[]');
+            // 4. 🔥 Handle new images – sabse important part
+            $newImages = $request->file('new_images');
+
+            // Agar upar se nahi mila to allFiles() mein dekho (kabhi kabhi [] ki wajah se)
+            if (! $newImages) {
+                $allFiles = $request->allFiles();
+                foreach ($allFiles as $key => $files) {
+                    if (str_contains($key, 'new_images')) {
+                        $newImages = $files;
+                        break;
+                    }
+                }
+            }
+
             if ($newImages) {
-                // Ensure it's an array (single file case)
+                // Ensure it's an array
                 if (! is_array($newImages)) {
                     $newImages = [$newImages];
                 }
@@ -305,9 +318,6 @@ class PostApiController extends Controller
             }
 
             DB::commit();
-
-            // Log success
-            \Log::info('Post updated successfully', ['post_id' => $post->id]);
 
             return response()->json([
                 'status' => true,
