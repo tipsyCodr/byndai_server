@@ -27,7 +27,8 @@ class IndexController extends Controller
 
         $products = Product::where('user_id', $user->id)->get();
         $productImages = ProductImage::whereIn('prod_id', $products->pluck('id'))->get();
-        return view('components.site.index', compact('user', 'products', 'productImages'));
+        $productLinks = \App\Models\ProductLink::whereIn('prod_id', $products->pluck('id'))->where('status', 1)->get();
+        return view('components.site.index', compact('user', 'products', 'productImages', 'productLinks'));
     }
     public function product($id)
     {

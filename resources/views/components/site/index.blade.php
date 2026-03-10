@@ -211,7 +211,7 @@
                         <div class="glass rounded-2xl overflow-hidden shadow-xl mb-4">
                             <!-- Hero Section -->
                             <div class="relative w-full gradient-hero" style="height: 200px;">
-                                <img src="{{ $user->masterUser?->profile_banner ? asset('storage/' . $user->masterUser?->profile_banner) : 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&w=1920&q=80' }}"
+                                <img src="{{ $user->masterUser?->profile_pic ? asset('storage/' . $user->masterUser?->profile_pic) : 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&w=1920&q=80' }}"
                                     alt="Cover" class="w-full h-full object-cover"/>
                                 <div class="absolute inset-x-0 bottom-0 h-32 gradient-overlay-bottom"></div>
                                 
@@ -222,7 +222,7 @@
                             
                             <!-- Avatar -->
                             <div class="profile-avatar-container">
-                                <img src="{{ $user->masterUser?->profile_pic ? asset('storage/' . $user->masterUser?->profile_pic) : 'https://placehold.co/200x200' }}"
+                                <img src="{{ $user->masterUser?->profile_logo ? asset('storage/' . $user->masterUser?->profile_logo) : 'https://placehold.co/200x200' }}"
                                     alt="{{ $user->masterUser?->fname ?? $user->user_name }}" class="profile-avatar-img shadow-xl">
                                 <div class="verified-badge">
                                     <i class="fas fa-check"></i>
@@ -395,6 +395,16 @@
                                                     <div><i class="fas fa-file-invoice me-2 text-primary"></i>GST: {{ $biz->gst_no }}</div>
                                                 @endif
                                             </div>
+
+                                            {{-- Action Buttons --}}
+                                            <div class="d-flex gap-2 mt-3">
+                                                <a href="tel:{{ $user->masterUser?->mobile_one }}" class="btn-primary" style="padding: 0.75rem;">
+                                                    <i class="fas fa-phone"></i> Call
+                                                </a>
+                                                <a href="mailto:{{ $biz->contact_email ?? $user->masterUser?->email_one }}" class="btn-secondary" style="padding: 0.75rem;">
+                                                    <i class="fas fa-envelope"></i> Email
+                                                </a>
+                                            </div>
                                         </div>
                                     </div>
                                 @endforeach
@@ -412,7 +422,7 @@
                                         @php
                                             $image = $productImages->firstWhere('prod_id', $value->id);
                                         @endphp
-                                        <div class="relative w-full aspect-square bg-secondary">
+                                        <div class="relative w-full aspect-square">
                                             <a href="{{ route('single-product', ['id' => encrypt($value->id)]) }}">
                                                 @php
                                                     $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400"><rect width="400" height="400" fill="#1e293b"/><svg x="125" y="125" width="150" height="150" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg></svg>';
@@ -448,14 +458,18 @@
                                                 <span class="text-muted-foreground ms-1">5.0</span>
                                             </div>
                                             
-                                            <div class="mt-auto d-flex gap-2">
-                                                <a href="{{ route('single-product', ['id' => encrypt($value->id)]) }}" class="btn-secondary" style="padding:0.75rem; flex: 1;">
-                                                    Details
-                                                </a>
-                                                <button class="btn-primary" style="padding:0.75rem; flex: 1;">
-                                                    <i class="fas fa-shopping-cart"></i> Cart
-                                                </button>
-                                            </div>
+                                            @php
+                                                $links = $productLinks->where('prod_id', $value->id);
+                                            @endphp
+                                            @if($links->count() > 0)
+                                                <div class="mt-auto d-flex flex-column gap-2">
+                                                    @foreach ($links as $pLink)
+                                                        <a href="{{ $pLink->links }}" target="_blank" class="custom-link-btn">
+                                                            <i class="fas fa-external-link-alt me-2"></i> {{ $pLink->title }}
+                                                        </a>
+                                                    @endforeach
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
