@@ -194,10 +194,10 @@
                                 @php
                                     $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600"><rect width="600" height="600" fill="#f8f8f8"/><svg x="150" y="150" width="300" height="300" viewBox="0 0 24 24" fill="none" stroke="#cccccc" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg></svg>';
                                     $imgSrc = 'data:image/svg+xml;base64,' . base64_encode($svg);
-                                    if ($value && !empty($value->file_name)) {
-                                        $imgSrc = str_starts_with($value->file_name, 'uploads/')
-                                            ? asset($value->file_name)
-                                            : asset('assets/images/bg/' . $value->file_name);
+                                    if ($value && !empty($value->product_images)) {
+                                        $imgSrc = str_starts_with($value->product_images, 'uploads/')
+                                            ? asset($value->product_images)
+                                            : asset($value->product_images);
                                     }
                                 @endphp
                                 <li data-thumb="{{ $imgSrc }}">
@@ -281,10 +281,10 @@
                                         $image = $similar_prod_images->firstWhere('prod_id', $similar->id);
                                         $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300"><rect width="300" height="300" fill="#f8f8f8"/><svg x="100" y="100" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="#cccccc" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg></svg>';
                                         $imgSrc = 'data:image/svg+xml;base64,' . base64_encode($svg);
-                                        if ($image && !empty($image->file_name)) {
-                                            $imgSrc = str_starts_with($image->file_name, 'uploads/')
-                                                ? asset($image->file_name)
-                                                : asset('assets/images/bg/' . $image->file_name);
+                                        if ($image && !empty($image->product_images)) {
+                                            $imgSrc = str_starts_with($image->product_images, 'uploads/')
+                                                ? asset($image->product_images)
+                                                : asset($image->product_images);
                                         }
                                     @endphp
                                     <a href="{{ route('single-product', ['id' => encrypt($similar->id)]) }}">
