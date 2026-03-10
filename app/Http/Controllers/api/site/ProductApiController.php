@@ -190,7 +190,7 @@ class ProductApiController extends Controller
 
                 ProductImage::create([
                     'prod_id' => $product->id,
-                    'file_name' => 'uploads/products/' . $fileName,
+                    'product_images' => 'uploads/products/' . $fileName,
                     'status' => 1,
                 ]);
             }
@@ -287,7 +287,7 @@ class ProductApiController extends Controller
                 $oldImages = ProductImage::where('prod_id', $product->id)->get();
 
                 foreach ($oldImages as $img) {
-                    $path = public_path($img->file_name);
+                    $path = public_path($img->product_images);
                     if (File::exists($path)) {
                         File::delete($path);
                     }
@@ -306,7 +306,7 @@ class ProductApiController extends Controller
 
                 ProductImage::create([
                     'prod_id' => $product->id,
-                    'file_name' => 'uploads/products/' . $fileName,
+                    'product_images' => 'uploads/products/' . $fileName,
                     'status' => 1,
                 ]);
             }
@@ -348,7 +348,7 @@ class ProductApiController extends Controller
             // delete images
             $images = ProductImage::where('prod_id', $product->id)->get();
             foreach ($images as $img) {
-                $path = public_path($img->file_name);
+                $path = public_path($img->product_images);
                 if (File::exists($path)) {
                     File::delete($path);
                 }
