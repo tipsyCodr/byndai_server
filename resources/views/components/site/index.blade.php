@@ -446,7 +446,7 @@
                     
                     <!-- Footer branding -->
                     <div class="text-center text-muted-foreground mb-5 pb-5 pt-3" style="font-size: 0.75rem;">
-                        Powered by <span class="text-primary font-weight-bold">GRID</span>
+                        Powered by <span class="text-primary font-weight-bold">ByndAI</span>
                     </div>
 
                 </div>
