@@ -62,6 +62,11 @@ class User extends Authenticatable
         return $this->hasOne(BusinessInfo::class, 'user_id', 'id');
     }
 
+    public function businesses()
+    {
+        return $this->hasMany(BusinessInfo::class, 'user_id', 'id');
+    }
+
     public function connectionsAsUser()
     {
         return $this->hasMany(Connection::class, 'user_id', 'id');

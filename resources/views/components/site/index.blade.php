@@ -176,6 +176,29 @@
         .profile-container {
             padding-bottom: 0 !important;
         }
+
+        /* Custom Link Buttons */
+        .custom-link-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1rem;
+            background: hsl(var(--secondary) / 0.5);
+            border: 1px solid hsl(var(--border));
+            border-radius: 0.75rem;
+            color: hsl(var(--foreground));
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        .custom-link-btn:hover {
+            background: hsl(var(--primary));
+            color: #fff;
+            border-color: hsl(var(--primary));
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px hsl(var(--primary) / 0.3);
+        }
     </style>
 
     <div id="profile-wrapper">
@@ -225,17 +248,32 @@
                             </div>
 
                             <!-- Socials Grid -->
+                            @php
+                                // Recognized social platforms
+                                $socialPlatforms = ['twitter', 'x', 'linkedin', 'facebook', 'instagram', 'github', 'youtube', 'whatsapp', 'tiktok', 'threads', 'snapchat', 'pinterest', 'telegram'];
+                                $socialLinks = collect();
+                                $customLinks = collect();
+                                if ($user->userLinks && $user->userLinks->count() > 0) {
+                                    foreach ($user->userLinks as $link) {
+                                        $platform = strtolower($link->masterLink?->name ?? 'link');
+                                        $isSocial = false;
+                                        foreach ($socialPlatforms as $sp) {
+                                            if (str_contains($platform, $sp)) { $isSocial = true; break; }
+                                        }
+                                        if ($isSocial) {
+                                            $socialLinks->push($link);
+                                        } else {
+                                            $customLinks->push($link);
+                                        }
+                                    }
+                                }
+                            @endphp
                             <div class="px-4 pb-4">
                                 <div class="grid-socials">
-                                    @php
-                                        $socialsFound = false;
-                                    @endphp
-                                    @if($user->userLinks && $user->userLinks->count() > 0)
-                                        @php $socialsFound = true; @endphp
-                                        @foreach ($user->userLinks as $link)
+                                    @if($socialLinks->count() > 0)
+                                        @foreach ($socialLinks as $link)
                                             @php
                                                 $platform = strtolower($link->masterLink?->name ?? 'link');
-                                                // Map colors
                                                 $bg = '#333';
                                                 if (str_contains($platform, 'twitter') || $platform == 'x') { $class = 'twitter'; $bg = '#000000'; }
                                                 elseif (str_contains($platform, 'linkedin')) { $class = 'linkedin-in'; $bg = '#0077B5'; }
@@ -244,24 +282,25 @@
                                                 elseif (str_contains($platform, 'github')) { $class = 'github'; $bg = '#333'; }
                                                 elseif (str_contains($platform, 'youtube')) { $class = 'youtube'; $bg = '#FF0000'; }
                                                 elseif (str_contains($platform, 'whatsapp')) { $class = 'whatsapp'; $bg = '#25D366'; }
-                                                elseif (str_contains($platform, 'globe') || str_contains($platform, 'website')) { $class = 'globe'; $bg = '#2563EB'; }
+                                                elseif (str_contains($platform, 'tiktok')) { $class = 'tiktok'; $bg = '#010101'; }
+                                                elseif (str_contains($platform, 'threads')) { $class = 'threads'; $bg = '#000000'; }
+                                                elseif (str_contains($platform, 'snapchat')) { $class = 'snapchat'; $bg = '#FFFC00'; }
+                                                elseif (str_contains($platform, 'pinterest')) { $class = 'pinterest'; $bg = '#E60023'; }
+                                                elseif (str_contains($platform, 'telegram')) { $class = 'telegram'; $bg = '#26A5E4'; }
                                                 else { $class = 'link'; }
                                             @endphp
-                                            <a href="{{ $link->link_data }}" class="social-link-item" target="_blank" title="{{ $link->title }}">
+                                            <a href="{{ $link->link_data }}" class="social-link-item" target="_blank" title="{{ $link->tittle ?? ucfirst($platform) }}">
                                                 <div class="social-link-icon" style="background:{{ $bg }}">
-                                                    <i class="{{ in_array($class, ['globe', 'link']) ? 'fas' : 'fab' }} fa-{{ $class }} fa-lg"></i>
+                                                    <i class="{{ in_array($class, ['link']) ? 'fas' : 'fab' }} fa-{{ $class }} fa-lg"></i>
                                                 </div>
-                                                <span class="social-link-label">{{ $link->title ?? ucfirst($platform) }}</span>
+                                                <span class="social-link-label">{{ $link->tittle ?? ucfirst($platform) }}</span>
                                             </a>
                                         @endforeach
-                                    @endif
-
-                                    @if(!$socialsFound)
+                                    @else
                                         @php
                                             $jsonSocials = json_decode($user->masterUser?->social_links ?? $user->masterUser?->link ?? '[]', true) ?: [];
                                             $fallbacks = count($jsonSocials) > 0 ? $jsonSocials : [
                                                 'phone' => ['url' => 'tel:' . ($user->masterUser?->mobile_one ?? ''), 'icon' => 'phone', 'color' => '#4A90D9', 'label' => 'Phone'],
-                                                'website' => ['url' => '#', 'icon' => 'globe', 'color' => '#2563EB', 'label' => 'Website'],
                                                 'whatsapp' => ['url' => 'https://wa.me/' . ($user->masterUser?->mobile_one ?? ''), 'icon' => 'whatsapp', 'color' => '#25D366', 'label' => 'WhatsApp', 'fab' => true],
                                                 'email' => ['url' => 'mailto:' . ($user->businessInfo?->contact_email ?? $user->masterUser?->email_one ?? ''), 'icon' => 'envelope', 'color' => '#EA4335', 'label' => 'Email'],
                                             ];
@@ -276,6 +315,17 @@
                                         @endforeach
                                     @endif
                                 </div>
+
+                                {{-- Custom Link Buttons --}}
+                                @if($customLinks->count() > 0)
+                                    <div class="mt-3 d-flex flex-column gap-2">
+                                        @foreach ($customLinks as $link)
+                                            <a href="{{ $link->link_data }}" target="_blank" class="custom-link-btn">
+                                                <i class="fas fa-link me-2"></i> {{ $link->tittle ?? 'Link' }}
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                @endif
                             </div>
                         </div>
 
@@ -306,23 +356,51 @@
                 <!-- RIGHT COLUMN: Main Content -->
                 <div class="col-12 col-lg-7 col-xl-7">
                     
-                    <!-- About Section -->
-                    <section class="mb-4">
-                        <h2 class="text-lg font-semibold text-foreground mb-3">About Me</h2>
-                        <div class="glass rounded-2xl p-4">
-                            <p class="text-muted-foreground" style="white-space: pre-wrap; margin-bottom: 0;">{{ $user->businessInfo?->description ?? "Hello! I'm " . ($user->masterUser?->fname ?? $user->user_name) . '. Welcome to my profile.' }}</p>
-                            
-                            <div class="mt-4 pt-3 border-top border-border text-muted-foreground text-sm">
-                                <i class="fas fa-map-marker-alt me-2 text-primary"></i> <strong>Location:</strong> {{ $user->masterUser?->address ?? 'Not provided' }}
+                    <!-- Businesses Section -->
+                    @if($user->businesses && $user->businesses->count() > 0)
+                        <section class="mb-4">
+                            <h2 class="text-lg font-semibold text-foreground mb-3">
+                                <i class="fas fa-building me-2 text-primary"></i> {{ $user->businesses->count() > 1 ? 'Businesses' : 'Business' }}
+                            </h2>
+                            <div class="row g-3">
+                                @foreach ($user->businesses as $biz)
+                                    <div class="col-12{{ $user->businesses->count() > 1 ? ' col-md-6' : '' }}">
+                                        <div class="glass rounded-2xl p-4 h-100">
+                                            <h3 class="font-bold text-foreground mb-2" style="font-size: 1.1rem;">
+                                                {{ $biz->legal_name ?? 'Unnamed Business' }}
+                                            </h3>
+                                            @if($biz->industry)
+                                                <div class="text-primary text-sm mb-3" style="font-weight: 500;">
+                                                    <i class="fas fa-industry me-1"></i> {{ $biz->industry->name ?? '' }}
+                                                </div>
+                                            @endif
+                                            @if($biz->description)
+                                                <p class="text-muted-foreground text-sm mb-3" style="white-space: pre-wrap;">{{ $biz->description }}</p>
+                                            @endif
+                                            <div class="d-flex flex-column gap-2 text-sm text-muted-foreground">
+                                                @if($biz->address)
+                                                    <div><i class="fas fa-map-marker-alt me-2 text-primary"></i>{{ $biz->address }}</div>
+                                                @endif
+                                                @if($biz->contact_email)
+                                                    <div><i class="fas fa-envelope me-2 text-primary"></i>{{ $biz->contact_email }}</div>
+                                                @endif
+                                                @if($biz->website_url)
+                                                    <div>
+                                                        <a href="{{ $biz->website_url }}" target="_blank" class="text-primary" style="text-decoration: none;">
+                                                            <i class="fas fa-globe me-2"></i>{{ $biz->website_url }}
+                                                        </a>
+                                                    </div>
+                                                @endif
+                                                @if($biz->gst_no)
+                                                    <div><i class="fas fa-file-invoice me-2 text-primary"></i>GST: {{ $biz->gst_no }}</div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
                             </div>
-
-                            <div class="mt-4">
-                                <a href="#" class="btn-secondary d-inline-flex" style="width: auto; padding: 0.75rem 1.5rem;">
-                                    Download CV <i class="fas fa-download ms-2"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </section>
+                        </section>
+                    @endif
 
                     <!-- Products Section -->
                     <section class="mb-4">
