@@ -155,9 +155,9 @@ class PostApiController extends Controller
         }
     }
 
-    // =========================
+    // ===========================
     // 2) UPDATE POST
-    // =========================
+    // ===========================
     // public function updatePost(Request $request, $post_id)
     // {
     //     $validator = Validator::make($request->all(), [
