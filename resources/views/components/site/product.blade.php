@@ -191,10 +191,17 @@
                     <div class="demo">
                         <ul id="lightSlider">
                             @forelse ($productImages as $value)
-                                <li data-thumb="{{ asset('assets/images/bg/' . $value->file_name) }}">
+                                @php
+                                    $imgSrc = 'https://via.placeholder.com/600';
+                                    if ($value && !empty($value->file_name)) {
+                                        $imgSrc = str_starts_with($value->file_name, 'uploads/')
+                                            ? asset($value->file_name)
+                                            : asset('assets/images/bg/' . $value->file_name);
+                                    }
+                                @endphp
+                                <li data-thumb="{{ $imgSrc }}">
                                     <div class="zoom-container">
-                                        <img src="{{ asset('assets/images/bg/' . $value->file_name) }}"
-                                            alt="{{ $product->product_name }}" class="zoom-image" />
+                                        <img src="{{ $imgSrc }}" alt="{{ $product->product_name }}" class="zoom-image" />
                                     </div>
                                 </li>
                             @empty
@@ -267,10 +274,15 @@
                                 <div class="card border h-100 shadow-sm">
                                     @php
                                         $image = $similar_prod_images->firstWhere('prod_id', $similar->id);
+                                        $imgSrc = 'https://via.placeholder.com/300';
+                                        if ($image && !empty($image->file_name)) {
+                                            $imgSrc = str_starts_with($image->file_name, 'uploads/')
+                                                ? asset($image->file_name)
+                                                : asset('assets/images/bg/' . $image->file_name);
+                                        }
                                     @endphp
                                     <a href="{{ route('single-product', ['id' => encrypt($similar->id)]) }}">
-                                        <img src="{{ $image ? asset('assets/images/bg/' . $image->file_name) : 'https://via.placeholder.com/300' }}"
-                                            class="card-img-top" alt="{{ $similar->product_name }}"
+                                        <img src="{{ $imgSrc }}" class="card-img-top" alt="{{ $similar->product_name }}"
                                             style="height: 180px; object-fit: cover;">
                                     </a>
                                     <div class="card-body p-2 text-center">

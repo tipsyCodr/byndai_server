@@ -295,36 +295,6 @@
                             </div>
                         </div>
 
-                        <!-- Side Stats -->
-                        <div class="px-0 pb-4">
-                            <div class="row g-2">
-                                <div class="col-6">
-                                    <div class="stat-box">
-                                        <span class="stat-value">4+</span>
-                                        <span class="stat-label">Years Exp</span>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="stat-box">
-                                        <span class="stat-value">50+</span>
-                                        <span class="stat-label">Projects</span>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="stat-box">
-                                        <span class="stat-value">4.9</span>
-                                        <span class="stat-label">Rating</span>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="stat-box">
-                                        <span class="stat-value">120</span>
-                                        <span class="stat-label">Clients</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                     </div>
                 </div>
 
@@ -363,7 +333,7 @@
                                             <a href="{{ route('single-product', ['id' => encrypt($value->id)]) }}">
                                                 @php
                                                     $imgSrc = 'https://placehold.co/400x400';
-                                                    if ($image) {
+                                                    if ($image && !empty($image->file_name)) {
                                                         $imgSrc = str_starts_with($image->file_name, 'uploads/') 
                                                                     ? asset($image->file_name) 
                                                                     : asset('assets/images/bg/' . $image->file_name);
