@@ -361,7 +361,15 @@
                                         @endphp
                                         <div class="relative w-full aspect-square bg-secondary">
                                             <a href="{{ route('single-product', ['id' => encrypt($value->id)]) }}">
-                                                <img src="{{ $image ? asset('assets/images/bg/' . $image->file_name) : 'https://placehold.co/400x400' }}"
+                                                @php
+                                                    $imgSrc = 'https://placehold.co/400x400';
+                                                    if ($image) {
+                                                        $imgSrc = str_starts_with($image->file_name, 'uploads/') 
+                                                                    ? asset($image->file_name) 
+                                                                    : asset('assets/images/bg/' . $image->file_name);
+                                                    }
+                                                @endphp
+                                                <img src="{{ $imgSrc }}"
                                                     alt="{{ $value->product_name }}" class="w-full h-full object-cover p-2 rounded-2xl"/>
                                             </a>
                                         </div>
