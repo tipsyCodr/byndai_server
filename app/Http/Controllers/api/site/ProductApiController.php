@@ -287,11 +287,11 @@ class ProductApiController extends Controller
                 $oldImages = ProductImage::where('prod_id', $product->id)->get();
 
                 foreach ($oldImages as $img) {
-                    $path = public_path($img->product_images);
+                    $path = public_path($img->file_name);
                     if (File::exists($path)) {
                         File::delete($path);
                     }
-                    $img->delete();
+                    ProductImage::where('id', $img->id)->delete();
                 }
 
                 $file = $request->file('product_image');
@@ -348,11 +348,11 @@ class ProductApiController extends Controller
             // delete images
             $images = ProductImage::where('prod_id', $product->id)->get();
             foreach ($images as $img) {
-                $path = public_path($img->product_images);
+                $path = public_path($img->file_name);
                 if (File::exists($path)) {
                     File::delete($path);
                 }
-                $img->delete();
+                ProductImage::where('id', $img->id)->delete();
             }
 
             // delete links
