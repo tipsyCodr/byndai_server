@@ -17,6 +17,9 @@
         content="{{ Str::limit($user->businessInfo?->description ?? ($user->masterUser?->desg ?? 'Check out my profile on Connecto'), 150) }}" />
     <meta property="og:image"
         content="{{ $user->masterUser?->profile_pic ? asset('storage/' . $user->masterUser->profile_pic) : asset('assets/images/default-avatar.png') }}" />
+    <meta property="og:image:width" content="600" />
+    <meta property="og:image:height" content="600" />
+    <meta property="og:image:type" content="image/jpeg" />
     <meta property="og:url" content="{{ url()->current() }}" />
     <meta property="og:type" content="profile" />
 
