@@ -329,26 +329,7 @@
                             </div>
                         </div>
 
-                        <!-- Business Card -->
-                        <div class="glass rounded-2xl p-4 shadow-xl mb-4">
-                            <div class="d-flex align-items-center mb-4">
-                                <img src="{{ $user->masterUser?->profile_logo ? asset('storage/' . $user->masterUser?->profile_logo) : 'https://placehold.co/150x150' }}"
-                                    class="rounded-xl me-3 shadow-sm" style="width: 60px; height: 60px; object-fit: cover;" alt="Logo">
-                                <div style="flex: 1; min-width: 0;">
-                                    <h3 class="font-bold text-foreground text-truncate mb-0" style="font-size: 1.125rem;">{{ $user->masterUser?->busi_type ?? 'Business Name' }}</h3>
-                                    <div class="text-sm text-muted-foreground text-truncate">{{ $user->masterUser?->category ?? 'Technology Solutions' }}</div>
-                                </div>
-                            </div>
-                            
-                            <div class="d-flex gap-2 mb-0">
-                                <a href="tel:{{ $user->masterUser?->mobile_one }}" class="btn-primary" style="padding: 0.75rem;">
-                                    <i class="fas fa-phone"></i> Call
-                                </a>
-                                <a href="mailto:{{ $user->businessInfo?->contact_email ?? $user->masterUser?->email_one }}" class="btn-secondary" style="padding: 0.75rem;">
-                                    <i class="fas fa-envelope"></i> Email
-                                </a>
-                            </div>
-                        </div>
+                        
 
                     </div>
                 </div>
