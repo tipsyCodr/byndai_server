@@ -259,6 +259,7 @@ class ConnectionApiController extends Controller
                 'status' => $status,
                 'fname' => $detail->fname,
                 'user_name' => $detail->user->user_name ?? null,
+                'profile_pic' => $detail->profile_pic,
             ];
         });
 
@@ -382,6 +383,7 @@ class ConnectionApiController extends Controller
                 'friend_id' => $detail->user_id,
                 'fname' => $detail->fname,
                 'user_name' => $detail->user->user_name ?? null,
+                'profile_pic' => $detail->profile_pic,
             ];
         });
 
@@ -483,6 +485,7 @@ class ConnectionApiController extends Controller
                 'status' => $status,
                 'fname' => $detail->fname,
                 'user_name' => $detail->user->user_name ?? null,
+                'profile_pic' => $detail->profile_pic,
             ];
         });
 
