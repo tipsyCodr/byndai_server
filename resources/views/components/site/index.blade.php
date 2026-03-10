@@ -171,6 +171,11 @@
                 top: 2rem;
             }
         }
+        
+        /* Override global padding to prevent body background peeking */
+        .profile-container {
+            padding-bottom: 0 !important;
+        }
     </style>
 
     <div id="profile-wrapper">
@@ -387,7 +392,7 @@
                     </section>
 
                     <!-- Inquiry Form -->
-                    <section class="mb-5 pb-5">
+                    <section class="mb-4">
                         <h2 class="text-lg font-semibold text-foreground mb-3">Send Inquiry</h2>
                         <form id="inquiry-form" class="glass rounded-2xl p-4" action="#">
                             <div class="mb-3">
@@ -415,7 +420,7 @@
                     </section>
                     
                     <!-- Footer branding -->
-                    <div class="text-center text-muted-foreground mb-5 pb-5 pt-3" style="font-size: 0.75rem;">
+                    <div class="text-center text-muted-foreground pb-5 mb-5 pt-2" style="font-size: 0.75rem;">
                         Powered by <span class="text-primary font-weight-bold">ByndAI</span>
                     </div>
 
