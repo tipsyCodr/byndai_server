@@ -155,14 +155,64 @@ class PostApiController extends Controller
         }
     }
 
-    // =========================
+    // ===========================
     // 2) UPDATE POST
-    // =========================
+    // ===========================
+    // public function updatePost(Request $request, $post_id)
+    // {
+    //     $validator = Validator::make($request->all(), [
+    //         'title' => 'nullable|string|max:150',
+    //         'description' => 'nullable|string|max:5000',
+    //     ]);
+
+    //     if ($validator->fails()) {
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => $validator->errors()->first(),
+    //         ], 422);
+    //     }
+
+    //     try {
+    //         $userId = $request->user()->id;
+
+    //         $post = Post::where('id', $post_id)
+    //             ->where('user_id', $userId)
+    //             ->first();
+
+    //         if (! $post) {
+    //             return response()->json([
+    //                 'status' => false,
+    //                 'message' => 'Post not found or unauthorized',
+    //             ], 404);
+    //         }
+
+    //         $post->update([
+    //             'title' => $request->title ?? $post->title,
+    //             'description' => $request->description ?? $post->description,
+    //         ]);
+
+    //         return response()->json([
+    //             'status' => true,
+    //             'message' => 'Post updated successfully',
+    //             'data' => $this->postFullResponse($post_id, $userId),
+    //         ], 200);
+
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => 'Failed to update post: '.$e->getMessage(),
+    //         ], 500);
+    //     }
+    // }
+
     public function updatePost(Request $request, $post_id)
     {
         $validator = Validator::make($request->all(), [
             'title' => 'nullable|string|max:150',
             'description' => 'nullable|string|max:5000',
+
+            'new_images' => 'nullable|array|max:5',
+            'new_images.*' => 'file|mimes:jpg,jpeg,png,webp|max:10240',
         ]);
 
         if ($validator->fails()) {
@@ -173,6 +223,7 @@ class PostApiController extends Controller
         }
 
         try {
+
             $userId = $request->user()->id;
 
             $post = Post::where('id', $post_id)
@@ -186,10 +237,62 @@ class PostApiController extends Controller
                 ], 404);
             }
 
+            DB::beginTransaction();
+
+            // update text fields
             $post->update([
                 'title' => $request->title ?? $post->title,
                 'description' => $request->description ?? $post->description,
+                'industry_id' => $request->industry_id ?? $post->industry_id,
             ]);
+
+            // -------------------------
+            // DELETE REMOVED IMAGES
+            // -------------------------
+            if ($request->has('removed_images')) {
+                $removedIds = $request->removed_images;
+
+                foreach ($removedIds as $mediaId) {
+
+                    $media = PostMedia::where('id', $mediaId)
+                        ->where('post_id', $post_id)
+                        ->first();
+
+                    if ($media) {
+
+                        // delete file from storage
+                        $filePath = str_replace('/storage/', '', $media->media_url);
+                        Storage::disk('public')->delete($filePath);
+
+                        $media->delete();
+                    }
+                }
+            }
+
+            // -------------------------
+            // ADD NEW IMAGES
+            // -------------------------
+            if ($request->hasFile('new_images')) {
+
+                $position = PostMedia::where('post_id', $post_id)->max('position') + 1;
+
+                foreach ($request->file('new_images') as $file) {
+
+                    $fileName = time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
+
+                    $path = $file->storeAs('uploads/posts', $fileName, 'public');
+
+                    PostMedia::create([
+                        'post_id' => $post->id,
+                        'media_type' => 'image',
+                        'media_url' => '/storage/'.$path,
+                        'thumbnail_url' => null,
+                        'position' => $position++,
+                    ]);
+                }
+            }
+
+            DB::commit();
 
             return response()->json([
                 'status' => true,
@@ -198,9 +301,13 @@ class PostApiController extends Controller
             ], 200);
 
         } catch (\Exception $e) {
+
+            DB::rollBack();
+
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to update post: '.$e->getMessage(),
+                'message' => 'Failed to update post',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
