@@ -337,7 +337,8 @@
                                         <div class="relative w-full aspect-square bg-secondary">
                                             <a href="{{ route('single-product', ['id' => encrypt($value->id)]) }}">
                                                 @php
-                                                    $imgSrc = 'https://placehold.co/400x400';
+                                                    $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400"><rect width="400" height="400" fill="#1e293b"/><svg x="125" y="125" width="150" height="150" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg></svg>';
+                                                    $imgSrc = 'data:image/svg+xml;base64,' . base64_encode($svg);
                                                     if ($image && !empty($image->file_name)) {
                                                         $imgSrc = str_starts_with($image->file_name, 'uploads/') 
                                                                     ? asset($image->file_name) 

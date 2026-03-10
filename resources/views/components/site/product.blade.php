@@ -192,7 +192,8 @@
                         <ul id="lightSlider">
                             @forelse ($productImages as $value)
                                 @php
-                                    $imgSrc = 'https://via.placeholder.com/600';
+                                    $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600"><rect width="600" height="600" fill="#f8f8f8"/><svg x="150" y="150" width="300" height="300" viewBox="0 0 24 24" fill="none" stroke="#cccccc" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg></svg>';
+                                    $imgSrc = 'data:image/svg+xml;base64,' . base64_encode($svg);
                                     if ($value && !empty($value->file_name)) {
                                         $imgSrc = str_starts_with($value->file_name, 'uploads/')
                                             ? asset($value->file_name)
@@ -205,9 +206,13 @@
                                     </div>
                                 </li>
                             @empty
-                                <li data-thumb="https://via.placeholder.com/300">
+                                @php
+                                    $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600"><rect width="600" height="600" fill="#f8f8f8"/><svg x="150" y="150" width="300" height="300" viewBox="0 0 24 24" fill="none" stroke="#cccccc" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg></svg>';
+                                    $emptyImgSrc = 'data:image/svg+xml;base64,' . base64_encode($svg);
+                                @endphp
+                                <li data-thumb="{{ $emptyImgSrc }}">
                                     <div class="zoom-container">
-                                        <img src="https://via.placeholder.com/600" alt="No Image" class="zoom-image" />
+                                        <img src="{{ $emptyImgSrc }}" alt="No Image" class="zoom-image" />
                                     </div>
                                 </li>
                             @endforelse
@@ -274,7 +279,8 @@
                                 <div class="card border h-100 shadow-sm">
                                     @php
                                         $image = $similar_prod_images->firstWhere('prod_id', $similar->id);
-                                        $imgSrc = 'https://via.placeholder.com/300';
+                                        $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300"><rect width="300" height="300" fill="#f8f8f8"/><svg x="100" y="100" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="#cccccc" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg></svg>';
+                                        $imgSrc = 'data:image/svg+xml;base64,' . base64_encode($svg);
                                         if ($image && !empty($image->file_name)) {
                                             $imgSrc = str_starts_with($image->file_name, 'uploads/')
                                                 ? asset($image->file_name)
