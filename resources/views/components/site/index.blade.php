@@ -171,6 +171,34 @@
                 top: 2rem;
             }
         }
+        
+        /* Override global padding to prevent body background peeking */
+        .profile-container {
+            padding-bottom: 0 !important;
+        }
+
+        /* Custom Link Buttons */
+        .custom-link-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1rem;
+            background: hsl(var(--secondary) / 0.5);
+            border: 1px solid hsl(var(--border));
+            border-radius: 0.75rem;
+            color: hsl(var(--foreground));
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        .custom-link-btn:hover {
+            background: hsl(var(--primary));
+            color: #fff;
+            border-color: hsl(var(--primary));
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px hsl(var(--primary) / 0.3);
+        }
     </style>
 
     <div id="profile-wrapper">
@@ -182,8 +210,8 @@
                     <div class="desktop-sticky">
                         <div class="glass rounded-2xl overflow-hidden shadow-xl mb-4">
                             <!-- Hero Section -->
-                            <div class="relative w-full gradient-hero" style="height: 200px;">
-                                <img src="{{ $user->masterUser?->profile_banner ? asset('storage/' . $user->masterUser?->profile_banner) : 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&w=1920&q=80' }}"
+                            <div class="relative w-full gradient-hero" style="height: 350px;">
+                                <img src="{{ $user->masterUser?->profile_pic ? asset('storage/' . $user->masterUser?->profile_pic) : 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&w=1920&q=80' }}"
                                     alt="Cover" class="w-full h-full object-cover"/>
                                 <div class="absolute inset-x-0 bottom-0 h-32 gradient-overlay-bottom"></div>
                                 
@@ -194,7 +222,7 @@
                             
                             <!-- Avatar -->
                             <div class="profile-avatar-container">
-                                <img src="{{ $user->masterUser?->profile_pic ? asset('storage/' . $user->masterUser?->profile_pic) : 'https://placehold.co/200x200' }}"
+                                <img src="{{ $user->masterUser?->profile_logo ? asset('storage/' . $user->masterUser?->profile_logo) : 'https://placehold.co/200x200' }}"
                                     alt="{{ $user->masterUser?->fname ?? $user->user_name }}" class="profile-avatar-img shadow-xl">
                                 <div class="verified-badge">
                                     <i class="fas fa-check"></i>
@@ -220,17 +248,32 @@
                             </div>
 
                             <!-- Socials Grid -->
+                            @php
+                                // Recognized social platforms
+                                $socialPlatforms = ['twitter', 'x', 'linkedin', 'facebook', 'instagram', 'github', 'youtube', 'whatsapp', 'tiktok', 'threads', 'snapchat', 'pinterest', 'telegram'];
+                                $socialLinks = collect();
+                                $customLinks = collect();
+                                if ($user->userLinks && $user->userLinks->count() > 0) {
+                                    foreach ($user->userLinks as $link) {
+                                        $platform = strtolower($link->masterLink?->name ?? 'link');
+                                        $isSocial = false;
+                                        foreach ($socialPlatforms as $sp) {
+                                            if (str_contains($platform, $sp)) { $isSocial = true; break; }
+                                        }
+                                        if ($isSocial) {
+                                            $socialLinks->push($link);
+                                        } else {
+                                            $customLinks->push($link);
+                                        }
+                                    }
+                                }
+                            @endphp
                             <div class="px-4 pb-4">
                                 <div class="grid-socials">
-                                    @php
-                                        $socialsFound = false;
-                                    @endphp
-                                    @if($user->userLinks && $user->userLinks->count() > 0)
-                                        @php $socialsFound = true; @endphp
-                                        @foreach ($user->userLinks as $link)
+                                    @if($socialLinks->count() > 0)
+                                        @foreach ($socialLinks as $link)
                                             @php
                                                 $platform = strtolower($link->masterLink?->name ?? 'link');
-                                                // Map colors
                                                 $bg = '#333';
                                                 if (str_contains($platform, 'twitter') || $platform == 'x') { $class = 'twitter'; $bg = '#000000'; }
                                                 elseif (str_contains($platform, 'linkedin')) { $class = 'linkedin-in'; $bg = '#0077B5'; }
@@ -239,24 +282,25 @@
                                                 elseif (str_contains($platform, 'github')) { $class = 'github'; $bg = '#333'; }
                                                 elseif (str_contains($platform, 'youtube')) { $class = 'youtube'; $bg = '#FF0000'; }
                                                 elseif (str_contains($platform, 'whatsapp')) { $class = 'whatsapp'; $bg = '#25D366'; }
-                                                elseif (str_contains($platform, 'globe') || str_contains($platform, 'website')) { $class = 'globe'; $bg = '#2563EB'; }
+                                                elseif (str_contains($platform, 'tiktok')) { $class = 'tiktok'; $bg = '#010101'; }
+                                                elseif (str_contains($platform, 'threads')) { $class = 'threads'; $bg = '#000000'; }
+                                                elseif (str_contains($platform, 'snapchat')) { $class = 'snapchat'; $bg = '#FFFC00'; }
+                                                elseif (str_contains($platform, 'pinterest')) { $class = 'pinterest'; $bg = '#E60023'; }
+                                                elseif (str_contains($platform, 'telegram')) { $class = 'telegram'; $bg = '#26A5E4'; }
                                                 else { $class = 'link'; }
                                             @endphp
-                                            <a href="{{ $link->link_data }}" class="social-link-item" target="_blank" title="{{ $link->title }}">
+                                            <a href="{{ $link->link_data }}" class="social-link-item" target="_blank" title="{{ $link->tittle ?? ucfirst($platform) }}">
                                                 <div class="social-link-icon" style="background:{{ $bg }}">
-                                                    <i class="{{ in_array($class, ['globe', 'link']) ? 'fas' : 'fab' }} fa-{{ $class }} fa-lg"></i>
+                                                    <i class="{{ in_array($class, ['link']) ? 'fas' : 'fab' }} fa-{{ $class }} fa-lg"></i>
                                                 </div>
-                                                <span class="social-link-label">{{ $link->title ?? ucfirst($platform) }}</span>
+                                                <span class="social-link-label">{{ $link->tittle ?? ucfirst($platform) }}</span>
                                             </a>
                                         @endforeach
-                                    @endif
-
-                                    @if(!$socialsFound)
+                                    @else
                                         @php
                                             $jsonSocials = json_decode($user->masterUser?->social_links ?? $user->masterUser?->link ?? '[]', true) ?: [];
                                             $fallbacks = count($jsonSocials) > 0 ? $jsonSocials : [
                                                 'phone' => ['url' => 'tel:' . ($user->masterUser?->mobile_one ?? ''), 'icon' => 'phone', 'color' => '#4A90D9', 'label' => 'Phone'],
-                                                'website' => ['url' => '#', 'icon' => 'globe', 'color' => '#2563EB', 'label' => 'Website'],
                                                 'whatsapp' => ['url' => 'https://wa.me/' . ($user->masterUser?->mobile_one ?? ''), 'icon' => 'whatsapp', 'color' => '#25D366', 'label' => 'WhatsApp', 'fab' => true],
                                                 'email' => ['url' => 'mailto:' . ($user->businessInfo?->contact_email ?? $user->masterUser?->email_one ?? ''), 'icon' => 'envelope', 'color' => '#EA4335', 'label' => 'Email'],
                                             ];
@@ -271,59 +315,21 @@
                                         @endforeach
                                     @endif
                                 </div>
+
+                                {{-- Custom Link Buttons --}}
+                                @if($customLinks->count() > 0)
+                                    <div class="mt-3 d-flex flex-column gap-2">
+                                        @foreach ($customLinks as $link)
+                                            <a href="{{ $link->link_data }}" target="_blank" class="custom-link-btn">
+                                                <i class="fas fa-link me-2"></i> {{ $link->tittle ?? 'Link' }}
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                @endif
                             </div>
                         </div>
 
-                        <!-- Business Card -->
-                        <div class="glass rounded-2xl p-4 shadow-xl mb-4">
-                            <div class="d-flex align-items-center mb-4">
-                                <img src="{{ $user->masterUser?->profile_logo ? asset('storage/' . $user->masterUser?->profile_logo) : 'https://placehold.co/150x150' }}"
-                                    class="rounded-xl me-3 shadow-sm" style="width: 60px; height: 60px; object-fit: cover;" alt="Logo">
-                                <div style="flex: 1; min-width: 0;">
-                                    <h3 class="font-bold text-foreground text-truncate mb-0" style="font-size: 1.125rem;">{{ $user->masterUser?->busi_type ?? 'Business Name' }}</h3>
-                                    <div class="text-sm text-muted-foreground text-truncate">{{ $user->masterUser?->category ?? 'Technology Solutions' }}</div>
-                                </div>
-                            </div>
-                            
-                            <div class="d-flex gap-2 mb-0">
-                                <a href="tel:{{ $user->masterUser?->mobile_one }}" class="btn-primary" style="padding: 0.75rem;">
-                                    <i class="fas fa-phone"></i> Call
-                                </a>
-                                <a href="mailto:{{ $user->businessInfo?->contact_email ?? $user->masterUser?->email_one }}" class="btn-secondary" style="padding: 0.75rem;">
-                                    <i class="fas fa-envelope"></i> Email
-                                </a>
-                            </div>
-                        </div>
-
-                        <!-- Side Stats -->
-                        <div class="px-0 pb-4">
-                            <div class="row g-2">
-                                <div class="col-6">
-                                    <div class="stat-box">
-                                        <span class="stat-value">4+</span>
-                                        <span class="stat-label">Years Exp</span>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="stat-box">
-                                        <span class="stat-value">50+</span>
-                                        <span class="stat-label">Projects</span>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="stat-box">
-                                        <span class="stat-value">4.9</span>
-                                        <span class="stat-label">Rating</span>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="stat-box">
-                                        <span class="stat-value">120</span>
-                                        <span class="stat-label">Clients</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        
 
                     </div>
                 </div>
@@ -331,23 +337,61 @@
                 <!-- RIGHT COLUMN: Main Content -->
                 <div class="col-12 col-lg-7 col-xl-7">
                     
-                    <!-- About Section -->
-                    <section class="mb-4">
-                        <h2 class="text-lg font-semibold text-foreground mb-3">About Me</h2>
-                        <div class="glass rounded-2xl p-4">
-                            <p class="text-muted-foreground" style="white-space: pre-wrap; margin-bottom: 0;">{{ $user->businessInfo?->description ?? "Hello! I'm " . ($user->masterUser?->fname ?? $user->user_name) . '. Welcome to my profile.' }}</p>
-                            
-                            <div class="mt-4 pt-3 border-top border-border text-muted-foreground text-sm">
-                                <i class="fas fa-map-marker-alt me-2 text-primary"></i> <strong>Location:</strong> {{ $user->masterUser?->address ?? 'Not provided' }}
-                            </div>
+                    <!-- Businesses Section -->
+                    @if($user->businesses && $user->businesses->count() > 0)
+                        <section class="mb-4">
+                            <h2 class="text-lg font-semibold text-foreground mb-3">
+                                <i class="fas fa-building me-2 text-primary"></i> {{ $user->businesses->count() > 1 ? 'Businesses' : 'Business' }}
+                            </h2>
+                            <div class="row g-3">
+                                @foreach ($user->businesses as $biz)
+                                    <div class="col-12{{ $user->businesses->count() > 1 ? ' col-md-6' : '' }}">
+                                        <div class="glass rounded-2xl p-4 h-100">
+                                            <h3 class="font-bold text-foreground mb-2" style="font-size: 1.1rem;">
+                                                {{ $biz->legal_name ?? 'Unnamed Business' }}
+                                            </h3>
+                                            @if($biz->industry)
+                                                <div class="text-primary text-sm mb-3" style="font-weight: 500;">
+                                                    <i class="fas fa-industry me-1"></i> {{ $biz->industry->name ?? '' }}
+                                                </div>
+                                            @endif
+                                            @if($biz->description)
+                                                <p class="text-muted-foreground text-sm mb-3" style="white-space: pre-wrap;">{{ $biz->description }}</p>
+                                            @endif
+                                            <div class="d-flex flex-column gap-2 text-sm text-muted-foreground">
+                                                @if($biz->address)
+                                                    <div><i class="fas fa-map-marker-alt me-2 text-primary"></i>{{ $biz->address }}</div>
+                                                @endif
+                                                @if($biz->contact_email)
+                                                    <div><i class="fas fa-envelope me-2 text-primary"></i>{{ $biz->contact_email }}</div>
+                                                @endif
+                                                @if($biz->website_url)
+                                                    <div>
+                                                        <a href="{{ $biz->website_url }}" target="_blank" class="text-primary" style="text-decoration: none;">
+                                                            <i class="fas fa-globe me-2"></i>{{ $biz->website_url }}
+                                                        </a>
+                                                    </div>
+                                                @endif
+                                                @if($biz->gst_no)
+                                                    <div><i class="fas fa-file-invoice me-2 text-primary"></i>GST: {{ $biz->gst_no }}</div>
+                                                @endif
+                                            </div>
 
-                            <div class="mt-4">
-                                <a href="#" class="btn-secondary d-inline-flex" style="width: auto; padding: 0.75rem 1.5rem;">
-                                    Download CV <i class="fas fa-download ms-2"></i>
-                                </a>
+                                            {{-- Action Buttons --}}
+                                            <div class="d-flex gap-2 mt-3">
+                                                <a href="tel:{{ $user->masterUser?->mobile_one }}" class="btn-primary" style="padding: 0.75rem;">
+                                                    <i class="fas fa-phone"></i> Call
+                                                </a>
+                                                <a href="mailto:{{ $biz->contact_email ?? $user->masterUser?->email_one }}" class="btn-secondary" style="padding: 0.75rem;">
+                                                    <i class="fas fa-envelope"></i> Email
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
                             </div>
-                        </div>
-                    </section>
+                        </section>
+                    @endif
 
                     <!-- Products Section -->
                     <section class="mb-4">
@@ -359,9 +403,18 @@
                                         @php
                                             $image = $productImages->firstWhere('prod_id', $value->id);
                                         @endphp
-                                        <div class="relative w-full aspect-square bg-secondary">
+                                        <div class="relative w-full aspect-square">
                                             <a href="{{ route('single-product', ['id' => encrypt($value->id)]) }}">
-                                                <img src="{{ $image ? asset('assets/images/bg/' . $image->file_name) : 'https://placehold.co/400x400' }}"
+                                                @php
+                                                    $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400"><rect width="400" height="400" fill="#1e293b"/><svg x="125" y="125" width="150" height="150" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg></svg>';
+                                                    $imgSrc = 'data:image/svg+xml;base64,' . base64_encode($svg);
+                                                    if ($image && !empty($image->product_images)) {
+                                                        $imgSrc = str_starts_with($image->product_images, 'uploads/') 
+                                                                    ? asset($image->product_images) 
+                                                                    : asset($image->product_images);
+                                                    }
+                                                @endphp
+                                                <img src="{{ $imgSrc }}"
                                                     alt="{{ $value->product_name }}" class="w-full h-full object-cover p-2 rounded-2xl"/>
                                             </a>
                                         </div>
@@ -386,14 +439,18 @@
                                                 <span class="text-muted-foreground ms-1">5.0</span>
                                             </div>
                                             
-                                            <div class="mt-auto d-flex gap-2">
-                                                <a href="{{ route('single-product', ['id' => encrypt($value->id)]) }}" class="btn-secondary" style="padding:0.75rem; flex: 1;">
-                                                    Details
-                                                </a>
-                                                <button class="btn-primary" style="padding:0.75rem; flex: 1;">
-                                                    <i class="fas fa-shopping-cart"></i> Cart
-                                                </button>
-                                            </div>
+                                            @php
+                                                $links = $productLinks->where('prod_id', $value->id);
+                                            @endphp
+                                            @if($links->count() > 0)
+                                                <div class="mt-auto d-flex flex-column gap-2">
+                                                    @foreach ($links as $pLink)
+                                                        <a href="{{ $pLink->links }}" target="_blank" class="custom-link-btn">
+                                                            <i class="fas fa-external-link-alt me-2"></i> {{ $pLink->title }}
+                                                        </a>
+                                                    @endforeach
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
@@ -409,7 +466,7 @@
                     </section>
 
                     <!-- Inquiry Form -->
-                    <section class="mb-5 pb-5">
+                    <section class="mb-4">
                         <h2 class="text-lg font-semibold text-foreground mb-3">Send Inquiry</h2>
                         <form id="inquiry-form" class="glass rounded-2xl p-4" action="#">
                             <div class="mb-3">
@@ -437,8 +494,8 @@
                     </section>
                     
                     <!-- Footer branding -->
-                    <div class="text-center text-muted-foreground mb-5 pb-5 pt-3" style="font-size: 0.75rem;">
-                        Powered by <span class="text-primary font-weight-bold">GRID</span>
+                    <div class="text-center text-muted-foreground pb-5 mb-5 pt-2" style="font-size: 0.75rem;">
+                        Powered by <span class="text-primary font-weight-bold">ByndAI</span>
                     </div>
 
                 </div>

@@ -469,7 +469,7 @@ class ConnectionApiController extends Controller
         // ✅ Pagination
         $receivers = $query->paginate($perPage);
 
-        // Step 3: statuses nikalna (connection_requests table se)
+        // Step 3: statuses nikalna (connection_requests table se)..................
         $statuses = ConnectionRequest::where('sender_id', $senderId)
             ->whereIn('receiver_id', $receiverIds)
             ->where('status', 0)

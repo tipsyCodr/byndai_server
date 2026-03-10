@@ -12,13 +12,13 @@ class IndexController extends Controller
     public function index($username = null)
     {
         if ($username) {
-            $user = \App\Models\User::with(['masterUser', 'businessInfo', 'userLinks.masterLink'])->where('user_name', $username)->first();
+            $user = \App\Models\User::with(['masterUser', 'businessInfo', 'businesses', 'userLinks.masterLink'])->where('user_name', $username)->first();
             if (!$user && is_numeric($username)) {
-                $user = \App\Models\User::with(['masterUser', 'businessInfo', 'userLinks.masterLink'])->find($username);
+                $user = \App\Models\User::with(['masterUser', 'businessInfo', 'businesses', 'userLinks.masterLink'])->find($username);
             }
         } else {
             // Default fallback User ID 2 for demo purposes
-            $user = \App\Models\User::with(['masterUser', 'businessInfo', 'userLinks.masterLink'])->find(2);
+            $user = \App\Models\User::with(['masterUser', 'businessInfo', 'businesses', 'userLinks.masterLink'])->find(2);
         }
 
         if (!$user) {
@@ -27,7 +27,8 @@ class IndexController extends Controller
 
         $products = Product::where('user_id', $user->id)->get();
         $productImages = ProductImage::whereIn('prod_id', $products->pluck('id'))->get();
-        return view('components.site.index', compact('user', 'products', 'productImages'));
+        $productLinks = \App\Models\ProductLink::whereIn('prod_id', $products->pluck('id'))->get();
+        return view('components.site.index', compact('user', 'products', 'productImages', 'productLinks'));
     }
     public function product($id)
     {

@@ -55,17 +55,17 @@
             <div class="hidden md:flex items-center gap-8 font-medium">
                 <a href="#features" class="hover:text-[#1ea9ff] transition-colors">Features</a>
                 {{-- @if (Route::has('login'))
-                    @auth
-                        <a href="{{ url('/dashboard') }}"
-                            class="px-6 py-2 bg-[#1b1b18] dark:bg-[#eeeeec] text-white dark:text-[#1C1C1A] rounded-full hover:scale-105 transition-transform">Dashboard</a>
-                    @else
-                        <a href="{{ route('login') }}" class="hover:text-[#f53003] transition-colors">Log in</a>
-                        @if (Route::has('register'))
-                            <a href="{{ route('register') }}"
-                                class="px-6 py-2 bg-[#1b1b18] dark:bg-[#eeeeec] text-white dark:text-[#1C1C1A] rounded-full hover:scale-105 transition-transform shadow-lg">Get
-                                Started</a>
-                        @endif
-                    @endauth 
+                @auth
+                <a href="{{ url('/dashboard') }}"
+                    class="px-6 py-2 bg-[#1b1b18] dark:bg-[#eeeeec] text-white dark:text-[#1C1C1A] rounded-full hover:scale-105 transition-transform">Dashboard</a>
+                @else
+                <a href="{{ route('login') }}" class="hover:text-[#f53003] transition-colors">Log in</a>
+                @if (Route::has('register'))
+                <a href="{{ route('register') }}"
+                    class="px-6 py-2 bg-[#1b1b18] dark:bg-[#eeeeec] text-white dark:text-[#1C1C1A] rounded-full hover:scale-105 transition-transform shadow-lg">Get
+                    Started</a>
+                @endif
+                @endauth
                 @endif --}}
             </div>
         </nav>
@@ -87,9 +87,11 @@
                     professional network with on-device artificial intelligence.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 pt-4">
-                    <a href="#features"
-                        class="px-8 py-4 bg-[#1ea9ff] text-white rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all">Start
-                        Free Trial</a>
+                    <a href="https://play.google.com/store/apps/details?id=com.pathidea.byndai&pcampaignid=web_share"
+                        target="_blank" rel="noopener noreferrer"
+                        class="hover:-translate-y-1 transition-transform inline-block">
+                        <img src="{{ asset('assets/images/google-badge.svg') }}" alt="Google Play" class="h-14 w-auto">
+                    </a>
                     <a href="#features"
                         class="px-8 py-4 glass rounded-2xl font-bold text-lg hover:bg-white/10 transition-all flex items-center justify-center gap-2 border border-[#3e3e3a]">
                         Learn More

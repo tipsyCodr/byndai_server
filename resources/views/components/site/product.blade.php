@@ -191,16 +191,28 @@
                     <div class="demo">
                         <ul id="lightSlider">
                             @forelse ($productImages as $value)
-                                <li data-thumb="{{ asset('assets/images/bg/' . $value->file_name) }}">
+                                @php
+                                    $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600"><rect width="600" height="600" fill="#f8f8f8"/><svg x="150" y="150" width="300" height="300" viewBox="0 0 24 24" fill="none" stroke="#cccccc" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg></svg>';
+                                    $imgSrc = 'data:image/svg+xml;base64,' . base64_encode($svg);
+                                    if ($value && !empty($value->product_images)) {
+                                        $imgSrc = str_starts_with($value->product_images, 'uploads/')
+                                            ? asset($value->product_images)
+                                            : asset($value->product_images);
+                                    }
+                                @endphp
+                                <li data-thumb="{{ $imgSrc }}">
                                     <div class="zoom-container">
-                                        <img src="{{ asset('assets/images/bg/' . $value->file_name) }}"
-                                            alt="{{ $product->product_name }}" class="zoom-image" />
+                                        <img src="{{ $imgSrc }}" alt="{{ $product->product_name }}" class="zoom-image" />
                                     </div>
                                 </li>
                             @empty
-                                <li data-thumb="https://via.placeholder.com/300">
+                                @php
+                                    $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600"><rect width="600" height="600" fill="#f8f8f8"/><svg x="150" y="150" width="300" height="300" viewBox="0 0 24 24" fill="none" stroke="#cccccc" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg></svg>';
+                                    $emptyImgSrc = 'data:image/svg+xml;base64,' . base64_encode($svg);
+                                @endphp
+                                <li data-thumb="{{ $emptyImgSrc }}">
                                     <div class="zoom-container">
-                                        <img src="https://via.placeholder.com/600" alt="No Image" class="zoom-image" />
+                                        <img src="{{ $emptyImgSrc }}" alt="No Image" class="zoom-image" />
                                     </div>
                                 </li>
                             @endforelse
@@ -267,10 +279,16 @@
                                 <div class="card border h-100 shadow-sm">
                                     @php
                                         $image = $similar_prod_images->firstWhere('prod_id', $similar->id);
+                                        $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300"><rect width="300" height="300" fill="#f8f8f8"/><svg x="100" y="100" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="#cccccc" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg></svg>';
+                                        $imgSrc = 'data:image/svg+xml;base64,' . base64_encode($svg);
+                                        if ($image && !empty($image->product_images)) {
+                                            $imgSrc = str_starts_with($image->product_images, 'uploads/')
+                                                ? asset($image->product_images)
+                                                : asset($image->product_images);
+                                        }
                                     @endphp
                                     <a href="{{ route('single-product', ['id' => encrypt($similar->id)]) }}">
-                                        <img src="{{ $image ? asset('assets/images/bg/' . $image->file_name) : 'https://via.placeholder.com/300' }}"
-                                            class="card-img-top" alt="{{ $similar->product_name }}"
+                                        <img src="{{ $imgSrc }}" class="card-img-top" alt="{{ $similar->product_name }}"
                                             style="height: 180px; object-fit: cover;">
                                     </a>
                                     <div class="card-body p-2 text-center">
