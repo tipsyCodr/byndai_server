@@ -956,4 +956,30 @@ class AuthApiController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Update FCM Token for the authenticated user.
+     */
+    public function updateFcmToken(Request $request)
+    {
+        $request->validate([
+            'fcm_token' => 'required|string',
+        ]);
+
+        $user = Auth::user();
+        if ($user) {
+            $user->fcm_token = $request->fcm_token;
+            $user->save();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'FCM token updated successfully',
+            ], 200);
+        }
+
+        return response()->json([
+            'status' => false,
+            'message' => 'Unauthenticated',
+        ], 401);
+    }
 }

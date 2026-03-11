@@ -10,6 +10,7 @@ use App\Http\Controllers\api\site\LeadController;
 use App\Http\Controllers\api\site\MasterApiController;
 use App\Http\Controllers\api\site\MasterCommentApiController;
 use App\Http\Controllers\api\site\MasterEventApiController;
+use App\Http\Controllers\api\site\MasterKeywordApiController;
 use App\Http\Controllers\api\site\MasterKeywordController;
 use App\Http\Controllers\api\site\MasterLinkController;
 use App\Http\Controllers\api\site\MasterPostApiController;
@@ -80,6 +81,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         MasterApiController::class,
         'getDistrict',
     ]);
+
+    Route::post('/update-fcm-token', [AuthApiController::class, 'updateFcmToken']);
 
     Route::get('/profile-card', [
         ProfileApiController::class,

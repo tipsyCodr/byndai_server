@@ -10,6 +10,9 @@ use App\Models\MasterUserDetail;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Kreait\Firebase\Factory;
+use Kreait\Firebase\Messaging\CloudMessage;
+use Kreait\Firebase\Messaging\Notification;
 
 class ConnectionApiController extends Controller
 {
@@ -171,6 +174,37 @@ class ConnectionApiController extends Controller
             'request_type' => 'friend_request',
             'requested_at' => now(),
         ]);
+
+        // Send FCM notification to receiver
+        $receiver = User::find($receiverId);
+        if ($receiver && !empty($receiver->fcm_token)) {
+            try {
+                $serviceAccountPath = config('firebase.credentials');
+                if (file_exists($serviceAccountPath)) {
+                    $factory = (new Factory)->withServiceAccount($serviceAccountPath);
+                    $messaging = $factory->createMessaging();
+
+                    $senderUser = Auth::user();
+                    $senderName = $senderUser->masterUser->fname ?? $senderUser->user_name ?? 'Someone';
+
+                    $message = CloudMessage::fromArray([
+                        'token' => $receiver->fcm_token,
+                        'notification' => [
+                            'title' => 'New Connection Request!',
+                            'body'  => "{$senderName} has sent you a connection request."
+                        ],
+                        'data' => [
+                            'type' => 'connection_request',
+                            'senderId' => (string)$senderId
+                        ]
+                    ]);
+
+                    $messaging->send($message);
+                }
+            } catch (\Exception $e) {
+                // Log or ignore notification failure.
+            }
+        }
 
         return response()->json([
             'status' => true,
