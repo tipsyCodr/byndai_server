@@ -130,7 +130,7 @@ class ConnectionApiController extends Controller
         return response()->json(['status' => true, 'message' => 'Connection removed successfully'], 200);
     }
 
-    // amit coding  start
+    // amit coding  start.................
 
     public function sendConnectionRequest(Request $request)
     {

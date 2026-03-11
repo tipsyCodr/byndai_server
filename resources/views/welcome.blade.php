@@ -25,11 +25,6 @@
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .dark .glass {
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
         .gradient-text {
             background: linear-gradient(135deg, #1d213e 0%, #1ea9ff 100%);
             -webkit-background-clip: text;
@@ -42,7 +37,7 @@
     </style>
 </head>
 
-<body class="bg-[#FDFDFC] dark:bg-[#0a0a0a] text-[#1b1b18] dark:text-[#EDEDEC] transition-colors duration-300">
+<body class="bg-[#FDFDFC] text-[#1b1b18] transition-colors duration-300">
     <div class="relative overflow-hidden min-h-screen">
         <!-- Background Decoration -->
         <div class="absolute top-0 left-0 w-full h-full hero-bg pointer-events-none"></div>
@@ -57,12 +52,12 @@
                 {{-- @if (Route::has('login'))
                 @auth
                 <a href="{{ url('/dashboard') }}"
-                    class="px-6 py-2 bg-[#1b1b18] dark:bg-[#eeeeec] text-white dark:text-[#1C1C1A] rounded-full hover:scale-105 transition-transform">Dashboard</a>
+                    class="px-6 py-2 bg-[#1b1b18] text-white rounded-full hover:scale-105 transition-transform">Dashboard</a>
                 @else
                 <a href="{{ route('login') }}" class="hover:text-[#f53003] transition-colors">Log in</a>
                 @if (Route::has('register'))
                 <a href="{{ route('register') }}"
-                    class="px-6 py-2 bg-[#1b1b18] dark:bg-[#eeeeec] text-white dark:text-[#1C1C1A] rounded-full hover:scale-105 transition-transform shadow-lg">Get
+                    class="px-6 py-2 bg-[#1b1b18] text-white rounded-full hover:scale-105 transition-transform shadow-lg">Get
                     Started</a>
                 @endif
                 @endauth
@@ -82,7 +77,7 @@
                     Streamline Your <br />
                     <span class="gradient-text">Connections</span>
                 </h1>
-                <p class="text-xl text-[#706f6c] dark:text-[#A1A09A] max-w-xl leading-relaxed">
+                <p class="text-xl text-[#706f6c] max-w-xl leading-relaxed">
                     ByndAI transforms business cards into digital assets instantly. Capture, organize, and grow your
                     professional network with on-device artificial intelligence.
                 </p>
@@ -131,10 +126,10 @@
 
         <!-- Features Section -->
         <section id="features"
-            class="relative z-10 max-w-7xl mx-auto px-6 py-32 border-t border-[#19140035] dark:border-[#3e3e3a]">
+            class="relative z-10 max-w-7xl mx-auto px-6 py-32 border-t border-[#19140035]">
             <div class="text-center space-y-4 mb-20">
                 <h2 class="text-4xl font-bold tracking-tight">Powerful Capabilities</h2>
-                <p class="text-[#706f6c] dark:text-[#A1A09A] max-w-2xl mx-auto italic text-lg">
+                <p class="text-[#706f6c] max-w-2xl mx-auto italic text-lg">
                     Designed for professionals who value speed and privacy.
                 </p>
             </div>
@@ -153,7 +148,7 @@
                         </svg>
                     </div>
                     <h3 class="text-xl font-bold mb-4">AI-Powered OCR</h3>
-                    <p class="text-[#706f6c] dark:text-[#A1A09A] leading-relaxed">
+                    <p class="text-[#706f6c] leading-relaxed">
                         Advanced text recognition extracts contact details from business cards in seconds with
                         unparalleled accuracy.
                     </p>
@@ -173,7 +168,7 @@
                         </svg>
                     </div>
                     <h3 class="text-xl font-bold mb-4">Seamless Integration</h3>
-                    <p class="text-[#706f6c] dark:text-[#A1A09A] leading-relaxed">
+                    <p class="text-[#706f6c] leading-relaxed">
                         Save extracted information directly to your device contacts or manage them within our intuitive
                         interface.
                     </p>
@@ -191,7 +186,7 @@
                         </svg>
                     </div>
                     <h3 class="text-xl font-bold mb-4">Privacy First</h3>
-                    <p class="text-[#706f6c] dark:text-[#A1A09A] leading-relaxed">
+                    <p class="text-[#706f6c] leading-relaxed">
                         All processing is done locally on your device. We never upload your images or contact data to
                         our servers.
                     </p>
@@ -201,12 +196,12 @@
 
         <!-- Footer -->
         <footer
-            class="relative z-10 max-w-7xl mx-auto px-6 py-12 flex flex-col md:flex-row justify-between items-center gap-6 border-t border-[#19140035] dark:border-[#3e3e3a]">
+            class="relative z-10 max-w-7xl mx-auto px-6 py-12 flex flex-col md:flex-row justify-between items-center gap-6 border-t border-[#19140035]">
             <div class="flex items-center gap-2 opacity-80">
                 <img src="{{ asset('assets/images/logo.png') }}" alt="ByndAI Logo" class="h-8 w-auto">
-                <span class="text-sm text-[#706f6c] dark:text-[#A1A09A]">© {{ date('Y') }} ByndAI.</span>
+                <span class="text-sm text-[#706f6c]">© {{ date('Y') }} ByndAI.</span>
             </div>
-            <div class="flex gap-8 text-sm font-medium text-[#706f6c] dark:text-[#A1A09A]">
+            <div class="flex gap-8 text-sm font-medium text-[#706f6c]">
                 <a href="{{ url('/privacy') }}" class="hover:text-[#1ea9ff] transition-colors">Privacy Policy</a>
                 <a href="{{ url('/terms') }}" class="hover:text-[#1ea9ff] transition-colors">Terms of Service</a>
                 <a href="mailto:info@pathideainfotech.com" class="hover:text-[#1ea9ff] transition-colors">Contact</a>
