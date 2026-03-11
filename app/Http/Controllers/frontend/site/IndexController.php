@@ -5,6 +5,7 @@ namespace App\Http\Controllers\frontend\site;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Models\UserReview;
 use Illuminate\Http\Request;
 
 class IndexController extends Controller
@@ -28,7 +29,9 @@ class IndexController extends Controller
         $products = Product::where('user_id', $user->id)->get();
         $productImages = ProductImage::whereIn('prod_id', $products->pluck('id'))->get();
         $productLinks = \App\Models\ProductLink::whereIn('prod_id', $products->pluck('id'))->get();
-        return view('frontend.mini-website.index', compact('user', 'products', 'productImages', 'productLinks'));
+        $avgRating = round(UserReview::where('to_user_id', $user->id)->avg('rating') ?? 0, 1);
+        $reviewCount = UserReview::where('to_user_id', $user->id)->count();
+        return view('frontend.mini-website.index', compact('user', 'products', 'productImages', 'productLinks', 'avgRating', 'reviewCount'));
     }
     public function product($id)
     {

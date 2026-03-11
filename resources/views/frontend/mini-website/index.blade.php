@@ -474,33 +474,134 @@
                         </div>
                     </section>
 
-                    <!-- Inquiry Form -->
+                    <!-- Review Form -->
                     <section class="mb-4">
-                        <h2 class="text-lg font-semibold text-foreground mb-3">Send Inquiry</h2>
-                        <form id="inquiry-form" class="glass rounded-2xl p-4" action="#">
-                            <div class="mb-3">
-                                <label class="text-sm text-muted-foreground mb-1 d-block">Your Name *</label>
-                                <div class="relative">
-                                    <i class="fas fa-user text-muted-foreground" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%)"></i>
-                                    <input type="text" name="name" placeholder="Enter your name" required class="form-input-icon"/>
+                        <div class="glass rounded-2xl p-4">
+                            
+                            <!-- Your Ratings header row -->
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <h2 class="text-lg font-semibold text-foreground mb-0">Your Ratings</h2>
+                                <div class="text-end">
+                                    <div class="d-flex align-items-center gap-1 justify-content-end">
+                                        @for ($i = 1; $i <= 5; $i++)
+                                            <i class="fas fa-star" style="color: {{ $i <= round($avgRating) ? '#f59e0b' : 'hsl(var(--muted-foreground))' }}; font-size: 0.85rem;"></i>
+                                        @endfor
+                                    </div>
+                                    <div class="d-flex align-items-baseline gap-1 justify-content-end mt-1">
+                                        <span id="avg-rating-display" class="font-bold text-foreground" style="font-size: 1.3rem;">{{ number_format($avgRating, 1) }}</span>
+                                        <span class="text-muted-foreground" style="font-size: 0.75rem;">
+                                            <span id="review-count-display">{{ $reviewCount }}</span> {{ $reviewCount == 1 ? 'person' : 'people' }}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="mb-3">
-                                <label class="text-sm text-muted-foreground mb-1 d-block">Mobile Number *</label>
-                                <div class="relative">
-                                    <i class="fas fa-phone text-muted-foreground" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%)"></i>
-                                    <input type="tel" name="mobileNumber" placeholder="+91 98765 43210" required class="form-input-icon"/>
-                                </div>
+
+                            <hr style="border-color: hsl(var(--border) / 0.4); margin-bottom: 1.25rem;">
+
+                            <!-- Rate your experience -->
+                            <p class="text-sm text-muted-foreground mb-3">
+                                Rate your experience working with <strong class="text-foreground">{{ $user->masterUser?->fname ?? $user->user_name }}</strong>
+                            </p>
+
+                            <div id="star-rating" class="d-flex gap-2 mb-3" style="font-size: 1.8rem; cursor: pointer;">
+                                @for ($s = 1; $s <= 5; $s++)
+                                    <i class="far fa-star star-icon" data-value="{{ $s }}" style="color: hsl(var(--muted-foreground)); transition: color 0.15s;"></i>
+                                @endfor
                             </div>
-                            <div class="mb-4">
-                                <label class="text-sm text-muted-foreground mb-1 d-block">Message</label>
-                                <textarea name="message" placeholder="I'm interested in your services..." rows="3" class="form-input h-auto"></textarea>
+                            <input type="hidden" id="selected-rating" value="0">
+
+                            <textarea id="review-message" placeholder="Share your experience..." rows="3"
+                                class="form-input h-auto mb-4" style="resize: vertical;"></textarea>
+
+                            <div class="text-center">
+                                <button id="submit-review-btn" class="btn-primary" style="padding: 0.75rem 2rem; min-width: 200px;">
+                                    <i class="fas fa-paper-plane me-2"></i> Submit Review
+                                </button>
                             </div>
-                            <button type="submit" class="btn-primary" style="padding:0.875rem">
-                                <i class="fas fa-paper-plane me-2"></i> Submit Inquiry
-                            </button>
-                        </form>
+
+                            <div id="review-alert" class="mt-3 text-center text-sm" style="display:none;"></div>
+                        </div>
                     </section>
+
+                    <script>
+                    (function () {
+                        const stars = document.querySelectorAll('.star-icon');
+                        const ratingInput = document.getElementById('selected-rating');
+                        const submitBtn = document.getElementById('submit-review-btn');
+                        const alertBox = document.getElementById('review-alert');
+
+                        // Hover & click on stars
+                        stars.forEach(star => {
+                            star.addEventListener('mouseenter', () => highlightStars(star.dataset.value));
+                            star.addEventListener('mouseleave', () => highlightStars(ratingInput.value));
+                            star.addEventListener('click', () => {
+                                ratingInput.value = star.dataset.value;
+                                highlightStars(star.dataset.value);
+                            });
+                        });
+
+                        function highlightStars(val) {
+                            stars.forEach(s => {
+                                const filled = parseInt(s.dataset.value) <= parseInt(val);
+                                s.classList.toggle('fas', filled);
+                                s.classList.toggle('far', !filled);
+                                s.style.color = filled ? '#f59e0b' : 'hsl(var(--muted-foreground))';
+                            });
+                        }
+
+                        submitBtn.addEventListener('click', async () => {
+                            const rating = parseInt(ratingInput.value);
+                            if (!rating) {
+                                showAlert('Please select a star rating first.', 'warning');
+                                return;
+                            }
+                            submitBtn.disabled = true;
+                            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Submitting...';
+
+                            try {
+                                const res = await fetch('{{ route('reviews.store') }}', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                        'Accept': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        to_user_id: {{ $user->id }},
+                                        rating: rating,
+                                        message: document.getElementById('review-message').value,
+                                    })
+                                });
+
+                                const data = await res.json();
+
+                                if (data.success) {
+                                    showAlert('✅ ' + data.message, 'success');
+                                    document.getElementById('avg-rating-display').textContent = data.average_rating.toFixed(1);
+                                    document.getElementById('review-count-display').textContent = data.review_count;
+                                    document.getElementById('review-message').value = '';
+                                    ratingInput.value = 0;
+                                    highlightStars(0);
+                                    submitBtn.innerHTML = '<i class="fas fa-check me-2"></i> Submitted!';
+                                } else {
+                                    showAlert('⚠️ ' + data.message, 'warning');
+                                    submitBtn.disabled = false;
+                                    submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i> Submit Review';
+                                }
+                            } catch (e) {
+                                showAlert('Something went wrong. Please try again.', 'danger');
+                                submitBtn.disabled = false;
+                                submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i> Submit Review';
+                            }
+                        });
+
+                        function showAlert(msg, type) {
+                            alertBox.style.display = 'block';
+                            alertBox.style.color = type === 'success' ? '#22c55e' : type === 'warning' ? '#f59e0b' : '#ef4444';
+                            alertBox.textContent = msg;
+                        }
+                    })();
+                    </script>
                     
                     <!-- Footer branding -->
                     <div class="text-center text-muted-foreground pb-5 mb-5 pt-2" style="font-size: 0.75rem;">
