@@ -340,6 +340,26 @@ class ProductApiController extends Controller
                 ]);
             }
 
+            // ✅ LINKS UPDATE
+            if ($request->has('links')) {
+
+                $links = json_decode($request->links, true);
+
+                // old links delete
+                ProductLink::where('prod_id', $product->id)->delete();
+
+                if (! empty($links)) {
+                    foreach ($links as $link) {
+                        ProductLink::create([
+                            'prod_id' => $product->id,
+                            'title' => $link['title'] ?? '',
+                            'links' => $link['links'] ?? '',
+                            'status' => 1,
+                        ]);
+                    }
+                }
+            }
+
             $final = Product::with(['productImage', 'productLink'])->find($product->id);
 
             return response()->json([
