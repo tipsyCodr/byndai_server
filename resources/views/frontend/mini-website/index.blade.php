@@ -510,6 +510,11 @@
                             </div>
                             <input type="hidden" id="selected-rating" value="0">
 
+                            @guest
+                            <input type="text" id="reviewer-name" placeholder="Your name (optional — leave blank for Anonymous)"
+                                class="form-input mb-3"/>
+                            @endguest
+
                             <textarea id="review-message" placeholder="Share your experience..." rows="3"
                                 class="form-input h-auto mb-4" style="resize: vertical;"></textarea>
 
@@ -570,6 +575,7 @@
                                         to_user_id: {{ $user->id }},
                                         rating: rating,
                                         message: document.getElementById('review-message').value,
+                                        reviewer_name: document.getElementById('reviewer-name') ? document.getElementById('reviewer-name').value.trim() || null : null,
                                     })
                                 });
 

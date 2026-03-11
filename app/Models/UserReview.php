@@ -14,6 +14,7 @@ class UserReview extends Model
     protected $fillable = [
         'to_user_id',
         'from_user_id',
+        'reviewer_name',
         'rating',
         'message',
     ];

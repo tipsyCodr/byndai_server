@@ -11,9 +11,10 @@ class ReviewController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'to_user_id' => 'required|exists:users,id',
-            'rating'     => 'required|integer|min:1|max:5',
-            'message'    => 'nullable|string|max:1000',
+            'to_user_id'    => 'required|exists:users,id',
+            'rating'        => 'required|integer|min:1|max:5',
+            'message'       => 'nullable|string|max:1000',
+            'reviewer_name' => 'nullable|string|max:100',
         ]);
 
         $fromUserId = auth()->id() ?? null;
@@ -33,10 +34,11 @@ class ReviewController extends Controller
         }
 
         UserReview::create([
-            'to_user_id'   => $request->to_user_id,
-            'from_user_id' => $fromUserId,
-            'rating'       => $request->rating,
-            'message'      => $request->message,
+            'to_user_id'    => $request->to_user_id,
+            'from_user_id'  => $fromUserId,
+            'reviewer_name' => $fromUserId ? null : ($request->reviewer_name ?: null), // null = anonymous
+            'rating'        => $request->rating,
+            'message'       => $request->message,
         ]);
 
         $avg   = UserReview::where('to_user_id', $request->to_user_id)->avg('rating');
