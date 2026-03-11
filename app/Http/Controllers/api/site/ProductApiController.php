@@ -26,16 +26,16 @@ class ProductApiController extends Controller
             $sortOrder = $request->query('sort_order', 'desc');
 
             $allowedSort = ['id', 'product_name', 'product_price', 'created_at', 'updated_at'];
-            if (!in_array($sortBy, $allowedSort)) {
+            if (! in_array($sortBy, $allowedSort)) {
                 $sortBy = 'id';
             }
-            if (!in_array(strtolower($sortOrder), ['asc', 'desc'])) {
+            if (! in_array(strtolower($sortOrder), ['asc', 'desc'])) {
                 $sortOrder = 'desc';
             }
 
             $query = Product::with(['productImage', 'productLink']);
 
-            if (!empty($search)) {
+            if (! empty($search)) {
                 $query->where(function ($q) use ($search) {
                     $q->where('product_name', 'like', "%$search%")
                         ->orWhere('category_name', 'like', "%$search%")
@@ -72,17 +72,17 @@ class ProductApiController extends Controller
             $sortOrder = $request->query('sort_order', 'desc');
 
             $allowedSort = ['id', 'product_name', 'product_price', 'created_at', 'updated_at'];
-            if (!in_array($sortBy, $allowedSort)) {
+            if (! in_array($sortBy, $allowedSort)) {
                 $sortBy = 'id';
             }
-            if (!in_array(strtolower($sortOrder), ['asc', 'desc'])) {
+            if (! in_array(strtolower($sortOrder), ['asc', 'desc'])) {
                 $sortOrder = 'desc';
             }
 
             $query = Product::with(['productImage', 'productLink'])
                 ->where('user_id', $user_id);
 
-            if (!empty($search)) {
+            if (! empty($search)) {
                 $query->where(function ($q) use ($search) {
                     $q->where('product_name', 'like', "%$search%")
                         ->orWhere('category_name', 'like', "%$search%")
@@ -114,7 +114,7 @@ class ProductApiController extends Controller
         try {
             $product = Product::with(['productImage', 'productLink'])->find($id);
 
-            if (!$product) {
+            if (! $product) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Product not found',
@@ -181,39 +181,68 @@ class ProductApiController extends Controller
                 $file = $request->file('product_image');
 
                 $folder = public_path('uploads/products');
-                if (!File::exists($folder)) {
+                if (! File::exists($folder)) {
                     File::makeDirectory($folder, 0777, true);
                 }
 
-                $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                $fileName = time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
                 $file->move($folder, $fileName);
 
                 ProductImage::create([
                     'prod_id' => $product->id,
-                    'product_images' => 'uploads/products/' . $fileName,
+                    'product_images' => 'uploads/products/'.$fileName,
                     'status' => 1,
                 ]);
             }
 
             // ✅ LINKS SAVE (no status column)
-            if ($request->links) {
+            // if ($request->links) {
+            //     $links = $request->links;
+
+            //     if (is_string($links)) {
+            //         $links = json_decode($links, true);
+            //     }
+
+            //     if (is_array($links)) {
+            //         foreach ($links as $l) {
+            //             if (! empty($l['links'])) {
+            //                 ProductLink::create([
+            //                     'prod_id' => $product->id,
+            //                     'title' => $l['title'] ?? 'Link',
+            //                     'links' => $l['links'],
+            //                 ]);
+            //             }
+            //         }
+            //     }
+            // }
+
+            if ($request->filled('links')) {
+
                 $links = $request->links;
 
                 if (is_string($links)) {
                     $links = json_decode($links, true);
                 }
 
-                if (is_array($links)) {
+                if (is_array($links) && count($links) > 0) {
+
                     foreach ($links as $l) {
-                        if (!empty($l['links'])) {
+
+                        $title = $l['title'] ?? null;
+                        $url = $l['links'] ?? null;
+
+                        if ($url) {
                             ProductLink::create([
                                 'prod_id' => $product->id,
-                                'title' => $l['title'] ?? 'Link',
-                                'links' => $l['links'],
+                                'title' => $title ?? 'Link',
+                                'links' => $url,
                             ]);
                         }
+
                     }
+
                 }
+
             }
 
             $final = Product::with(['productImage', 'productLink'])->find($product->id);
@@ -243,7 +272,7 @@ class ProductApiController extends Controller
                 ->where('user_id', $user->id)
                 ->first();
 
-            if (!$product) {
+            if (! $product) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Product not found',
@@ -297,16 +326,16 @@ class ProductApiController extends Controller
                 $file = $request->file('product_image');
 
                 $folder = public_path('uploads/products');
-                if (!File::exists($folder)) {
+                if (! File::exists($folder)) {
                     File::makeDirectory($folder, 0777, true);
                 }
 
-                $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                $fileName = time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
                 $file->move($folder, $fileName);
 
                 ProductImage::create([
                     'prod_id' => $product->id,
-                    'product_images' => 'uploads/products/' . $fileName,
+                    'product_images' => 'uploads/products/'.$fileName,
                     'status' => 1,
                 ]);
             }
@@ -338,7 +367,7 @@ class ProductApiController extends Controller
                 ->where('user_id', $user->id)
                 ->first();
 
-            if (!$product) {
+            if (! $product) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Product not found',
