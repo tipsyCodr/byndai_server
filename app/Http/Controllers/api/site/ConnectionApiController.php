@@ -130,7 +130,7 @@ class ConnectionApiController extends Controller
         return response()->json(['status' => true, 'message' => 'Connection removed successfully'], 200);
     }
 
-    // amit coding  start
+    // amit coding  start.................
 
     public function sendConnectionRequest(Request $request)
     {
@@ -578,5 +578,54 @@ class ConnectionApiController extends Controller
             'is_friend' => $exists,
             'message' => $exists ? 'Both users are friends' : 'Not friends',
         ], 200);
+    }
+
+    public function removeConnection(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|integer',
+            'friend_id' => 'required|integer',
+        ]);
+
+        $user_id = $request->user_id;
+        $friend_id = $request->friend_id;
+
+        // Use transaction to ensure both deletions happen or none
+        DB::beginTransaction();
+
+        try {
+            // 1. Delete from connections table where (user_id, friend_id) in either order
+            Connection::where(function ($query) use ($user_id, $friend_id) {
+                $query->where('user_id', $user_id)
+                    ->where('friend_id', $friend_id);
+            })->orWhere(function ($query) use ($user_id, $friend_id) {
+                $query->where('user_id', $friend_id)
+                    ->where('friend_id', $user_id);
+            })->delete();
+
+            // 2. Delete from connection_requests table where (sender_id, receiver_id) in either order
+            ConnectionRequest::where(function ($query) use ($user_id, $friend_id) {
+                $query->where('sender_id', $user_id)
+                    ->where('receiver_id', $friend_id);
+            })->orWhere(function ($query) use ($user_id, $friend_id) {
+                $query->where('sender_id', $friend_id)
+                    ->where('receiver_id', $user_id);
+            })->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Connection removed successfully.',
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to remove connection.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 }
