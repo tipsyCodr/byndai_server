@@ -97,8 +97,11 @@
                         </div>
                         <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
                             <a href="{{ $playStoreLink }}" target="_blank" rel="noreferrer"
-                                class="inline-flex min-w-[220px] items-center justify-center gap-3 rounded-full bg-amber-400 px-6 py-3.5 text-sm font-semibold text-slate-950 transition duration-200 hover:bg-amber-300">Download
-                                Free Now</a>
+                                class="inline-flex min-w-[220px] items-center justify-center gap-3 rounded-full bg-amber-400 px-6 py-3.5 text-sm font-semibold text-slate-950 transition duration-200 hover:bg-amber-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                                    <path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd" />
+                                </svg>
+                                Download Free Now</a>
                             <a href="#demo"
                                 class="inline-flex items-center justify-center gap-3 rounded-full border border-white/15 px-6 py-3.5 text-sm font-semibold text-white transition hover:border-white/35 hover:bg-white/5">See
                                 2-minute walkthrough</a>
@@ -296,8 +299,11 @@
                     <div class="mt-10 space-y-5 border-t border-slate-200 pt-6 text-sm leading-7 text-slate-600">
                         <p>Built for entrepreneurs, consultants, event organizers, and sales teams who need more than a
                             contact list.</p><a href="{{ $playStoreLink }}" target="_blank" rel="noreferrer"
-                            class="inline-flex items-center justify-center rounded-full bg-amber-400 px-6 py-3.5 text-sm font-semibold text-slate-950 transition duration-200 hover:bg-amber-300">Join
-                            the Android launch</a>
+                            class="inline-flex items-center justify-center gap-3 rounded-full bg-amber-400 px-6 py-3.5 text-sm font-semibold text-slate-950 transition duration-200 hover:bg-amber-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                                <path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd" />
+                            </svg>
+                            Join the Android launch</a>
                     </div>
                 </div>
                 <div class="space-y-3">@foreach ($features as $index => $feature)<div
@@ -342,8 +348,11 @@
                     <p class="mt-4 text-base leading-7 text-slate-300">{{ $step['text'] }}</p>
                 </div>@endforeach</div>
                 <div class="mt-12"><a href="{{ $playStoreLink }}" target="_blank" rel="noreferrer"
-                        class="inline-flex items-center justify-center rounded-full bg-amber-400 px-6 py-3.5 text-sm font-semibold text-slate-950 transition duration-200 hover:bg-amber-300">Get
-                        started on Google Play</a></div>
+                        class="inline-flex items-center justify-center gap-3 rounded-full bg-amber-400 px-6 py-3.5 text-sm font-semibold text-slate-950 transition duration-200 hover:bg-amber-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                            <path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd" />
+                        </svg>
+                        Get started on Google Play</a></div>
             </div>
         </section>
 
@@ -490,8 +499,11 @@
                         </div>
                         <div class="mt-8 flex flex-col gap-4 sm:flex-row"><a href="{{ $playStoreLink }}" target="_blank"
                                 rel="noreferrer"
-                                class="inline-flex items-center justify-center rounded-full bg-amber-400 px-6 py-3.5 text-sm font-semibold text-slate-950 transition duration-200 hover:bg-amber-300">Try
-                                Free on Android</a><a href="{{ $whatsappLink }}" target="_blank" rel="noreferrer"
+                                class="inline-flex items-center justify-center gap-3 rounded-full bg-amber-400 px-6 py-3.5 text-sm font-semibold text-slate-950 transition duration-200 hover:bg-amber-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                                    <path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd" />
+                                </svg>
+                                Try Free on Android</a><a href="{{ $whatsappLink }}" target="_blank" rel="noreferrer"
                                 class="inline-flex items-center justify-center rounded-full border border-white/15 px-6 py-3.5 text-sm font-semibold text-white transition hover:border-white/35 hover:bg-white/5">Talk
                                 on WhatsApp</a></div>
                     </div>
@@ -590,8 +602,11 @@
                         business identity, and start networking with more speed, clarity, and follow-through.</p>
                     <div class="mt-10 flex flex-col gap-4 sm:flex-row"><a href="{{ $playStoreLink }}" target="_blank"
                             rel="noreferrer"
-                            class="inline-flex items-center justify-center rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-slate-950 transition hover:bg-slate-100">Download
-                            from Google Play</a><a href="{{ $whatsappLink }}" target="_blank" rel="noreferrer"
+                            class="inline-flex items-center justify-center gap-3 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-slate-950 transition hover:bg-slate-100">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-slate-950">
+                                <path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd" />
+                            </svg>
+                            Download from Google Play</a><a href="{{ $whatsappLink }}" target="_blank" rel="noreferrer"
                             class="inline-flex items-center justify-center rounded-full border border-white/20 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10">Chat
                             on WhatsApp</a></div>
                     <div class="mt-8 text-sm leading-7 text-slate-200">Launch note: the page is optimized to convert
@@ -633,7 +648,11 @@
                 <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Android launch</p>
                 <p class="text-sm font-semibold text-slate-950">Download Bynd AI free</p>
             </div><a href="{{ $playStoreLink }}" target="_blank" rel="noreferrer"
-                class="shrink-0 rounded-full bg-amber-400 px-5 py-3 text-sm font-semibold text-slate-950 transition duration-200 hover:bg-amber-300">Install</a>
+                class="shrink-0 flex items-center justify-center gap-2 rounded-full bg-amber-400 px-5 py-3 text-sm font-semibold text-slate-950 transition duration-200 hover:bg-amber-300">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                    <path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd" />
+                </svg>
+                Install</a>
         </div>
     </div>
     <div id="exit-intent-modal"
@@ -651,8 +670,11 @@
                 business card, QR sharing, lead capture, and a stronger business presence built for modern networking.</p>
             <div class="mt-8 flex flex-col gap-4 sm:flex-row"><a href="{{ $playStoreLink }}" target="_blank"
                     rel="noreferrer"
-                    class="inline-flex flex-1 items-center justify-center rounded-full bg-amber-400 px-6 py-3.5 text-sm font-semibold text-slate-950 transition duration-200 hover:bg-amber-300">Claim
-                    my free download</a><a href="{{ $whatsappLink }}" target="_blank" rel="noreferrer"
+                    class="inline-flex flex-1 items-center justify-center gap-3 rounded-full bg-amber-400 px-6 py-3.5 text-sm font-semibold text-slate-950 transition duration-200 hover:bg-amber-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                        <path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd" />
+                    </svg>
+                    Claim my free download</a><a href="{{ $whatsappLink }}" target="_blank" rel="noreferrer"
                     class="inline-flex flex-1 items-center justify-center rounded-full border border-slate-200 px-6 py-3.5 text-sm font-semibold text-slate-950 transition hover:border-slate-300 hover:bg-slate-50">Need
                     help first?</a></div>
         </div>
