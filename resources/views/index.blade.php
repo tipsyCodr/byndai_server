@@ -132,7 +132,7 @@
                         <div class="relative">
                             <div class="absolute inset-x-6 top-10 h-[26rem] rounded-full bg-sky-500/20 blur-[120px]"></div>
                             <div
-                                class="relative mx-auto w-full max-w-[380px] rounded-[3rem] border border-white/10 bg-white/6 p-3 shadow-[0_50px_120px_-45px_rgba(59,130,246,0.8)] backdrop-blur">
+                                class="relative mx-auto w-full max-w-[380px] rounded-[3rem] border border-white/10 bg-white/6 p-3 shadow-[0_50px_120px_-45px_rgba(59,130,246,0.8)] backdrop-blur animate-float">
                                 <div class="rounded-[2.5rem] border border-white/10 bg-slate-950 p-3">
                                     <div
                                         class="overflow-hidden rounded-[2rem] bg-gradient-to-b from-slate-100 via-white to-sky-50 text-slate-950">
@@ -242,8 +242,8 @@
                         uses verifiable trust markers: official business channels, real contact details, local presence, and
                         a clear founder story.</p>
                 </div>
-                <div class="mt-14 grid gap-8 lg:grid-cols-3">@foreach ($socialSignals as $signal)<div
-                    class="border-t border-slate-200 pt-6">
+                <div class="mt-14 grid gap-8 lg:grid-cols-3">@foreach ($socialSignals as $index => $signal)<div
+                    class="border-t border-slate-200 pt-6 reveal-on-scroll" style="transition-delay: {{ $index * 150 }}ms">
                     <p class="text-lg font-semibold text-slate-950">{{ $signal['title'] }}</p>
                     <p class="mt-3 text-base leading-7 text-slate-600">{{ $signal['text'] }}</p>
                 </div>@endforeach</div>
@@ -261,14 +261,14 @@
                         organize, and convert.</p>
                 </div>
                 <div class="grid gap-6 md:grid-cols-2">
-                    <div class="rounded-[2rem] bg-white p-8 shadow-[0_30px_90px_-60px_rgba(15,23,42,0.35)]">
+                    <div class="rounded-[2rem] bg-white p-8 shadow-[0_30px_90px_-60px_rgba(15,23,42,0.35)] reveal-on-scroll">
                         <p class="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">The old way</p>
                         <div class="mt-6 space-y-4">@foreach ($problemPoints as $point)<div class="flex gap-3"><span
                                 class="mt-1.5 h-2.5 w-2.5 rounded-full bg-rose-500"></span>
                             <p class="text-base leading-7 text-slate-600">{{ $point }}</p>
                         </div>@endforeach</div>
                     </div>
-                    <div class="rounded-[2rem] bg-slate-950 p-8 text-white shadow-[0_30px_90px_-60px_rgba(2,6,23,0.95)]">
+                    <div class="rounded-[2rem] bg-slate-950 p-8 text-white shadow-[0_30px_90px_-60px_rgba(2,6,23,0.95)] reveal-on-scroll" style="transition-delay: 150ms">
                         <p class="text-sm font-semibold uppercase tracking-[0.24em] text-sky-200">The Bynd AI way</p>
                         <div class="mt-6 space-y-4">@foreach ($solutionPoints as $point)<div class="flex gap-3"><span
                                 class="mt-1.5 h-2.5 w-2.5 rounded-full bg-emerald-400"></span>
@@ -282,7 +282,7 @@
         <section id="features" class="bg-white py-20 md:py-24">
             <div class="mx-auto grid max-w-7xl gap-14 px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
                 <div class="lg:sticky lg:top-28 lg:self-start">
-                    <div class="max-w-3xl space-y-4">
+                    <div class="max-w-3xl space-y-4 reveal-on-scroll">
                         <p class="text-sm font-semibold uppercase tracking-[0.24em] text-sky-600">Feature stack</p>
                         <h2 class="text-3xl font-semibold tracking-tight text-slate-950 md:text-5xl">Nine reasons Bynd AI
                             feels larger than a typical networking app.</h2>
@@ -297,8 +297,8 @@
                             the Android launch</a>
                     </div>
                 </div>
-                <div class="space-y-3">@foreach ($features as $feature)<div
-                    class="grid gap-4 border-t border-slate-200 py-7 md:grid-cols-[110px_72px_1fr] md:items-start">
+                <div class="space-y-3">@foreach ($features as $index => $feature)<div
+                    class="grid gap-4 border-t border-slate-200 py-7 md:grid-cols-[110px_72px_1fr] md:items-start reveal-on-scroll" style="transition-delay: {{ $index * 100 }}ms">
                     <div>
                         <p class="text-sm font-semibold uppercase tracking-[0.24em] text-slate-400">
                             {{ $feature['number'] }}</p>
@@ -328,8 +328,8 @@
                         seconds: download it, build a polished identity, then use it to create better networking outcomes.
                     </p>
                 </div>
-                <div class="mt-14 grid gap-8 md:grid-cols-3">@foreach ($steps as $step)<div
-                    class="border-t border-white/10 pt-6">
+                <div class="mt-14 grid gap-8 md:grid-cols-3">@foreach ($steps as $index => $step)<div
+                    class="border-t border-white/10 pt-6 reveal-on-scroll" style="transition-delay: {{ $index * 150 }}ms">
                     <p class="text-5xl font-black tracking-[-0.04em] text-white/20">{{ $step['number'] }}</p>
                     <h3 class="mt-5 text-2xl font-semibold">{{ $step['title'] }}</h3>
                     <p class="mt-4 text-base leading-7 text-slate-300">{{ $step['text'] }}</p>
@@ -352,28 +352,33 @@
                 </div>
                 <div class="mt-14 grid gap-10 lg:grid-cols-[0.88fr_1.12fr] lg:items-center">
                     <div
-                        class="mx-auto w-full max-w-[340px] rounded-[2.7rem] border border-slate-200 bg-slate-950 p-3 shadow-[0_40px_120px_-50px_rgba(15,23,42,0.9)]">
+                        class="mx-auto w-full max-w-[340px] rounded-[2.7rem] border border-slate-200 bg-slate-950 p-3 shadow-[0_40px_120px_-50px_rgba(15,23,42,0.9)] reveal-on-scroll">
                         <div class="rounded-[2.2rem] bg-white">
                             <div
-                                class="rounded-t-[2.2rem] bg-gradient-to-r from-sky-500 to-blue-600 px-5 pb-6 pt-5 text-white">
+                                class="rounded-t-[2.2rem] bg-gradient-to-r from-sky-500 to-blue-600 px-5 pb-6 pt-5 text-white transition-colors duration-500" id="carousel-header">
                                 <div
                                     class="flex items-center justify-between text-xs uppercase tracking-[0.24em] text-white/80">
-                                    <span>Screen 1</span><span>30 sec setup</span></div>
+                                    <span id="carousel-eyebrow">Screen 1</span><span id="carousel-stat">30 sec setup</span></div>
                                 <div class="mt-8 space-y-2">
                                     <p class="text-sm text-white/80">Bynd AI</p>
-                                    <h3 class="text-2xl font-semibold tracking-tight">Welcome to smarter networking</h3>
+                                    <h3 id="carousel-title" class="text-2xl font-semibold tracking-tight">Welcome to smarter networking</h3>
                                 </div>
                             </div>
                             <div class="space-y-4 p-5">
-                                <div
-                                    class="rounded-2xl border border-dashed border-slate-200 px-4 py-3 text-sm text-slate-500">
+                                <div id="carousel-summary"
+                                    class="rounded-2xl border border-dashed border-slate-200 px-4 py-3 text-sm text-slate-500 transition-all duration-300">
                                     Optimized for business networking in meetings, expos, and local growth communities.
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="space-y-4">@foreach ($screens as $screen)<div
-                        class="w-full rounded-[1.8rem] border border-slate-200 bg-white px-5 py-5 text-left">
+                    <div class="space-y-4">@foreach ($screens as $index => $screen)<div
+                        class="carousel-btn w-full rounded-[1.8rem] border border-slate-200 bg-white px-5 py-5 text-left cursor-pointer transition hover:border-sky-500 reveal-on-scroll {{ $loop->first ? 'active' : '' }}"
+                        data-eyebrow="{{ $screen['eyebrow'] }}"
+                        data-stat="{{ $screen['stat'] }}"
+                        data-title="{{ $screen['title'] }}"
+                        data-summary="{{ $screen['summary'] }}"
+                        style="transition-delay: {{ $index * 100 }}ms">
                         <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                             <div>
                                 <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
@@ -432,8 +437,8 @@
                         see themselves on the page and recognize the app as a business growth tool, not just another profile
                         app.</p>
                 </div>
-                <div class="mt-14 grid gap-6 md:grid-cols-2 xl:grid-cols-3">@foreach ($useCases as $useCase)<div
-                    class="border-t border-slate-200 pt-6">
+                <div class="mt-14 grid gap-6 md:grid-cols-2 xl:grid-cols-3">@foreach ($useCases as $index => $useCase)<div
+                    class="border-t border-slate-200 pt-6 reveal-on-scroll" style="transition-delay: {{ $index * 100 }}ms">
                     <div class="flex items-start gap-4">
                         <div
                             class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-sm font-semibold text-white">
@@ -450,7 +455,7 @@
         <section id="pricing" class="bg-slate-950 py-20 text-white md:py-24">
             <div class="mx-auto max-w-7xl px-6 lg:px-8">
                 <div class="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-                    <div class="max-w-3xl space-y-4">
+                    <div class="max-w-3xl space-y-4 reveal-on-scroll">
                         <p class="text-sm font-semibold uppercase tracking-[0.24em] text-sky-200">Value</p>
                         <h2 class="text-3xl font-semibold tracking-tight text-white md:text-5xl">Free to download, easier to
                             try, and built to prove value quickly.</h2>
@@ -458,7 +463,7 @@
                             light: no credit card wall, no complex pricing math, and a clear reason to install now instead
                             of later.</p>
                     </div>
-                    <div class="rounded-[2rem] border border-white/10 bg-white/5 p-8 backdrop-blur">
+                    <div class="rounded-[2rem] border border-white/10 bg-white/5 p-8 backdrop-blur reveal-on-scroll" style="transition-delay: 150ms">
                         <p class="text-sm font-semibold uppercase tracking-[0.24em] text-sky-200">Launch offer</p>
                         <p class="mt-4 text-5xl font-black tracking-[-0.05em]">FREE</p>
                         <p class="mt-4 text-lg text-slate-300">Download from Google Play and start building your digital
@@ -508,22 +513,22 @@
                             value speed, trust, and follow-through.</div>
                     </div>
                     <div class="grid gap-6 md:grid-cols-2">
-                        <div class="border-t border-slate-200 pt-6">
+                        <div class="border-t border-slate-200 pt-6 reveal-on-scroll">
                             <h3 class="text-xl font-semibold tracking-tight text-slate-950">Path Idea InfoTech</h3>
                             <p class="mt-3 text-base leading-7 text-slate-600">Technology partner powering the launch,
                                 product vision, and business identity behind Bynd AI.</p>
                         </div>
-                        <div class="border-t border-slate-200 pt-6">
+                        <div class="border-t border-slate-200 pt-6 reveal-on-scroll" style="transition-delay: 100ms">
                             <h3 class="text-xl font-semibold tracking-tight text-slate-950">Security-first messaging</h3>
                             <p class="mt-3 text-base leading-7 text-slate-600">The page emphasizes privacy, transparency,
                                 and direct contact paths so visitors feel safer taking the next step.</p>
                         </div>
-                        <div class="border-t border-slate-200 pt-6">
+                        <div class="border-t border-slate-200 pt-6 reveal-on-scroll" style="transition-delay: 200ms">
                             <h3 class="text-xl font-semibold tracking-tight text-slate-950">Made in India</h3>
                             <p class="mt-3 text-base leading-7 text-slate-600">Positioned for Indian professionals, with a
                                 strong local story rooted in Raipur and Central India.</p>
                         </div>
-                        <div class="border-t border-slate-200 pt-6">
+                        <div class="border-t border-slate-200 pt-6 reveal-on-scroll" style="transition-delay: 300ms">
                             <h3 class="text-xl font-semibold tracking-tight text-slate-950">Reach the team easily</h3>
                             <p class="mt-3 text-base leading-7 text-slate-600">Phone, WhatsApp, email, website, social
                                 profiles, and a physical address are all surfaced clearly below.</p>
@@ -535,7 +540,7 @@
 
         <section id="faq" class="bg-slate-50 py-20 md:py-24">
             <div class="mx-auto max-w-5xl px-6 lg:px-8">
-                <div class="mx-auto max-w-3xl space-y-4 text-center">
+                <div class="mx-auto max-w-3xl space-y-4 text-center reveal-on-scroll">
                     <p class="text-sm font-semibold uppercase tracking-[0.24em] text-sky-600">FAQ</p>
                     <h2 class="text-3xl font-semibold tracking-tight text-slate-950 md:text-5xl">Answer the questions that
                         block the install.</h2>
@@ -543,8 +548,8 @@
                         objections around price, differentiation, support, events, and product fit while staying honest
                         about what still needs launch-stage validation.</p>
                 </div>
-                <div class="mt-14 space-y-4">@foreach ($faqs as $item)<details
-                    class="group overflow-hidden rounded-[1.6rem] border border-slate-200 bg-white" @if ($loop->first)
+                <div class="mt-14 space-y-4">@foreach ($faqs as $index => $item)<details
+                    class="group overflow-hidden rounded-[1.6rem] border border-slate-200 bg-white reveal-on-scroll" style="transition-delay: {{ $index * 50 }}ms" @if ($loop->first)
                     open @endif>
                     <summary
                         class="flex cursor-pointer list-none items-center justify-between gap-6 px-6 py-5 text-left">
@@ -560,7 +565,7 @@
 
         <section class="bg-gradient-to-br from-sky-600 via-blue-700 to-slate-950 py-20 text-white md:py-24">
             <div class="mx-auto grid max-w-7xl gap-12 px-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:px-8">
-                <div>
+                <div class="reveal-on-scroll">
                     <p class="text-sm font-semibold uppercase tracking-[0.28em] text-sky-200">Final call to action</p>
                     <h2 class="mt-4 text-4xl font-black tracking-[-0.04em] md:text-6xl">Download Bynd AI and give every new
                         connection a better chance to become business.</h2>
@@ -576,7 +581,7 @@
                         visitors into Play Store clicks, while the data layer is ready for CTA, FAQ, scroll depth, and
                         time-on-page tracking.</div>
                 </div>
-                <div>
+                <div class="reveal-on-scroll" style="transition-delay: 150ms">
                     <div class="mx-auto max-w-sm rounded-[2rem] bg-white/10 p-6 backdrop-blur">
                         <div class="rounded-[1.6rem] bg-white p-5 text-slate-950"><img src="{{ $qrImage }}"
                                 alt="QR code linking to the Bynd AI Google Play Store page" loading="lazy"
@@ -686,6 +691,61 @@
             modal?.addEventListener('click', (event) => {
                 if (event.target === modal) closeModal();
             });
+
+            // Scroll Reveal Observer
+            const revealObserver = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-revealed');
+                        revealObserver.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+            document.querySelectorAll('.reveal-on-scroll').forEach((el) => {
+                revealObserver.observe(el);
+            });
+
+            // Interactive Carousel
+            const carouselBtns = document.querySelectorAll('.carousel-btn');
+            const carouselHeader = document.getElementById('carousel-header');
+            const carouselEyebrow = document.getElementById('carousel-eyebrow');
+            const carouselStat = document.getElementById('carousel-stat');
+            const carouselTitle = document.getElementById('carousel-title');
+            const carouselSummary = document.getElementById('carousel-summary');
+
+            if (carouselBtns.length && carouselTitle) {
+                // Ensure text elements have transition
+                carouselTitle.style.transition = 'opacity 300ms ease';
+                
+                carouselBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        if (btn.classList.contains('active')) return;
+
+                        // Remove active class from all and set active on current
+                        carouselBtns.forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+
+                        // Briefly fade out text box for transition
+                        carouselTitle.style.opacity = '0';
+                        carouselSummary.classList.add('opacity-0');
+                        carouselHeader.classList.add('opacity-70');
+                        
+                        setTimeout(() => {
+                            // Update content
+                            carouselEyebrow.textContent = btn.dataset.eyebrow;
+                            carouselStat.textContent = btn.dataset.stat;
+                            carouselTitle.textContent = btn.dataset.title;
+                            carouselSummary.textContent = btn.dataset.summary;
+                            
+                            // Fade back in
+                            carouselTitle.style.opacity = '1';
+                            carouselSummary.classList.remove('opacity-0');
+                            carouselHeader.classList.remove('opacity-70');
+                        }, 300);
+                    });
+                });
+            }
         })();
     </script>
 @endpush
