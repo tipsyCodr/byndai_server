@@ -15,7 +15,7 @@ return new class extends Migration
             Schema::create('user_reviews', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('to_user_id')->constrained('users')->onDelete('cascade');
-                $table->foreignId('from_user_id')->nullable()->constrained('users')->onDelete('set null');
+                $table->unsignedBigInteger('from_user_id')->nullable(); // null = anonymous
                 $table->tinyInteger('rating')->unsigned()->default(5); // 1-5
                 $table->text('message')->nullable();
                 $table->timestamps();
