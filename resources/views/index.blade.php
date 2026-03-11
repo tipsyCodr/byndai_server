@@ -243,7 +243,8 @@
                         a clear founder story.</p>
                 </div>
                 <div class="mt-14 grid gap-8 lg:grid-cols-3">@foreach ($socialSignals as $index => $signal)<div
-                    class="border-t border-slate-200 pt-6 reveal-on-scroll" style="transition-delay: {{ $index * 150 }}ms">
+                    class="border-t border-slate-200 pt-6 reveal-on-scroll"
+                    style="transition-delay: {{ $index * 150 }}ms">
                     <p class="text-lg font-semibold text-slate-950">{{ $signal['title'] }}</p>
                     <p class="mt-3 text-base leading-7 text-slate-600">{{ $signal['text'] }}</p>
                 </div>@endforeach</div>
@@ -261,14 +262,16 @@
                         organize, and convert.</p>
                 </div>
                 <div class="grid gap-6 md:grid-cols-2">
-                    <div class="rounded-[2rem] bg-white p-8 shadow-[0_30px_90px_-60px_rgba(15,23,42,0.35)] reveal-on-scroll">
+                    <div
+                        class="rounded-[2rem] bg-white p-8 shadow-[0_30px_90px_-60px_rgba(15,23,42,0.35)] reveal-on-scroll">
                         <p class="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">The old way</p>
                         <div class="mt-6 space-y-4">@foreach ($problemPoints as $point)<div class="flex gap-3"><span
                                 class="mt-1.5 h-2.5 w-2.5 rounded-full bg-rose-500"></span>
                             <p class="text-base leading-7 text-slate-600">{{ $point }}</p>
                         </div>@endforeach</div>
                     </div>
-                    <div class="rounded-[2rem] bg-slate-950 p-8 text-white shadow-[0_30px_90px_-60px_rgba(2,6,23,0.95)] reveal-on-scroll" style="transition-delay: 150ms">
+                    <div class="rounded-[2rem] bg-slate-950 p-8 text-white shadow-[0_30px_90px_-60px_rgba(2,6,23,0.95)] reveal-on-scroll"
+                        style="transition-delay: 150ms">
                         <p class="text-sm font-semibold uppercase tracking-[0.24em] text-sky-200">The Bynd AI way</p>
                         <div class="mt-6 space-y-4">@foreach ($solutionPoints as $point)<div class="flex gap-3"><span
                                 class="mt-1.5 h-2.5 w-2.5 rounded-full bg-emerald-400"></span>
@@ -298,14 +301,17 @@
                     </div>
                 </div>
                 <div class="space-y-3">@foreach ($features as $index => $feature)<div
-                    class="grid gap-4 border-t border-slate-200 py-7 md:grid-cols-[110px_72px_1fr] md:items-start reveal-on-scroll" style="transition-delay: {{ $index * 100 }}ms">
+                    class="grid gap-4 border-t border-slate-200 py-7 md:grid-cols-[110px_72px_1fr] md:items-start reveal-on-scroll"
+                    style="transition-delay: {{ $index * 100 }}ms">
                     <div>
                         <p class="text-sm font-semibold uppercase tracking-[0.24em] text-slate-400">
-                            {{ $feature['number'] }}</p>
+                            {{ $feature['number'] }}
+                        </p>
                     </div>
                     <div
                         class="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 text-white">
-                        <span class="text-xs font-semibold">AI</span></div>
+                        <span class="text-xs font-semibold">AI</span>
+                    </div>
                     <div class="space-y-3">
                         <div class="flex flex-col gap-2 md:flex-row md:items-baseline md:justify-between">
                             <h3 class="text-2xl font-semibold tracking-tight text-slate-950">{{ $feature['title'] }}
@@ -329,7 +335,8 @@
                     </p>
                 </div>
                 <div class="mt-14 grid gap-8 md:grid-cols-3">@foreach ($steps as $index => $step)<div
-                    class="border-t border-white/10 pt-6 reveal-on-scroll" style="transition-delay: {{ $index * 150 }}ms">
+                    class="border-t border-white/10 pt-6 reveal-on-scroll"
+                    style="transition-delay: {{ $index * 150 }}ms">
                     <p class="text-5xl font-black tracking-[-0.04em] text-white/20">{{ $step['number'] }}</p>
                     <h3 class="mt-5 text-2xl font-semibold">{{ $step['title'] }}</h3>
                     <p class="mt-4 text-base leading-7 text-slate-300">{{ $step['text'] }}</p>
@@ -354,14 +361,16 @@
                     <div
                         class="mx-auto w-full max-w-[340px] rounded-[2.7rem] border border-slate-200 bg-slate-950 p-3 shadow-[0_40px_120px_-50px_rgba(15,23,42,0.9)] reveal-on-scroll">
                         <div class="rounded-[2.2rem] bg-white">
-                            <div
-                                class="rounded-t-[2.2rem] bg-gradient-to-r from-sky-500 to-blue-600 px-5 pb-6 pt-5 text-white transition-colors duration-500" id="carousel-header">
+                            <div class="rounded-t-[2.2rem] bg-gradient-to-r from-sky-500 to-blue-600 px-5 pb-6 pt-5 text-white transition-colors duration-500"
+                                id="carousel-header">
                                 <div
                                     class="flex items-center justify-between text-xs uppercase tracking-[0.24em] text-white/80">
-                                    <span id="carousel-eyebrow">Screen 1</span><span id="carousel-stat">30 sec setup</span></div>
+                                    <span id="carousel-eyebrow">Screen 1</span><span id="carousel-stat">30 sec setup</span>
+                                </div>
                                 <div class="mt-8 space-y-2">
                                     <p class="text-sm text-white/80">Bynd AI</p>
-                                    <h3 id="carousel-title" class="text-2xl font-semibold tracking-tight">Welcome to smarter networking</h3>
+                                    <h3 id="carousel-title" class="text-2xl font-semibold tracking-tight">Welcome to smarter
+                                        networking</h3>
                                 </div>
                             </div>
                             <div class="space-y-4 p-5">
@@ -374,15 +383,14 @@
                     </div>
                     <div class="space-y-4">@foreach ($screens as $index => $screen)<div
                         class="carousel-btn w-full rounded-[1.8rem] border border-slate-200 bg-white px-5 py-5 text-left cursor-pointer transition hover:border-sky-500 reveal-on-scroll {{ $loop->first ? 'active' : '' }}"
-                        data-eyebrow="{{ $screen['eyebrow'] }}"
-                        data-stat="{{ $screen['stat'] }}"
-                        data-title="{{ $screen['title'] }}"
-                        data-summary="{{ $screen['summary'] }}"
+                        data-eyebrow="{{ $screen['eyebrow'] }}" data-stat="{{ $screen['stat'] }}"
+                        data-title="{{ $screen['title'] }}" data-summary="{{ $screen['summary'] }}"
                         style="transition-delay: {{ $index * 100 }}ms">
                         <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                             <div>
                                 <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
-                                    {{ $screen['eyebrow'] }}</p>
+                                    {{ $screen['eyebrow'] }}
+                                </p>
                                 <h3 class="mt-2 text-xl font-semibold tracking-tight">{{ $screen['title'] }}</h3>
                             </div><span class="text-sm text-slate-500">{{ $screen['stat'] }}</span>
                         </div>
@@ -414,13 +422,17 @@
                         </thead>
                         <tbody>@foreach ($comparisonRows as $row)<tr class="align-top">
                             <td class="border-t border-slate-200 px-6 py-5 text-sm font-semibold text-slate-950">
-                                {{ $row['feature'] }}</td>
+                                {{ $row['feature'] }}
+                            </td>
                             <td class="border-t border-slate-200 px-6 py-5 text-sm leading-7 text-slate-600">
-                                {{ $row['traditional'] }}</td>
+                                {{ $row['traditional'] }}
+                            </td>
                             <td class="border-t border-slate-200 px-6 py-5 text-sm leading-7 text-slate-600">
-                                {{ $row['generic'] }}</td>
+                                {{ $row['generic'] }}
+                            </td>
                             <td class="border-t border-slate-200 px-6 py-5 text-sm leading-7 text-sky-800">
-                                {{ $row['bynd'] }}</td>
+                                {{ $row['bynd'] }}
+                            </td>
                         </tr>@endforeach</tbody>
                     </table>
                 </div>
@@ -438,11 +450,13 @@
                         app.</p>
                 </div>
                 <div class="mt-14 grid gap-6 md:grid-cols-2 xl:grid-cols-3">@foreach ($useCases as $index => $useCase)<div
-                    class="border-t border-slate-200 pt-6 reveal-on-scroll" style="transition-delay: {{ $index * 100 }}ms">
+                    class="border-t border-slate-200 pt-6 reveal-on-scroll"
+                    style="transition-delay: {{ $index * 100 }}ms">
                     <div class="flex items-start gap-4">
                         <div
                             class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-sm font-semibold text-white">
-                            {{ strtoupper(substr($useCase['title'], 0, 2)) }}</div>
+                            {{ strtoupper(substr($useCase['title'], 0, 2)) }}
+                        </div>
                         <div>
                             <h3 class="text-xl font-semibold tracking-tight text-slate-950">{{ $useCase['title'] }}</h3>
                             <p class="mt-3 text-base leading-7 text-slate-600">{{ $useCase['text'] }}</p>
@@ -463,7 +477,8 @@
                             light: no credit card wall, no complex pricing math, and a clear reason to install now instead
                             of later.</p>
                     </div>
-                    <div class="rounded-[2rem] border border-white/10 bg-white/5 p-8 backdrop-blur reveal-on-scroll" style="transition-delay: 150ms">
+                    <div class="rounded-[2rem] border border-white/10 bg-white/5 p-8 backdrop-blur reveal-on-scroll"
+                        style="transition-delay: 150ms">
                         <p class="text-sm font-semibold uppercase tracking-[0.24em] text-sky-200">Launch offer</p>
                         <p class="mt-4 text-5xl font-black tracking-[-0.05em]">FREE</p>
                         <p class="mt-4 text-lg text-slate-300">Download from Google Play and start building your digital
@@ -549,16 +564,18 @@
                         about what still needs launch-stage validation.</p>
                 </div>
                 <div class="mt-14 space-y-4">@foreach ($faqs as $index => $item)<details
-                    class="group overflow-hidden rounded-[1.6rem] border border-slate-200 bg-white reveal-on-scroll" style="transition-delay: {{ $index * 50 }}ms" @if ($loop->first)
-                    open @endif>
+                    class="group overflow-hidden rounded-[1.6rem] border border-slate-200 bg-white reveal-on-scroll"
+                    style="transition-delay: {{ $index * 50 }}ms" @if ($loop->first) open @endif>
                     <summary
                         class="flex cursor-pointer list-none items-center justify-between gap-6 px-6 py-5 text-left">
                         <span
                             class="text-lg font-semibold tracking-tight text-slate-950">{{ $item['question'] }}</span><span
                             class="text-2xl text-slate-400 group-open:hidden">+</span><span
-                            class="hidden text-2xl text-slate-400 group-open:block">-</span></summary>
+                            class="hidden text-2xl text-slate-400 group-open:block">-</span>
+                    </summary>
                     <div class="border-t border-slate-100 px-6 py-5 text-base leading-7 text-slate-600">
-                        {{ $item['answer'] }}</div>
+                        {{ $item['answer'] }}
+                    </div>
                 </details>@endforeach</div>
             </div>
         </section>
@@ -653,12 +670,12 @@
                 setInterval(() => {
                     // Start Exit Animation on whole card (fade out & slide slightly down)
                     activityCard.classList.add('opacity-0', 'translate-y-4');
-                    
+
                     setTimeout(() => {
                         // Swap Text Once Hidden
                         activityIndex = (activityIndex + 1) % activityFeed.length;
                         activityNode.textContent = activityFeed[activityIndex];
-                        
+
                         // Start Entry Animation on whole card (fade in & slide to original position)
                         activityCard.classList.remove('opacity-0', 'translate-y-4');
                     }, 500); // 500ms matches the duration-500 CSS transition
@@ -717,7 +734,7 @@
             if (carouselBtns.length && carouselTitle) {
                 // Ensure text elements have transition
                 carouselTitle.style.transition = 'opacity 300ms ease';
-                
+
                 carouselBtns.forEach(btn => {
                     btn.addEventListener('click', () => {
                         if (btn.classList.contains('active')) return;
@@ -730,14 +747,14 @@
                         carouselTitle.style.opacity = '0';
                         carouselSummary.classList.add('opacity-0');
                         carouselHeader.classList.add('opacity-70');
-                        
+
                         setTimeout(() => {
                             // Update content
                             carouselEyebrow.textContent = btn.dataset.eyebrow;
                             carouselStat.textContent = btn.dataset.stat;
                             carouselTitle.textContent = btn.dataset.title;
                             carouselSummary.textContent = btn.dataset.summary;
-                            
+
                             // Fade back in
                             carouselTitle.style.opacity = '1';
                             carouselSummary.classList.remove('opacity-0');
