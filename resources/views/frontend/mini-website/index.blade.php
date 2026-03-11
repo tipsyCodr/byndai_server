@@ -197,7 +197,7 @@
         .custom-link-btn:hover {
             background: hsl(var(--primary));
             color: #fff;
-            border-color: hsl(var(--primary));
+            border-color: hsl(var(--praimary));
             transform: translateY(-2px);
             box-shadow: 0 4px 15px hsl(var(--primary) / 0.3);
         }
@@ -205,7 +205,7 @@
 
     <div id="profile-wrapper">
         <!-- Hero Section Bleeding to Edge -->
-        <div class="relative w-full gradient-hero" style="height: 480px;">
+        <div class="relative w-full gradient-hero" style="height: 500px;">
             <img src="{{ $user->masterUser?->profile_pic ? asset('storage/' . $user->masterUser?->profile_pic) : 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&w=1920&q=80' }}"
                 alt="Cover" class="w-full h-full object-cover"/>
             <div class="absolute inset-x-0 bottom-0 h-32 gradient-overlay-bottom"></div>
