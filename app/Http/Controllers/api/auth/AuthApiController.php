@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class AuthApiController extends Controller
 {
@@ -970,6 +971,11 @@ class AuthApiController extends Controller
         if ($user) {
             $user->fcm_token = $request->fcm_token;
             $user->save();
+
+            Log::info('FCM Token updated successfully.', [
+                'user_id' => $user->id,
+                'fcm_token' => $request->fcm_token
+            ]);
 
             return response()->json([
                 'status' => true,

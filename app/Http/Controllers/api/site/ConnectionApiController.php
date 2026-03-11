@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification;
+use Illuminate\Support\Facades\Log;
 
 class ConnectionApiController extends Controller
 {
@@ -178,6 +179,11 @@ class ConnectionApiController extends Controller
         // Send FCM notification to receiver
         $receiver = User::find($receiverId);
         if ($receiver && !empty($receiver->fcm_token)) {
+            Log::info('Attempting to send FCM connection request notification', [
+                'sender_id' => $senderId,
+                'receiver_id' => $receiverId,
+                'fcm_token' => $receiver->fcm_token
+            ]);
             try {
                 $serviceAccountPath = config('firebase.credentials');
                 if (file_exists($serviceAccountPath)) {
@@ -200,10 +206,25 @@ class ConnectionApiController extends Controller
                     ]);
 
                     $messaging->send($message);
+                    Log::info('FCM connection request notification sent successfully.', [
+                        'receiver_id' => $receiverId
+                    ]);
+                } else {
+                    Log::error('FCM Service Account credentials file not found.', [
+                        'path' => $serviceAccountPath
+                    ]);
                 }
             } catch (\Exception $e) {
-                // Log or ignore notification failure.
+                Log::error('FCM connection request notification failed.', [
+                    'receiver_id' => $receiverId,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
             }
+        } else {
+            Log::info('Skipped FCM notification: Receiver has no fcm_token set.', [
+                'receiver_id' => $receiverId
+            ]);
         }
 
         return response()->json([
