@@ -1,4 +1,6 @@
-<x-site.main title="Product">
+@extends('frontend.mini-website.layouts.app')
+
+@section('content')
 
     {{-- External Styles --}}
     <link href='https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css' rel='stylesheet'>
@@ -341,4 +343,4 @@
         });
     </script>
 
-</x-site.main>
+@endsection
