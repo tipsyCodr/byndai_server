@@ -1,4 +1,6 @@
-<x-site.main :title="$user->masterUser?->fname ?? $user->user_name" :user="$user">
+@extends('frontend.mini-website.layouts.app')
+
+@section('content')
     <style>
         /* CSS Variables — dark theme matching mygrid.club */
         #profile-wrapper {
@@ -38,7 +40,7 @@
         }
         
         #profile-wrapper .glass {
-          background: hsl(var(--card) / 0.6);
+          background: hsl(var(--card) / 0.1);
           backdrop-filter: blur(24px);
           -webkit-backdrop-filter: blur(24px);
           border: 1px solid hsl(var(--border) / 0.5);
@@ -202,26 +204,27 @@
     </style>
 
     <div id="profile-wrapper">
+        <!-- Hero Section Bleeding to Edge -->
+        <div class="relative w-full gradient-hero" style="height: 350px;">
+            <img src="{{ $user->masterUser?->profile_pic ? asset('storage/' . $user->masterUser?->profile_pic) : 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&w=1920&q=80' }}"
+                alt="Cover" class="w-full h-full object-cover"/>
+            <div class="absolute inset-x-0 bottom-0 h-32 gradient-overlay-bottom"></div>
+            
+            <button type="button" class="absolute top-0 right-0 mt-3 me-3 btn btn-sm rounded-xl p-2" style="background: hsl(var(--background)/0.8); backdrop-filter: blur(4px); border: 1px solid hsl(var(--border)); color: hsl(var(--foreground)); z-index: 10;">
+                <i class="fas fa-share-nodes"></i>
+            </button>
+        </div>
+
         <div class="container py-4">
             <div class="row custom-gutters justify-content-center">
                 
                 <!-- LEFT COLUMN: Profile & Sidebar -->
                 <div class="col-12 col-lg-5 col-xl-4 mb-4">
                     <div class="desktop-sticky">
-                        <div class="glass rounded-2xl overflow-hidden shadow-xl mb-4">
-                            <!-- Hero Section -->
-                            <div class="relative w-full gradient-hero" style="height: 350px;">
-                                <img src="{{ $user->masterUser?->profile_pic ? asset('storage/' . $user->masterUser?->profile_pic) : 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&w=1920&q=80' }}"
-                                    alt="Cover" class="w-full h-full object-cover"/>
-                                <div class="absolute inset-x-0 bottom-0 h-32 gradient-overlay-bottom"></div>
-                                
-                                <button type="button" class="absolute top-0 right-0 mt-3 me-3 btn btn-sm rounded-xl p-2" style="background: hsl(var(--background)/0.8); backdrop-filter: blur(4px); border: 1px solid hsl(var(--border)); color: hsl(var(--foreground));">
-                                    <i class="fas fa-share-nodes"></i>
-                                </button>
-                            </div>
+                        <div class="glass rounded-2xl shadow-xl mb-4" style="margin-top: -6rem; padding-top: 1rem; position: relative;">
                             
                             <!-- Avatar -->
-                            <div class="profile-avatar-container">
+                            <div class="profile-avatar-container" style="margin-top: -3rem;">
                                 <img src="{{ $user->masterUser?->profile_logo ? asset('storage/' . $user->masterUser?->profile_logo) : 'https://placehold.co/200x200' }}"
                                     alt="{{ $user->masterUser?->fname ?? $user->user_name }}" class="profile-avatar-img shadow-xl">
                                 <div class="verified-badge">
@@ -231,12 +234,18 @@
 
                             <!-- User Info -->
                             <div class="px-4 text-center mt-3 pb-4">
-                                <h1 class="text-2xl font-bold text-foreground">{{ $user->masterUser?->fname ?? $user->user_name }}</h1>
+                                <h1 class="text-2xl font-bold text-foreground mb-1">{{ $user->masterUser?->fname ?? $user->user_name }}</h1>
+                                
+                                @if($user->businesses && $user->businesses->count() > 0)
+                                    <h2 class="text-lg font-semibold text-primary mb-2">
+                                        {{ $user->businesses->first()->legal_name }}
+                                    </h2>
+                                @endif
                                 
                                 <div class="mt-2 text-center d-flex flex-wrap justify-content-center" style="gap: 0.5rem;">
                                     @if ($user->masterUser?->desg)
                                         <span class="badge-pill">
-                                            <i class="fas fa-briefcase"></i> {{ $user->masterUser->desg }}
+                                            <i class="fas   fa-briefcase"></i> {{ $user->masterUser->desg }}
                                         </span>
                                     @endif
                                     @if ($user->masterUser?->district?->district_name)
@@ -338,7 +347,7 @@
                 <div class="col-12 col-lg-7 col-xl-7">
                     
                     <!-- Businesses Section -->
-                    @if($user->businesses && $user->businesses->count() > 0)
+                    @include('frontend.mini-website.partials.footer')
                         <section class="mb-4">
                             <h2 class="text-lg font-semibold text-foreground mb-3">
                                 <i class="fas fa-building me-2 text-primary"></i> {{ $user->businesses->count() > 1 ? 'Businesses' : 'Business' }}
@@ -391,7 +400,7 @@
                                 @endforeach
                             </div>
                         </section>
-                    @endif
+                    
 
                     <!-- Products Section -->
                     <section class="mb-4">
@@ -507,4 +516,4 @@
             <i class="fas fa-address-book"></i> Save Contact
         </a>
     </div>
-</x-site.main>
+@endsection
