@@ -18,6 +18,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             sudo -u byndai-app bash -c '
+              source ~/.nvm/nvm.sh
               cd /home/byndai-app/htdocs/app.byndai.in
               git reset --hard HEAD
               git clean -fd

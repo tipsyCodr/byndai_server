@@ -591,7 +591,7 @@ class ConnectionApiController extends Controller
         $user_id = $request->user_id;
         $friend_id = $request->friend_id;
 
-        // Use transaction to ensure both deletions happen or none
+        // Use transaction to ensure both deletions happen or none...........
         DB::beginTransaction();
 
         try {

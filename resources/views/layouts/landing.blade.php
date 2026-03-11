@@ -31,6 +31,9 @@
                 <a href="https://play.google.com/store/apps/details?id=com.pathidea.byndai" target="_blank"
                     rel="noreferrer"
                     class="hidden items-center justify-center gap-3 rounded-full bg-amber-400 px-6 py-3.5 text-sm font-semibold text-slate-950 transition duration-200 hover:bg-amber-300 md:inline-flex">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                        <path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd" />
+                    </svg>
                     Get Bynd AI
                 </a>
 
@@ -66,6 +69,9 @@
                     <a href="https://play.google.com/store/apps/details?id=com.pathidea.byndai" target="_blank"
                         rel="noreferrer"
                         class="flex items-center justify-center w-full gap-3 rounded-full bg-amber-400 px-6 py-3.5 text-base font-semibold text-slate-950 transition duration-200 hover:bg-amber-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                            <path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd" />
+                        </svg>
                         Get Bynd AI
                     </a>
                 </div>
