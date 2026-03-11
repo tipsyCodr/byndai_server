@@ -73,6 +73,8 @@ class ConnectionApiController extends Controller
         }
         $create_connection = ConnectionRequest::create(['sender_id' => $sender_id, 'receiver_id' => $data['receiver_id'], 'request_type' => 'friend_request', 'status' => 0, 'requested_at' => now()]);
 
+        $this->sendFcmConnectionRequestNotification($sender_id, $data['receiver_id']);
+
         return response()->json(['status' => true, 'message' => 'Connection request sent successfully', 'data' => $create_connection], 201);
     }
 
@@ -176,6 +178,17 @@ class ConnectionApiController extends Controller
             'requested_at' => now(),
         ]);
 
+        $this->sendFcmConnectionRequestNotification($senderId, $receiverId);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Connection request sent successfully',
+            'data' => $connection,
+        ], 201);
+    }
+
+    private function sendFcmConnectionRequestNotification($senderId, $receiverId)
+    {
         // Send FCM notification to receiver
         $receiver = User::find($receiverId);
         if ($receiver && !empty($receiver->fcm_token)) {
@@ -226,12 +239,6 @@ class ConnectionApiController extends Controller
                 'receiver_id' => $receiverId
             ]);
         }
-
-        return response()->json([
-            'status' => true,
-            'message' => 'Connection request sent successfully',
-            'data' => $connection,
-        ], 201);
     }
 
     public function getUniqueSendersByReceiver(Request $request, $receiverId)
