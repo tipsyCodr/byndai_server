@@ -13,6 +13,7 @@ use App\Http\Controllers\api\site\MasterEventApiController;
 use App\Http\Controllers\api\site\MasterKeywordController;
 use App\Http\Controllers\api\site\MasterLinkController;
 use App\Http\Controllers\api\site\MasterPostApiController;
+use App\Http\Controllers\api\site\PageController;
 use App\Http\Controllers\api\site\PostApiController;
 use App\Http\Controllers\api\site\ProductApiController;
 use App\Http\Controllers\api\site\ProfileApiController;
@@ -23,7 +24,6 @@ use App\Http\Controllers\api\site\SubscriptionApiController;
 use App\Http\Controllers\api\site\UserAnalyticsController;
 use App\Http\Controllers\api\site\UserListController;
 use App\Http\Controllers\api\site\UserReviewApiController;
-use App\Http\Controllers\api\site\PageController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/check-mobile', [AuthApiController::class, 'checkMobile']);
@@ -288,6 +288,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/connection-create', [
         ConnectionApiController::class,
         'connectionCreate',
+    ]);
+
+    Route::delete('/connections/remove', [
+        ConnectionApiController::class,
+        'removeConnection',
     ]);
 
     Route::get('/connection-receiver-senders/{receiver_id}', [
