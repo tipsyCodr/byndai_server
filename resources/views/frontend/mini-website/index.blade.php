@@ -237,9 +237,9 @@
                                 <h1 class="text-2xl font-bold text-foreground mb-1">{{ $user->masterUser?->fname ?? $user->user_name }}</h1>
                                 
                                 @if($user->businesses && $user->businesses->count() > 0)
-                                    <h2 class="text-lg font-semibold text-primary mb-2">
+                                    <p class="text-xs font-semibold text-white mb-2">
                                         {{ $user->businesses->first()->legal_name }}
-                                    </h2>
+                                    </p>
                                 @endif
                                 
                                 <div class="mt-2 text-center d-flex flex-wrap justify-content-center" style="gap: 0.5rem;">
@@ -347,11 +347,11 @@
                 <div class="col-12 col-lg-7 col-xl-7">
                     
                     <!-- Businesses Section -->
-                    @include('frontend.mini-website.partials.footer')
+                    {{-- @include('frontend.mini-website.partials.footer') --}}
                         <section class="mb-4">
-                            <h2 class="text-lg font-semibold text-foreground mb-3">
+                            {{-- <h2 class="text-lg font-semibold text-foreground mb-3">
                                 <i class="fas fa-building me-2 text-primary"></i> {{ $user->businesses->count() > 1 ? 'Businesses' : 'Business' }}
-                            </h2>
+                            </h2> --}}
                             <div class="row g-3">
                                 @foreach ($user->businesses as $biz)
                                     <div class="col-12{{ $user->businesses->count() > 1 ? ' col-md-6' : '' }}">
@@ -408,12 +408,12 @@
                         <div class="row g-3">
                             @foreach ($products as $value)
                                 <div class="col-12 col-md-6">
-                                    <div class="bg-card-50 rounded-2xl overflow-hidden border border-border h-100 d-flex flex-column">
+                                    <div class="bg-card-50 rounded-2xl overflow-hidden  h-100 d-flex flex-column">
                                         @php
                                             $image = $productImages->firstWhere('prod_id', $value->id);
                                         @endphp
                                         <div class="relative w-full aspect-square">
-                                            <a href="{{ route('single-product', ['id' => encrypt($value->id)]) }}">
+                                            {{-- <a href="{{ route('single-product', ['id' => encrypt($value->id)]) }}"> --}}
                                                 @php
                                                     $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400"><rect width="400" height="400" fill="#1e293b"/><svg x="125" y="125" width="150" height="150" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg></svg>';
                                                     $imgSrc = 'data:image/svg+xml;base64,' . base64_encode($svg);
@@ -425,15 +425,15 @@
                                                 @endphp
                                                 <img src="{{ $imgSrc }}"
                                                     alt="{{ $value->product_name }}" class="w-full h-full object-cover p-2 rounded-2xl"/>
-                                            </a>
+                                            {{-- </a> --}}
                                         </div>
                                         <div class="p-4 d-flex flex-column flex-grow-1">
                                             <div class="d-flex align-items-start justify-content-between mb-2 gap-2">
-                                                <a href="{{ route('single-product', ['id' => encrypt($value->id)]) }}" class="text-decoration-none" style="min-width: 0;">
+                                                {{-- <a href="{{ route('single-product', ['id' => encrypt($value->id)]) }}" class="text-decoration-none" style="min-width: 0;"> --}}
                                                     <h3 class="font-semibold text-foreground mb-0 truncate" style="font-size: 1.1rem; line-height: 1.3;" title="{{ $value->product_name }}">
                                                         {{ $value->product_name }}
                                                     </h3>
-                                                </a>
+                                                {{-- </a> --}}
                                                 <div class="text-primary font-bold whitespace-nowrap">
                                                     ₹{{ $value->product_price }}
                                                 </div>
