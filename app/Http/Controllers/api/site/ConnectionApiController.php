@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\api\site;
 
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\Connection;
 use App\Models\ConnectionRequest;
