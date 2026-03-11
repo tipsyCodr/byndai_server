@@ -205,7 +205,7 @@
 
     <div id="profile-wrapper">
         <!-- Hero Section Bleeding to Edge -->
-        <div class="relative w-full gradient-hero" style="height: 350px;">
+        <div class="relative w-full gradient-hero" style="height: 480px;">
             <img src="{{ $user->masterUser?->profile_pic ? asset('storage/' . $user->masterUser?->profile_pic) : 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&w=1920&q=80' }}"
                 alt="Cover" class="w-full h-full object-cover"/>
             <div class="absolute inset-x-0 bottom-0 h-32 gradient-overlay-bottom"></div>
