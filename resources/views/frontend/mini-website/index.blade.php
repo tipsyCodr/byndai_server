@@ -24,6 +24,9 @@
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
           line-height: 1.5;
           min-height: 100vh;
+          overflow-x: hidden;
+          width: 100%;
+          position: relative;
         }
 
         #profile-wrapper .bg-background { background-color: hsl(var(--background)); }
@@ -232,6 +235,9 @@
         @media (min-width: 768px) {
             .review-card { flex: 0 0 45%; }
         }
+    </style>
+    <style>
+        body { overflow-x: hidden; width: 100%; }
     </style>
 
     <div id="profile-wrapper">
