@@ -57,7 +57,7 @@ class AuthApiController extends Controller
         $token = Str::random(40);
         $exp = now()->addMinutes(5);
         $p = PhoneVerification::firstOrNew(['user_mobile' => decrypt($phone)]);
-        if (!$p->updated_at || !$p->updated_at->isSameDay(now())) {
+        if (! $p->updated_at || ! $p->updated_at->isSameDay(now())) {
             $p->no_of_attempt = 0;
         }
         if ($p->no_of_attempt >= 100) {
@@ -117,7 +117,7 @@ class AuthApiController extends Controller
             return response()->json(
                 [
                     'status' => true,
-                    'message' => 'Successfully fetched ' . $users->count(),
+                    'message' => 'Successfully fetched '.$users->count(),
                     'data' => $users,
                 ],
                 200,
@@ -125,7 +125,7 @@ class AuthApiController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to fetch users: ' . $e->getMessage(),
+                'message' => 'Failed to fetch users: '.$e->getMessage(),
             ]);
         }
     }
@@ -136,7 +136,7 @@ class AuthApiController extends Controller
 
             $userId = $request->user_id;
 
-            if (!$userId) {
+            if (! $userId) {
                 return response()->json([
                     'status' => false,
                     'message' => 'user_id is required',
@@ -199,7 +199,7 @@ class AuthApiController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to fetch users: ' . $e->getMessage(),
+                'message' => 'Failed to fetch users: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -222,7 +222,7 @@ class AuthApiController extends Controller
             return response()->json(
                 [
                     'status' => false,
-                    'message' => 'Failed to send OTP: ' . $e->getMessage(),
+                    'message' => 'Failed to send OTP: '.$e->getMessage(),
                 ],
                 500,
             );
@@ -233,7 +233,7 @@ class AuthApiController extends Controller
     {
         $r->validate(['phone_no' => 'required|digits:10']);
         $user = User::where('user_mobile', $r->phone_no)->first();
-        if (!$user) {
+        if (! $user) {
             $otpData = $this->sendOtp(encrypt($r->phone_no));
 
             return response()->json(
@@ -261,7 +261,7 @@ class AuthApiController extends Controller
 
         $user = User::where('user_mobile', $r->phone_no)->first();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(
                 [
                     'exists' => false,
@@ -290,7 +290,7 @@ class AuthApiController extends Controller
 
         $user = User::where('user_mobile', $r->phone_no)->first();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(
                 [
                     'status' => false,
@@ -328,7 +328,7 @@ class AuthApiController extends Controller
 
         $user = User::where('user_mobile', $r->phone_no)->first();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(
                 [
                     'status' => false,
@@ -362,7 +362,7 @@ class AuthApiController extends Controller
             ->with('masterUser')
             ->first();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(
                 [
                     'status' => false,
@@ -383,7 +383,7 @@ class AuthApiController extends Controller
         }
 
         // ✅ `hashed` cast automatically supports Hash::check()
-        if (!Hash::check($r->pin, $user->pin)) {
+        if (! Hash::check($r->pin, $user->pin)) {
             return response()->json(
                 [
                     'status' => false,
@@ -410,7 +410,7 @@ class AuthApiController extends Controller
     {
         $r->validate(['password' => 'nullable|string']);
         $user = User::where('user_mobile', $phone)->first();
-        if (!$user) {
+        if (! $user) {
             return response()->json(
                 [
                     'status' => false,
@@ -420,7 +420,7 @@ class AuthApiController extends Controller
             );
         }
         if ($r->filled('password')) {
-            if (!Hash::check($r->password, $user->password)) {
+            if (! Hash::check($r->password, $user->password)) {
                 return response()->json(
                     ['status' => false, 'message' => 'Incorrect password!'],
                     401,
@@ -447,7 +447,7 @@ class AuthApiController extends Controller
             ->where('token', $token)
             ->where('otp', $r->otp)
             ->first();
-        if (!$p) {
+        if (! $p) {
             return response()->json(
                 ['status' => false, 'message' => 'Invalid OTP!'],
                 422,
@@ -493,7 +493,7 @@ class AuthApiController extends Controller
             ->where('token', $token)
             ->whereNotNull('verified_at')
             ->first();
-        if (!$check_no) {
+        if (! $check_no) {
             return response()->json(
                 ['status' => false, 'message' => 'Verified first your number!'],
                 422,
@@ -555,7 +555,7 @@ class AuthApiController extends Controller
             return response()->json(
                 [
                     'status' => false,
-                    'message' => 'Something went wrong: ' . $e->getMessage(),
+                    'message' => 'Something went wrong: '.$e->getMessage(),
                 ],
                 500,
             );
@@ -604,7 +604,7 @@ class AuthApiController extends Controller
         // master_user_details record
         $master = MasterUserDetail::where('user_id', $user->id)->first();
 
-        if (!$master) {
+        if (! $master) {
             return response()->json([
                 'status' => false,
                 'message' => 'Master user detail not found',
@@ -617,7 +617,7 @@ class AuthApiController extends Controller
         $originalName = $file->getClientOriginalName();
 
         // ✅ safe file name (spaces remove)
-        $safeName = time() . '_' . preg_replace('/\s+/', '_', $originalName);
+        $safeName = time().'_'.preg_replace('/\s+/', '_', $originalName);
 
         // ✅ folder
         $folder = 'uploads/profile_pics';
@@ -626,7 +626,7 @@ class AuthApiController extends Controller
         $path = $file->storeAs($folder, $safeName, 'public');
 
         // ✅ old image delete (optional)
-        if (!empty($master->profile_pic) && Storage::disk('public')->exists($master->profile_pic)) {
+        if (! empty($master->profile_pic) && Storage::disk('public')->exists($master->profile_pic)) {
             Storage::disk('public')->delete($master->profile_pic);
         }
 
@@ -639,7 +639,7 @@ class AuthApiController extends Controller
             'message' => 'Profile picture uploaded successfully',
             'data' => [
                 'profile_pic_path' => $path,
-                'profile_pic_url' => asset('storage/' . $path),
+                'profile_pic_url' => asset('storage/'.$path),
             ],
         ]);
     }
@@ -650,8 +650,8 @@ class AuthApiController extends Controller
 
         // ---------- Validation ----------
         $validator = Validator::make($request->all(), [
-            'user_name' => 'nullable|string|max:100|unique:users,user_name,' . $user->id,
-            'email' => 'nullable|email|max:150|unique:users,email,' . $user->id,
+            'user_name' => 'nullable|string|max:100|unique:users,user_name,'.$user->id,
+            'email' => 'nullable|email|max:150|unique:users,email,'.$user->id,
             'dob' => 'nullable|date',
             'gender' => 'nullable|string|max:20',
 
@@ -684,9 +684,9 @@ class AuthApiController extends Controller
         }
 
         // ---------- Update users table ----------
-        if ($request->filled('user_name')) {
-            $user->user_name = $request->user_name;
-        }
+        // if ($request->filled('user_name')) {
+        //     $user->user_name = $request->user_name;
+        // }
 
         if ($request->filled('email')) {
             $user->email = $request->email;
@@ -697,13 +697,14 @@ class AuthApiController extends Controller
         // ---------- MasterUserDetail find/create ----------
         $detail = MasterUserDetail::where('user_id', $user->id)->first();
 
-        if (!$detail) {
+        if (! $detail) {
             $detail = new MasterUserDetail;
             $detail->user_id = $user->id;
         }
 
         // ---------- Text fields ----------
         $detail->dob = $request->dob ?? $detail->dob;
+        $detail->fname = $request->user_name ?? $detail->fname;
         $detail->gender = $request->gender ?? $detail->gender;
 
         $detail->mobile_one = $request->mobile_one ?? $detail->mobile_one;
@@ -731,7 +732,7 @@ class AuthApiController extends Controller
         // profile_pic
         if ($request->hasFile('profile_pic')) {
             $file = $request->file('profile_pic');
-            $fileName = 'profile_pic_' . $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $fileName = 'profile_pic_'.$user->id.'_'.time().'.'.$file->getClientOriginalExtension();
             $path = $file->storeAs($folder, $fileName, 'public');
             $detail->profile_pic = $path;
         }
@@ -740,7 +741,7 @@ class AuthApiController extends Controller
         // profile_logo
         if ($request->hasFile('profile_logo')) {
             $file = $request->file('profile_logo');
-            $fileName = 'profile_logo_' . $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $fileName = 'profile_logo_'.$user->id.'_'.time().'.'.$file->getClientOriginalExtension();
             $path = $file->storeAs($folder, $fileName, 'public');
             $detail->profile_logo = $path;
         }
@@ -748,7 +749,7 @@ class AuthApiController extends Controller
         // profile_banner
         if ($request->hasFile('profile_banner')) {
             $file = $request->file('profile_banner');
-            $fileName = 'profile_banner_' . $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $fileName = 'profile_banner_'.$user->id.'_'.time().'.'.$file->getClientOriginalExtension();
             $path = $file->storeAs($folder, $fileName, 'public');
             $detail->profile_banner = $path;
         }
@@ -756,7 +757,7 @@ class AuthApiController extends Controller
         // profile_video
         if ($request->hasFile('profile_video')) {
             $file = $request->file('profile_video');
-            $fileName = 'profile_video_' . $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $fileName = 'profile_video_'.$user->id.'_'.time().'.'.$file->getClientOriginalExtension();
             $path = $file->storeAs($folder, $fileName, 'public');
             $detail->profile_video = $path;
         }
@@ -784,7 +785,7 @@ class AuthApiController extends Controller
             ->orderBy('created_at', 'desc')
             ->first();
 
-        if (!$p) {
+        if (! $p) {
             return response()->json([
                 'status' => false,
                 'message' => 'No SMS record found for this number with a Job ID.',
@@ -816,7 +817,7 @@ class AuthApiController extends Controller
             // Verify the Firebase id_token
             $serviceAccountPath = storage_path('app/firebase/service-account.json');
 
-            if (!file_exists($serviceAccountPath)) {
+            if (! file_exists($serviceAccountPath)) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Firebase service account not configured.',
@@ -865,12 +866,12 @@ class AuthApiController extends Controller
         } catch (\Kreait\Firebase\Exception\Auth\FailedToVerifyToken $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Invalid Google token: ' . $e->getMessage(),
+                'message' => 'Invalid Google token: '.$e->getMessage(),
             ], 401);
         } catch (Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Google login failed: ' . $e->getMessage(),
+                'message' => 'Google login failed: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -893,7 +894,7 @@ class AuthApiController extends Controller
             // Verify the Firebase id_token
             $serviceAccountPath = storage_path('app/firebase/service-account.json');
 
-            if (!file_exists($serviceAccountPath)) {
+            if (! file_exists($serviceAccountPath)) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Firebase service account not configured.',
@@ -944,15 +945,17 @@ class AuthApiController extends Controller
 
         } catch (\Kreait\Firebase\Exception\Auth\FailedToVerifyToken $e) {
             DB::rollBack();
+
             return response()->json([
                 'status' => false,
-                'message' => 'Invalid Google token: ' . $e->getMessage(),
+                'message' => 'Invalid Google token: '.$e->getMessage(),
             ], 401);
         } catch (Exception $e) {
             DB::rollBack();
+
             return response()->json([
                 'status' => false,
-                'message' => 'Google registration failed: ' . $e->getMessage(),
+                'message' => 'Google registration failed: '.$e->getMessage(),
             ], 500);
         }
     }
