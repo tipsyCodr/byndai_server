@@ -204,6 +204,34 @@
         #profile-wrapper .text-xs { font-size: 0.75rem; }
         #profile-wrapper .uppercase { text-transform: uppercase; }
         #profile-wrapper .tracking-wider { letter-spacing: 0.05em; }
+        #profile-wrapper .italic { font-style: italic; }
+
+        /* Reviews Slider Styles */
+        .reviews-slider {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            gap: 1rem;
+            padding: 0.5rem 0 1.5rem;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .reviews-slider::-webkit-scrollbar { display: none; }
+        .review-card {
+            flex: 0 0 85%;
+            scroll-snap-align: center;
+            background: hsl(var(--card) / 0.5);
+            backdrop-filter: blur(12px);
+            border: 1px solid hsl(var(--border) / 0.8);
+            border-radius: 1.25rem;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        @media (min-width: 768px) {
+            .review-card { flex: 0 0 45%; }
+        }
     </style>
 
     <div id="profile-wrapper">
@@ -476,6 +504,41 @@
                             @endif
                         </div>
                     </section>
+
+                    <!-- Reviews Slider Section -->
+                    @if(isset($reviews) && $reviews->count() > 0)
+                    <section class="mb-4">
+                        <h2 class="text-lg font-semibold text-foreground mb-3">Recent Reviews</h2>
+                        <div class="reviews-slider">
+                            @foreach($reviews as $review)
+                                <div class="review-card">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div style="width: 2.5rem; height: 2.5rem; border-radius: 50%; background: hsl(var(--secondary)); overflow: hidden;">
+                                                <img src="{{ $review->fromUser?->masterUser?->profile_logo ? asset('storage/' . $review->fromUser->masterUser->profile_logo) : 'https://placehold.co/100x100?text=' . urlencode(substr($review->reviewer_name ?? $review->fromUser?->masterUser?->fname ?? 'G', 0, 1)) }}" 
+                                                     class="w-full h-full object-cover" alt="User">
+                                            </div>
+                                            <div>
+                                                <div class="text-sm font-bold text-foreground">
+                                                    {{ $review->reviewer_name ?? $review->fromUser?->masterUser?->fname ?? 'Anonymous' }}
+                                                </div>
+                                                <div class="text-xs text-muted-foreground">{{ $review->created_at->diffForHumans() }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex gap-1">
+                                            @for($i=1; $i<=5; $i++)
+                                                <i class="fas fa-star" style="font-size: 0.65rem; color: {{ $i <= $review->rating ? '#f59e0b' : 'hsl(var(--muted-foreground))' }}"></i>
+                                            @endfor
+                                        </div>
+                                    </div>
+                                    <p class="text-sm text-muted-foreground mb-0 italic" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                                        "{{ $review->message }}"
+                                    </p>
+                                </div>
+                            @endforeach
+                        </div>
+                    </section>
+                    @endif
 
                     <!-- Review Form -->
                     <section class="mb-4">
