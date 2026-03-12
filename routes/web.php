@@ -18,4 +18,5 @@ Route::get('/u/{username}', [IndexController::class, 'index'])->name('site.profi
 Route::get('/{user_id?}', [IndexController::class, 'index'])->name('home-page');
 Route::get('/product/{id}', [IndexController::class, 'product'])->name('single-product');
 
+Route::post('/reviews/generate', [ReviewController::class, 'generateReview'])->name('reviews.generate');
 Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');

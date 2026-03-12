@@ -51,4 +51,65 @@ class ReviewController extends Controller
             'review_count'   => $count,
         ]);
     }
+    public function generateReview(Request $request)
+    {
+        $request->validate([
+            'to_user_id' => 'required|exists:users,id',
+            'rating'     => 'nullable|integer|min:1|max:5',
+        ]);
+
+        $user = \App\Models\User::with('masterUser')->find($request->to_user_id);
+        $name = $user->masterUser?->fname ?? $user->user_name;
+        $rating = $request->rating ?? 5;
+
+        $apiKey = env('OPENAI_API_SECRET_KEY');
+
+        if (!$apiKey) {
+            return response()->json([
+                'success' => false,
+                'message' => 'API Configuration error.',
+            ], 500);
+        }
+
+        $prompt = "Write a short, professional, and positive review for {$name}. The rating is {$rating} stars. The review should be suitable for a professional platform. Keep it under 200 characters.";
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::withToken($apiKey)
+                ->timeout(30)
+                ->post('https://api.openai.com/v1/chat/completions', [
+                    'model' => 'gpt-4o-mini',
+                    'messages' => [
+                        [
+                            'role' => 'system',
+                            'content' => 'You are a helpful assistant that generates professional reviews.',
+                        ],
+                        [
+                            'role' => 'user',
+                            'content' => $prompt,
+                        ],
+                    ],
+                    'temperature' => 0.7,
+                ]);
+
+            if ($response->failed()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to generate review content.',
+                ], 500);
+            }
+
+            $result = $response->json();
+            $content = trim($result['choices'][0]['message']['content'] ?? '', '"');
+
+            return response()->json([
+                'success' => true,
+                'content' => $content,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error generating review.',
+            ], 500);
+        }
+    }
 }

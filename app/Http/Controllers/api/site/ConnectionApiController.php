@@ -214,7 +214,7 @@ class ConnectionApiController extends Controller
                         ],
                         'data' => [
                             'type' => 'connection_request',
-                            'senderId' => (string)$senderId
+                            'senderId' => (string )$senderId
                         ]
                     ]);
 
