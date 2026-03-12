@@ -587,14 +587,17 @@
                                 class="form-input mb-3"/>
                             @endguest
 
-                            <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="mb-2">
                                 <label for="review-message" class="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Review Message</label>
-                                <button type="button" id="generate-review-btn" class="text-xs text-primary font-semibold hover:underline" style="background: none; border: none; padding: 0;">
-                                    <i class="fas fa-magic me-1"></i> Generate Review
-                                </button>
                             </div>
                             <textarea id="review-message" placeholder="Share your experience..." rows="3"
-                                class="form-input h-auto mb-4" style="resize: vertical;"></textarea>
+                                class="form-input h-auto mb-3" style="resize: vertical;"></textarea>
+
+                            <div class="text-end mb-4">
+                                <button type="button" id="generate-review-btn" class="btn-secondary" style="padding: 0.5rem 1rem; width: auto; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.5rem; border-radius: 0.75rem;">
+                                    <i class="fas fa-magic"></i> Generate AI Review
+                                </button>
+                            </div>
 
                             <div class="text-center">
                                 <button id="submit-review-btn" class="btn-primary" style="padding: 0.75rem 2rem; min-width: 200px;">
@@ -615,7 +618,8 @@
                         const generateBtn = document.getElementById('generate-review-btn');
 
                         // Generate Review Content
-                        generateBtn.addEventListener('click', async () => {
+                        if (generateBtn) {
+                            generateBtn.addEventListener('click', async () => {
                             const rating = parseInt(ratingInput.value) || 5;
                             generateBtn.disabled = true;
                             generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Generating...';
@@ -644,10 +648,13 @@
                             } catch (e) {
                                 showAlert('Failed to generate review. Please try again.', 'danger');
                             } finally {
-                                generateBtn.disabled = false;
-                                generateBtn.innerHTML = '<i class="fas fa-magic me-1"></i> Generate Review';
+                                if (generateBtn) {
+                                    generateBtn.disabled = false;
+                                    generateBtn.innerHTML = '<i class="fas fa-magic"></i> Generate AI Review';
+                                }
                             }
                         });
+                        }
 
                         // Hover & click on stars
                         stars.forEach(star => {
