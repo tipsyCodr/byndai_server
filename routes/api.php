@@ -27,6 +27,8 @@ use App\Http\Controllers\api\site\UserListController;
 use App\Http\Controllers\api\site\UserReviewApiController;
 use Illuminate\Support\Facades\Route;
 
+Route::post('/test-notification', [NotificationController::class, 'test']);
+
 Route::post('/check-mobile', [AuthApiController::class, 'checkMobile']);
 Route::post('/check-sms-delivery', [AuthApiController::class, 'checkSmsDelivery']);
 Route::post('/reset-pin-otp', [AuthApiController::class, 'resetPinOtp']);
