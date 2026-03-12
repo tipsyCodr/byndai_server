@@ -31,7 +31,13 @@ class IndexController extends Controller
         $productLinks = \App\Models\ProductLink::whereIn('prod_id', $products->pluck('id'))->get();
         $avgRating = round(UserReview::where('to_user_id', $user->id)->avg('rating') ?? 0, 1);
         $reviewCount = UserReview::where('to_user_id', $user->id)->count();
-        return view('frontend.mini-website.index', compact('user', 'products', 'productImages', 'productLinks', 'avgRating', 'reviewCount'));
+        $reviews = UserReview::with(['fromUser.masterUser'])
+            ->where('to_user_id', $user->id)
+            ->whereNotNull('message')
+            ->latest()
+            ->get();
+            
+        return view('frontend.mini-website.index', compact('user', 'products', 'productImages', 'productLinks', 'avgRating', 'reviewCount', 'reviews'));
     }
     public function product($id)
     {
