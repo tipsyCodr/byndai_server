@@ -24,6 +24,9 @@
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
           line-height: 1.5;
           min-height: 100vh;
+          overflow-x: hidden;
+          width: 100%;
+          position: relative;
         }
 
         #profile-wrapper .bg-background { background-color: hsl(var(--background)); }
@@ -232,6 +235,9 @@
         @media (min-width: 768px) {
             .review-card { flex: 0 0 45%; }
         }
+    </style>
+    <style>
+        body { overflow-x: hidden; width: 100%; }
     </style>
 
     <div id="profile-wrapper">
@@ -581,14 +587,17 @@
                                 class="form-input mb-3"/>
                             @endguest
 
-                            <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="mb-2">
                                 <label for="review-message" class="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Review Message</label>
-                                <button type="button" id="generate-review-btn" class="text-xs text-primary font-semibold hover:underline" style="background: none; border: none; padding: 0;">
-                                    <i class="fas fa-magic me-1"></i> Generate Review
-                                </button>
                             </div>
                             <textarea id="review-message" placeholder="Share your experience..." rows="3"
-                                class="form-input h-auto mb-4" style="resize: vertical;"></textarea>
+                                class="form-input h-auto mb-3" style="resize: vertical;"></textarea>
+
+                            <div class="mb-4">
+                                <button type="button" id="generate-review-btn" class="btn-secondary" style="padding: 0.75rem 1rem; width: 100%; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; border-radius: 1rem;">
+                                    <i class="fas fa-magic"></i> Generate AI Review
+                                </button>
+                            </div>
 
                             <div class="text-center">
                                 <button id="submit-review-btn" class="btn-primary" style="padding: 0.75rem 2rem; min-width: 200px;">
@@ -609,10 +618,11 @@
                         const generateBtn = document.getElementById('generate-review-btn');
 
                         // Generate Review Content
-                        generateBtn.addEventListener('click', async () => {
+                        if (generateBtn) {
+                            generateBtn.addEventListener('click', async () => {
                             const rating = parseInt(ratingInput.value) || 5;
                             generateBtn.disabled = true;
-                            generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Generating...';
+                            generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating AI Review...';
 
                             try {
                                 const res = await fetch('{{ route('reviews.generate') }}', {
@@ -638,10 +648,13 @@
                             } catch (e) {
                                 showAlert('Failed to generate review. Please try again.', 'danger');
                             } finally {
-                                generateBtn.disabled = false;
-                                generateBtn.innerHTML = '<i class="fas fa-magic me-1"></i> Generate Review';
+                                if (generateBtn) {
+                                    generateBtn.disabled = false;
+                                    generateBtn.innerHTML = '<i class="fas fa-magic"></i> Generate AI Review';
+                                }
                             }
                         });
+                        }
 
                         // Hover & click on stars
                         stars.forEach(star => {
