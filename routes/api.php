@@ -10,6 +10,7 @@ use App\Http\Controllers\api\site\LeadController;
 use App\Http\Controllers\api\site\MasterApiController;
 use App\Http\Controllers\api\site\MasterCommentApiController;
 use App\Http\Controllers\api\site\MasterEventApiController;
+use App\Http\Controllers\api\site\MasterKeywordApiController;
 use App\Http\Controllers\api\site\MasterKeywordController;
 use App\Http\Controllers\api\site\MasterLinkController;
 use App\Http\Controllers\api\site\MasterPostApiController;
@@ -24,7 +25,10 @@ use App\Http\Controllers\api\site\SubscriptionApiController;
 use App\Http\Controllers\api\site\UserAnalyticsController;
 use App\Http\Controllers\api\site\UserListController;
 use App\Http\Controllers\api\site\UserReviewApiController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
+
+Route::post('/test-notification', [NotificationController::class, 'test']);
 
 Route::post('/check-mobile', [AuthApiController::class, 'checkMobile']);
 Route::post('/check-sms-delivery', [AuthApiController::class, 'checkSmsDelivery']);
@@ -80,6 +84,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         MasterApiController::class,
         'getDistrict',
     ]);
+
+    Route::post('/update-fcm-token', [AuthApiController::class, 'updateFcmToken']);
 
     Route::get('/profile-card', [
         ProfileApiController::class,

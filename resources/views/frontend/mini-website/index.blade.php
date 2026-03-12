@@ -201,6 +201,9 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 15px hsl(var(--primary) / 0.3);
         }
+        #profile-wrapper .text-xs { font-size: 0.75rem; }
+        #profile-wrapper .uppercase { text-transform: uppercase; }
+        #profile-wrapper .tracking-wider { letter-spacing: 0.05em; }
     </style>
 
     <div id="profile-wrapper">
@@ -515,6 +518,12 @@
                                 class="form-input mb-3"/>
                             @endguest
 
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label for="review-message" class="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Review Message</label>
+                                <button type="button" id="generate-review-btn" class="text-xs text-primary font-semibold hover:underline" style="background: none; border: none; padding: 0;">
+                                    <i class="fas fa-magic me-1"></i> Generate Review
+                                </button>
+                            </div>
                             <textarea id="review-message" placeholder="Share your experience..." rows="3"
                                 class="form-input h-auto mb-4" style="resize: vertical;"></textarea>
 
@@ -534,6 +543,42 @@
                         const ratingInput = document.getElementById('selected-rating');
                         const submitBtn = document.getElementById('submit-review-btn');
                         const alertBox = document.getElementById('review-alert');
+                        const generateBtn = document.getElementById('generate-review-btn');
+
+                        // Generate Review Content
+                        generateBtn.addEventListener('click', async () => {
+                            const rating = parseInt(ratingInput.value) || 5;
+                            generateBtn.disabled = true;
+                            generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Generating...';
+
+                            try {
+                                const res = await fetch('{{ route('reviews.generate') }}', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                        'Accept': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        to_user_id: {{ $user->id }},
+                                        rating: rating
+                                    })
+                                });
+
+                                const data = await res.json();
+
+                                if (data.success) {
+                                    document.getElementById('review-message').value = data.content;
+                                } else {
+                                    showAlert('⚠️ ' + data.message, 'warning');
+                                }
+                            } catch (e) {
+                                showAlert('Failed to generate review. Please try again.', 'danger');
+                            } finally {
+                                generateBtn.disabled = false;
+                                generateBtn.innerHTML = '<i class="fas fa-magic me-1"></i> Generate Review';
+                            }
+                        });
 
                         // Hover & click on stars
                         stars.forEach(star => {

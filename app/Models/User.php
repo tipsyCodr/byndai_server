@@ -28,6 +28,7 @@ class User extends Authenticatable
         "status",
         "remember_token",
         "google_id",
+        "fcm_token",
     ];
 
     /**

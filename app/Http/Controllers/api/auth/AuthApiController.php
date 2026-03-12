@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class AuthApiController extends Controller
 {
@@ -694,7 +695,7 @@ class AuthApiController extends Controller
 
         $user->save();
 
-        // ---------- MasterUserDetail find/create ----------
+        // ---------- MasterUserDetail find/create ------------------------------
         $detail = MasterUserDetail::where('user_id', $user->id)->first();
 
         if (! $detail) {
@@ -958,5 +959,36 @@ class AuthApiController extends Controller
                 'message' => 'Google registration failed: '.$e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Update FCM Token for the authenticated user.
+     */
+    public function updateFcmToken(Request $request)
+    {
+        $request->validate([
+            'fcm_token' => 'required|string',
+        ]);
+
+        $user = Auth::user();
+        if ($user) {
+            $user->fcm_token = $request->fcm_token;
+            $user->save();
+
+            Log::info('FCM Token updated successfully.', [
+                'user_id' => $user->id,
+                'fcm_token' => $request->fcm_token
+            ]);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'FCM token updated successfully',
+            ], 200);
+        }
+
+        return response()->json([
+            'status' => false,
+            'message' => 'Unauthenticated',
+        ], 401);
     }
 }

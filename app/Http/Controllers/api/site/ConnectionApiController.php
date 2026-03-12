@@ -10,6 +10,10 @@ use App\Models\MasterUserDetail;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Kreait\Firebase\Factory;
+use Kreait\Firebase\Messaging\CloudMessage;
+use Kreait\Firebase\Messaging\Notification;
+use Illuminate\Support\Facades\Log;
 
 class ConnectionApiController extends Controller
 {
@@ -68,6 +72,8 @@ class ConnectionApiController extends Controller
             }
         }
         $create_connection = ConnectionRequest::create(['sender_id' => $sender_id, 'receiver_id' => $data['receiver_id'], 'request_type' => 'friend_request', 'status' => 0, 'requested_at' => now()]);
+
+        $this->sendFcmConnectionRequestNotification($sender_id, $data['receiver_id']);
 
         return response()->json(['status' => true, 'message' => 'Connection request sent successfully', 'data' => $create_connection], 201);
     }
@@ -172,11 +178,67 @@ class ConnectionApiController extends Controller
             'requested_at' => now(),
         ]);
 
+        $this->sendFcmConnectionRequestNotification($senderId, $receiverId);
+
         return response()->json([
             'status' => true,
             'message' => 'Connection request sent successfully',
             'data' => $connection,
         ], 201);
+    }
+
+    private function sendFcmConnectionRequestNotification($senderId, $receiverId)
+    {
+        // Send FCM notification to receiver
+        $receiver = User::find($receiverId);
+        if ($receiver && !empty($receiver->fcm_token)) {
+            Log::info('Attempting to send FCM connection request notification', [
+                'sender_id' => $senderId,
+                'receiver_id' => $receiverId,
+                'fcm_token' => $receiver->fcm_token
+            ]);
+            try {
+                $serviceAccountPath = config('firebase.credentials');
+                if (file_exists($serviceAccountPath)) {
+                    $factory = (new Factory)->withServiceAccount($serviceAccountPath);
+                    $messaging = $factory->createMessaging();
+
+                    $senderUser = Auth::user();
+                    $senderName = $senderUser->masterUser->fname ?? $senderUser->user_name ?? 'Someone';
+
+                    $message = CloudMessage::fromArray([
+                        'token' => $receiver->fcm_token,
+                        'notification' => [
+                            'title' => 'New Connection Request!',
+                            'body'  => "{$senderName} has sent you a connection request."
+                        ],
+                        'data' => [
+                            'type' => 'connection_request',
+                            'senderId' => (string )$senderId
+                        ]
+                    ]);
+
+                    $messaging->send($message);
+                    Log::info('FCM connection request notification sent successfully.', [
+                        'receiver_id' => $receiverId
+                    ]);
+                } else {
+                    Log::error('FCM Service Account credentials file not found.', [
+                        'path' => $serviceAccountPath
+                    ]);
+                }
+            } catch (\Exception $e) {
+                Log::error('FCM connection request notification failed.', [
+                    'receiver_id' => $receiverId,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+            }
+        } else {
+            Log::info('Skipped FCM notification: Receiver has no fcm_token set.', [
+                'receiver_id' => $receiverId
+            ]);
+        }
     }
 
     public function getUniqueSendersByReceiver(Request $request, $receiverId)
