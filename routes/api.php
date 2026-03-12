@@ -316,6 +316,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'updateConnectionRequestStatus',
     ]);
 
+    Route::post('/connection/status', [
+        ConnectionApiController::class,
+        'checkStatus',
+    ]);
+
     Route::post('/connection-request/delete', [
         ConnectionApiController::class,
         'deleteConnectionRequest',

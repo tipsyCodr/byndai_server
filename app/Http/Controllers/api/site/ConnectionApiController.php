@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\api\site;
 
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\Connection;
 use App\Models\ConnectionRequest;
@@ -10,10 +9,11 @@ use App\Models\MasterUserDetail;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification;
-use Illuminate\Support\Facades\Log;
 
 class ConnectionApiController extends Controller
 {
@@ -191,11 +191,11 @@ class ConnectionApiController extends Controller
     {
         // Send FCM notification to receiver
         $receiver = User::find($receiverId);
-        if ($receiver && !empty($receiver->fcm_token)) {
+        if ($receiver && ! empty($receiver->fcm_token)) {
             Log::info('Attempting to send FCM connection request notification', [
                 'sender_id' => $senderId,
                 'receiver_id' => $receiverId,
-                'fcm_token' => $receiver->fcm_token
+                'fcm_token' => $receiver->fcm_token,
             ]);
             try {
                 $serviceAccountPath = config('firebase.credentials');
@@ -210,33 +210,33 @@ class ConnectionApiController extends Controller
                         'token' => $receiver->fcm_token,
                         'notification' => [
                             'title' => 'New Connection Request!',
-                            'body'  => "{$senderName} has sent you a connection request."
+                            'body' => "{$senderName} has sent you a connection request.",
                         ],
                         'data' => [
                             'type' => 'connection_request',
-                            'senderId' => (string )$senderId
-                        ]
+                            'senderId' => (string) $senderId,
+                        ],
                     ]);
 
                     $messaging->send($message);
                     Log::info('FCM connection request notification sent successfully.', [
-                        'receiver_id' => $receiverId
+                        'receiver_id' => $receiverId,
                     ]);
                 } else {
                     Log::error('FCM Service Account credentials file not found.', [
-                        'path' => $serviceAccountPath
+                        'path' => $serviceAccountPath,
                     ]);
                 }
             } catch (\Exception $e) {
                 Log::error('FCM connection request notification failed.', [
                     'receiver_id' => $receiverId,
                     'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString()
+                    'trace' => $e->getTraceAsString(),
                 ]);
             }
         } else {
             Log::info('Skipped FCM notification: Receiver has no fcm_token set.', [
-                'receiver_id' => $receiverId
+                'receiver_id' => $receiverId,
             ]);
         }
     }
@@ -690,5 +690,61 @@ class ConnectionApiController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function checkStatus(Request $request)
+    {
+        $viewerId = $request->viewerUserId;
+        $profileId = $request->profileUserId;
+
+        if (! $viewerId || ! $profileId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid user ids',
+            ], 400);
+        }
+
+        // viewer -> profile
+        $sentRequest = ConnectionRequest::where('sender_id', $viewerId)
+            ->where('receiver_id', $profileId)
+            ->first();
+
+        // profile -> viewer
+        $receivedRequest = ConnectionRequest::where('sender_id', $profileId)
+            ->where('receiver_id', $viewerId)
+            ->first();
+
+        // viewer sent request
+        if ($sentRequest) {
+
+            if ($sentRequest->status === 'accepted') {
+                $status = 'connected';
+            } else {
+                $status = 'sent';
+            }
+
+            return response()->json([
+                'request_status' => $status,
+            ]);
+        }
+
+        // viewer received request
+        if ($receivedRequest) {
+
+            if ($receivedRequest->status === 'accepted') {
+                $status = 'connected';
+            } else {
+                $status = 'received';
+            }
+
+            return response()->json([
+                'request_status' => $status,
+            ]);
+        }
+
+        // no request
+        return response()->json([
+            'request_status' => 'none',
+        ]);
     }
 }
