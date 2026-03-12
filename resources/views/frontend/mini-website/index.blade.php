@@ -593,8 +593,8 @@
                             <textarea id="review-message" placeholder="Share your experience..." rows="3"
                                 class="form-input h-auto mb-3" style="resize: vertical;"></textarea>
 
-                            <div class="text-end mb-4">
-                                <button type="button" id="generate-review-btn" class="btn-secondary" style="padding: 0.5rem 1rem; width: auto; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.5rem; border-radius: 0.75rem;">
+                            <div class="mb-4">
+                                <button type="button" id="generate-review-btn" class="btn-secondary" style="padding: 0.75rem 1rem; width: 100%; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; border-radius: 1rem;">
                                     <i class="fas fa-magic"></i> Generate AI Review
                                 </button>
                             </div>
@@ -622,7 +622,7 @@
                             generateBtn.addEventListener('click', async () => {
                             const rating = parseInt(ratingInput.value) || 5;
                             generateBtn.disabled = true;
-                            generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Generating...';
+                            generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating AI Review...';
 
                             try {
                                 const res = await fetch('{{ route('reviews.generate') }}', {
