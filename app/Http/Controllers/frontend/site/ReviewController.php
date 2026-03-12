@@ -58,9 +58,22 @@ class ReviewController extends Controller
             'rating'     => 'nullable|integer|min:1|max:5',
         ]);
 
-        $user = \App\Models\User::with('masterUser')->find($request->to_user_id);
+        $user = \App\Models\User::with(['masterUser', 'businesses', 'businesses.industry'])->find($request->to_user_id);
         $name = $user->masterUser?->fname ?? $user->user_name;
         $rating = $request->rating ?? 5;
+
+        // Fetch context for better review
+        $businessNames = $user->businesses->pluck('legal_name')->filter()->unique()->implode(', ');
+        $industries = $user->businesses->map(fn($b) => $b->industry?->name)->filter()->unique()->implode(', ');
+        $businessDesc = $user->businesses->pluck('description')->filter()->first();
+        
+        $products = \App\Models\Product::where('user_id', $user->id)->limit(3)->pluck('product_name')->implode(', ');
+
+        $context = "";
+        if ($businessNames) $context .= "Business: {$businessNames}. ";
+        if ($industries) $context .= "Industry: {$industries}. ";
+        if ($products) $context .= "Products/Services: {$products}. ";
+        if ($businessDesc) $context .= "Description: " . \Illuminate\Support\Str::limit($businessDesc, 100) . ". ";
 
         $apiKey = env('OPENAI_API_SECRET_KEY');
 
@@ -71,7 +84,7 @@ class ReviewController extends Controller
             ], 500);
         }
 
-        $prompt = "Write a short, professional, and positive review for {$name}. The rating is {$rating} stars. The review should be suitable for a professional platform. Keep it under 200 characters.";
+        $prompt = "Write a short, professional, and positive review for {$name}. The rating is {$rating} stars. Context: {$context} Mention specific business or products if relevant. Keep it under 250 characters.";
 
         try {
             $response = \Illuminate\Support\Facades\Http::withToken($apiKey)
@@ -81,7 +94,7 @@ class ReviewController extends Controller
                     'messages' => [
                         [
                             'role' => 'system',
-                            'content' => 'You are a helpful assistant that generates professional reviews.',
+                            'content' => 'You are a helpful assistant that generates specific, professional reviews based on provided business context.',
                         ],
                         [
                             'role' => 'user',
