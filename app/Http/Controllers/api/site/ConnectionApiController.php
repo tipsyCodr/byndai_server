@@ -567,6 +567,56 @@ class ConnectionApiController extends Controller
         ], 200);
     }
 
+    // public function deleteConnectionRequest(Request $request)
+    // {
+    //     $data = $request->validate([
+    //         'sender_id' => 'required|exists:users,id',
+    //         'receiver_id' => 'required|exists:users,id',
+    //         'status' => 'nullable|in:0,1,2',
+    //     ]);
+
+    //     // ✅ optional security: only sender/receiver hi delete kar sake
+    //     $authId = Auth::id();
+
+    //     if ($authId != $data['sender_id'] && $authId != $data['receiver_id']) {
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => 'Unauthorized: You cannot delete this request',
+    //         ], 403);
+    //     }
+
+    //     // 🔍 find request
+    //     $query = ConnectionRequest::where('sender_id', $data['sender_id'])
+    //         ->where('receiver_id', $data['receiver_id']);
+
+    //     // ✅ agar status bhi pass hua hai to status bhi match karega
+    //     if (isset($data['status'])) {
+    //         $query->where('status', $data['status']);
+    //     }
+
+    //     $requestRow = $query->first();
+
+    //     if (! $requestRow) {
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => 'Connection request not found',
+    //         ], 404);
+    //     }
+
+    //     // 🗑 delete
+    //     $requestRow->delete();
+
+    //     return response()->json([
+    //         'status' => true,
+    //         'message' => 'Connection request deleted successfully',
+    //         'data' => [
+    //             'sender_id' => $data['sender_id'],
+    //             'receiver_id' => $data['receiver_id'],
+    //             'status' => $requestRow->status,
+    //         ],
+    //     ], 200);
+    // }
+
     public function deleteConnectionRequest(Request $request)
     {
         $data = $request->validate([
@@ -575,7 +625,6 @@ class ConnectionApiController extends Controller
             'status' => 'nullable|in:0,1,2',
         ]);
 
-        // ✅ optional security: only sender/receiver hi delete kar sake
         $authId = Auth::id();
 
         if ($authId != $data['sender_id'] && $authId != $data['receiver_id']) {
@@ -585,34 +634,53 @@ class ConnectionApiController extends Controller
             ], 403);
         }
 
-        // 🔍 find request
-        $query = ConnectionRequest::where('sender_id', $data['sender_id'])
-            ->where('receiver_id', $data['receiver_id']);
+        // 🔎 connection request search (both direction)
+        $query = ConnectionRequest::where(function ($q) use ($data) {
+            $q->where('sender_id', $data['sender_id'])
+                ->where('receiver_id', $data['receiver_id']);
+        })->orWhere(function ($q) use ($data) {
+            $q->where('sender_id', $data['receiver_id'])
+                ->where('receiver_id', $data['sender_id']);
+        });
 
-        // ✅ agar status bhi pass hua hai to status bhi match karega
+        // optional status filter
         if (isset($data['status'])) {
             $query->where('status', $data['status']);
         }
 
-        $requestRow = $query->first();
+        $requests = $query->get();
 
-        if (! $requestRow) {
+        if ($requests->isEmpty()) {
             return response()->json([
                 'status' => false,
                 'message' => 'Connection request not found',
             ], 404);
         }
 
-        // 🗑 delete
-        $requestRow->delete();
+        // 🗑 delete connection requests
+        ConnectionRequest::where(function ($q) use ($data) {
+            $q->where('sender_id', $data['sender_id'])
+                ->where('receiver_id', $data['receiver_id']);
+        })->orWhere(function ($q) use ($data) {
+            $q->where('sender_id', $data['receiver_id'])
+                ->where('receiver_id', $data['sender_id']);
+        })->delete();
+
+        // 🗑 delete from connections table also
+        Connection::where(function ($q) use ($data) {
+            $q->where('user_id', $data['sender_id'])
+                ->where('friend_id', $data['receiver_id']);
+        })->orWhere(function ($q) use ($data) {
+            $q->where('user_id', $data['receiver_id'])
+                ->where('friend_id', $data['sender_id']);
+        })->delete();
 
         return response()->json([
             'status' => true,
-            'message' => 'Connection request deleted successfully',
+            'message' => 'Connection request and connection deleted successfully',
             'data' => [
                 'sender_id' => $data['sender_id'],
                 'receiver_id' => $data['receiver_id'],
-                'status' => $requestRow->status,
             ],
         ], 200);
     }
