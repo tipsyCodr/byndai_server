@@ -29,7 +29,6 @@ use App\Http\Controllers\frontend\site\ReviewController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
-
 Route::post('/test-notification', [NotificationController::class, 'test']);
 
 Route::post('/check-mobile', [AuthApiController::class, 'checkMobile']);
@@ -560,6 +559,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'store',
     ]);
 
+    Route::post('/user-review/find', [
+        UserReviewApiController::class,
+        'findReview',
+    ]);
+
     // ✅ Get Reviews of a User (to_user_id)
     Route::get('/user-reviews/{userId}', [
         UserReviewApiController::class,
@@ -583,8 +587,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
         UserReviewApiController::class,
         'delete',
     ]);
-
-    
 
     Route::post('/profile-view/start', [
         ProfileViewController::class,
