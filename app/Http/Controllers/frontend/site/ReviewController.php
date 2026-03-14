@@ -5,6 +5,8 @@ namespace App\Http\Controllers\frontend\site;
 use App\Http\Controllers\Controller;
 use App\Models\UserReview;
 use Illuminate\Http\Request;
+use App\Models\User;
+use App\Models\Product;
 
 class ReviewController extends Controller
 {
