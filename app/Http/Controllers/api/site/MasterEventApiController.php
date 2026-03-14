@@ -361,37 +361,47 @@ class MasterEventApiController extends Controller
             if ($request->has('delete_images')) {
                 $deleteImages = $request->input('delete_images');
 
-                // If it's a single value, convert to array
-                if (! is_array($deleteImages)) {
+                if (is_string($deleteImages)) {
                     $deleteImages = [$deleteImages];
                 }
 
                 foreach ($deleteImages as $imagePath) {
-                    // Find image record by path
                     $image = MasterEventImage::where('event_id', $id)
                         ->where('event_img_path', $imagePath)
                         ->first();
 
                     if ($image) {
-                        // Delete physical file
                         $fullPath = public_path($image->event_img_path);
                         if (File::exists($fullPath)) {
                             File::delete($fullPath);
                         }
-
-                        // Delete database record
                         $image->delete();
                     }
                 }
             }
 
-            // Handle new image uploads
+            // Handle new image uploads - IMPROVED VERSION
             if ($request->hasFile('event_img')) {
+                $files = $request->file('event_img');
+
+                // Debug: Check if files are valid
+                foreach ($files as $key => $file) {
+                    if (! $file->isValid()) {
+                        \Log::error("File {$key} is invalid: ".$file->getErrorMessage());
+                        throw new \Exception('Invalid file upload: '.$file->getErrorMessage());
+                    }
+                }
+
+                $existingCount = MasterEventImage::where('event_id', $id)->count();
+                if (($existingCount + count($files)) > 5) {
+                    throw new \Exception('Maximum 5 images allowed per event');
+                }
+
                 $this->uploadEventImages($request, $event);
             }
 
             // Update event data
-            $updateData = [
+            $updateData = array_filter([
                 'indus_type' => $request->indus_type,
                 'title' => $request->title,
                 'description' => $request->description,
@@ -408,10 +418,7 @@ class MasterEventApiController extends Controller
                 'is_audience' => $request->is_audience,
                 'is_online' => $request->is_online,
                 'status' => $request->status,
-            ];
-
-            // Remove null values
-            $updateData = array_filter($updateData, function ($value) {
+            ], function ($value) {
                 return $value !== null && $value !== '';
             });
 
@@ -419,7 +426,7 @@ class MasterEventApiController extends Controller
 
             DB::commit();
 
-            // Load fresh data with relationships
+            // Load fresh data
             $updatedEvent = MasterEvent::with([
                 'Industry',
                 'country',
@@ -438,6 +445,9 @@ class MasterEventApiController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
+            \Log::error('Event Update Error: '.$e->getMessage());
+            \Log::error('Stack trace: '.$e->getTraceAsString());
+
             return response()->json([
                 'status' => false,
                 'message' => 'Error updating event: '.$e->getMessage(),
@@ -452,43 +462,71 @@ class MasterEventApiController extends Controller
     {
         $files = $request->file('event_img');
 
-        // Count existing images
-        $existingImagesCount = MasterEventImage::where('event_id', $event->id)->count();
+        if (empty($files)) {
+            return;
+        }
 
-        // Check total images limit (5)
-        if (($existingImagesCount + count($files)) > 5) {
+        // Ensure files is an array
+        if (! is_array($files)) {
+            $files = [$files];
+        }
+
+        $existingCount = MasterEventImage::where('event_id', $event->id)->count();
+
+        if (($existingCount + count($files)) > 5) {
             throw new \Exception('Maximum 5 images allowed per event');
         }
 
-        // Create title-based folder name (sanitize title)
+        // Sanitize title for folder name
         $folderTitle = preg_replace('/[^a-zA-Z0-9_-]/', '_', $event->title);
         $folderPath = "assets/uploads/event/{$folderTitle}/";
         $fullPath = public_path($folderPath);
 
-        // Create directory if not exists
         if (! file_exists($fullPath)) {
             mkdir($fullPath, 0777, true);
         }
 
-        foreach ($files as $file) {
-            // Generate unique filename
-            $extension = $file->getClientOriginalExtension();
-            $fileName = time().'_'.uniqid().'.'.$extension;
+        foreach ($files as $index => $file) {
+            try {
+                // Double-check file validity
+                if (! $file->isValid()) {
+                    \Log::warning("Skipping invalid file at index {$index}: ".$file->getErrorMessage());
 
-            // Move file
-            $file->move($fullPath, $fileName);
+                    continue;
+                }
 
-            // Determine type (0 for image, 1 for video)
-            $mimeType = $file->getMimeType();
-            $type = str_contains($mimeType, 'video') ? 1 : 0;
+                // Get file contents directly
+                $fileContent = file_get_contents($file->getRealPath());
+                if ($fileContent === false) {
+                    throw new \Exception('Could not read file contents');
+                }
 
-            // Create database record
-            MasterEventImage::create([
-                'event_id' => $event->id,
-                'event_img' => $fileName,
-                'event_img_path' => $folderPath.$fileName,
-                'type' => $type,
-            ]);
+                $extension = $file->getClientOriginalExtension();
+                $fileName = time().'_'.uniqid().'_'.$index.'.'.$extension;
+
+                // Write file manually
+                $writeSuccess = file_put_contents($fullPath.$fileName, $fileContent);
+
+                if ($writeSuccess === false) {
+                    throw new \Exception('Failed to write file to destination');
+                }
+
+                $mimeType = $file->getMimeType();
+                $type = str_contains($mimeType, 'video') ? 1 : 0;
+
+                MasterEventImage::create([
+                    'event_id' => $event->id,
+                    'event_img' => $fileName,
+                    'event_img_path' => $folderPath.$fileName,
+                    'type' => $type,
+                ]);
+
+                \Log::info("Successfully uploaded image: {$fileName}");
+
+            } catch (\Exception $e) {
+                \Log::error("Error uploading file at index {$index}: ".$e->getMessage());
+                throw $e;
+            }
         }
     }
 
