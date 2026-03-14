@@ -430,6 +430,19 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'getAllDistricts',
     ]);
 
+    Route::post('/update-event/{id}', [
+        MasterEventApiController::class,
+        'updateEvent',
+    ]);
+    Route::get('/event/{id}', [
+        MasterEventApiController::class,
+        'getEvent',
+    ]);
+    Route::post('/delete-event-image', [
+        MasterEventApiController::class,
+        'deleteEventImage',
+    ]);
+
     Route::post('/upload-profile-pic', [
         AuthApiController::class,
         'uploadProfilePic',
