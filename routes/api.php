@@ -27,7 +27,7 @@ use App\Http\Controllers\api\site\UserListController;
 use App\Http\Controllers\api\site\UserReviewApiController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\frontend\site\ReviewController.php
+<!-- use App\Http\Controllers\frontend\site\ReviewController.php -->
 
 Route::post('/test-notification', [NotificationController::class, 'test']);
 
@@ -583,10 +583,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'delete',
     ]);
 
-    Route::post('/generate-review', [
+    <!-- Route::post('/generate-review', [
         ReviewController::class,
         'generateReview',
-    ]);
+    ]); -->
 
     Route::post('/profile-view/start', [
         ProfileViewController::class,
