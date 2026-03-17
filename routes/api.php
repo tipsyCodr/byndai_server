@@ -25,6 +25,7 @@ use App\Http\Controllers\api\site\SubscriptionApiController;
 use App\Http\Controllers\api\site\UserAnalyticsController;
 use App\Http\Controllers\api\site\UserListController;
 use App\Http\Controllers\api\site\UserReviewApiController;
+use App\Http\Controllers\api\site\ProductClickController;
 use App\Http\Controllers\frontend\site\ReviewController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
@@ -652,18 +653,26 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'getByUserId',
     ]);
 
-    Route::post('/reviews/generate', [ReviewController::class, 'generateReview'])->name('reviews.generate');
+    Route::post('/reviews/generate', [
+        ReviewController::class,
+     'generateReview'
+     ])->name('reviews.generate');
 
     Route::post('/product-click', [
         ProductClickController::class,
         'store',
     ]);
-    Route::get('/product-click', [
-        ProductClickController::class,
-        'index',
+
+    Route::post('/fresh', [
+        ProductApiController::class,
+        'userProductClick',
     ]);
 
-    // api for post end..........
+    
+
+   
+
+    // api for post end............................
 
     Route::post('/logout', [AuthApiController::class, 'logout']);
 
