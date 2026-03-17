@@ -113,7 +113,12 @@ class BusinessInfoApiController extends Controller
     // ✅ GET by USER ID (Admin type feature)
     public function getByUserId($user_id)
     {
-        $data = BusinessInfo::where('user_id', $user_id)
+        // $data = BusinessInfo::where('user_id', $user_id)
+        //     ->orderBy('id', 'desc')
+        //     ->get();
+
+        $data = BusinessInfo::with('industry')
+            ->where('user_id', $user_id)
             ->orderBy('id', 'desc')
             ->get();
 
