@@ -423,5 +423,13 @@ class ProductApiController extends Controller
         }
     }
 
+    public function userProductClick()
+    {
+        return response()->json([
+                'status' => true,
+                'message' => 'Product clicked successfully',
+                
+            ], 200);
     
+    }
 }
