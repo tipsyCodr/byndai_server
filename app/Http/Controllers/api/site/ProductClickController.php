@@ -4,6 +4,7 @@ namespace App\Http\Controllers\api\site;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\ProductClick;
 
 class ProductClickController extends Controller
 {
