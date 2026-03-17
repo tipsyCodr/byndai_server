@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Validator;
+use App\Models\ProductClick;
 
 class ProductApiController extends Controller
 {
@@ -420,5 +421,47 @@ class ProductApiController extends Controller
                 'message' => $e->getMessage(),
             ], 500);
         }
+    }
+
+     public function productClick(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|integer',
+            'viewer_user_id' => 'required|integer',
+            'profile_user_id' => 'required|integer',
+        ]);
+
+        $productId = $request->product_id;
+        $viewerId = $request->viewer_user_id;
+        $profileId = $request->profile_user_id;
+
+        // 👉 Check existing row
+        $click = ProductClick::where('product_id', $productId)
+            ->where('viewer_id', $viewerId)
+            ->where('profile_id', $profileId)
+            ->first();
+
+        if ($click) {
+            // ✅ Row exists → increment
+            $click->increment('click_count');
+            $click->update([
+                'last_clicked_at' => now(),
+            ]);
+        } else {
+            // ✅ New row create
+            $click = ProductClick::create([
+                'product_id' => $productId,
+                'viewer_id' => $viewerId,
+                'profile_id' => $profileId,
+                'click_count' => 1,
+                'last_clicked_at' => now(),
+            ]);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Click tracked successfully',
+            'data' => $click,
+        ]);
     }
 }
