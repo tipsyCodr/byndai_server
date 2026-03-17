@@ -8,7 +8,7 @@ use App\Models\ProductClick;
 
 class ProductClickController extends Controller
 {
-    // ✅ STORE / UPDATE CLICK
+    // ✅ STORE / UPDATE CLICK    
     public function store(Request $request)
     {
         $request->validate([
@@ -56,7 +56,7 @@ class ProductClickController extends Controller
     {
         $query = ProductClick::query();
 
-        // 👉 Optional filters
+        // 👉 Optional filters.......
         if ($request->viewer_user_id) {
             $query->where('viewer_id', $request->viewer_user_id);
         }
