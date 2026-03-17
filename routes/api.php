@@ -654,6 +654,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::post('/reviews/generate', [ReviewController::class, 'generateReview'])->name('reviews.generate');
 
+    Route::post('/product-click', [
+        ProductClickController::class,
+        'store',
+    ]);
+    Route::get('/product-click', [
+        ProductClickController::class,
+        'index',
+    ]);
+
     // api for post end..........
 
     Route::post('/logout', [AuthApiController::class, 'logout']);
