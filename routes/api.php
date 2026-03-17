@@ -17,6 +17,7 @@ use App\Http\Controllers\api\site\MasterPostApiController;
 use App\Http\Controllers\api\site\PageController;
 use App\Http\Controllers\api\site\PostApiController;
 use App\Http\Controllers\api\site\ProductApiController;
+use App\Http\Controllers\api\site\ProductClickController;
 use App\Http\Controllers\api\site\ProfileApiController;
 use App\Http\Controllers\api\site\ProfileLinkClickController;
 use App\Http\Controllers\api\site\ProfileViewController;
@@ -25,7 +26,6 @@ use App\Http\Controllers\api\site\SubscriptionApiController;
 use App\Http\Controllers\api\site\UserAnalyticsController;
 use App\Http\Controllers\api\site\UserListController;
 use App\Http\Controllers\api\site\UserReviewApiController;
-use App\Http\Controllers\api\site\ProductClickController;
 use App\Http\Controllers\frontend\site\ReviewController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
@@ -655,24 +655,20 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::post('/reviews/generate', [
         ReviewController::class,
-     'generateReview'
-     ])->name('reviews.generate');
+        'generateReview',
+    ])->name('reviews.generate');
 
     Route::post('/product-click', [
         ProductClickController::class,
         'store',
     ]);
 
-    Route::post('/fresh', [
-        ProductApiController::class,
-        'userProductClick',
+    Route::get('/product-click', [
+        ProductClickController::class,
+        'index',
     ]);
 
-    
-
-   
-
-    // api for post end............................
+    // api for post end..........
 
     Route::post('/logout', [AuthApiController::class, 'logout']);
 
