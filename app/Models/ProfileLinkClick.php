@@ -9,7 +9,7 @@ class ProfileLinkClick extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
+    protected $fillable = [        
         'viewer_id',
         'profile_id',
         'platform',

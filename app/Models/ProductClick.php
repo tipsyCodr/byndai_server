@@ -10,6 +10,7 @@ class ProductClick extends Model
     use HasFactory;
 
     protected $fillable = [
+        'product_id',
         'viewer_id',
         'profile_id',
         'click_count',
