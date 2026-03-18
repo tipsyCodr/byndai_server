@@ -31,4 +31,14 @@ class ProductClick extends Model
     {
         return $this->belongsTo(User::class, 'profile_id');
     }
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class, 'product_id');
+    }
+
+    public function viewerDetail()
+    {
+        return $this->hasOne(MasterUserDetail::class, 'user_id', 'viewer_id');
+    }
 }

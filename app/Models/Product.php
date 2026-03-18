@@ -18,7 +18,7 @@ class Product extends Model
         'sku',
         'tags',
         'stock',
-        'status'
+        'status',
     ];
 
     public function productImage()
@@ -29,5 +29,10 @@ class Product extends Model
     public function productLink()
     {
         return $this->hasMany(ProductLink::class, 'prod_id', 'id');
+    }
+
+    public function productImage()
+    {
+        return $this->hasMany(ProductImage::class, 'prod_id', 'id');
     }
 }

@@ -668,6 +668,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'index',
     ]);
 
+    Route::post('/profile-product-clicks', [
+        ProductClickController::class,
+        'getProfileProductClicks',
+    ]);
+
     // api for post end..........
 
     Route::post('/logout', [AuthApiController::class, 'logout']);
