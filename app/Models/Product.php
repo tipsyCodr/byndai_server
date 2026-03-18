@@ -31,8 +31,5 @@ class Product extends Model
         return $this->hasMany(ProductLink::class, 'prod_id', 'id');
     }
 
-    public function productImage()
-    {
-        return $this->hasMany(ProductImage::class, 'prod_id', 'id');
-    }
+    
 }
