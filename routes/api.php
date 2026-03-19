@@ -27,6 +27,7 @@ use App\Http\Controllers\api\site\UserAnalyticsController;
 use App\Http\Controllers\api\site\UserListController;
 use App\Http\Controllers\api\site\UserReviewApiController;
 use App\Http\Controllers\frontend\site\ReviewController;
+use App\Http\Controllers\frontend\site\SubscriptionPlanController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
@@ -672,6 +673,27 @@ Route::middleware(['auth:sanctum'])->group(function () {
         ProductClickController::class,
         'getProfileProductClicks',
     ]);
+
+     Route::get('/get-subscription-plan', [
+        SubscriptionPlanController::class,
+      'index'
+     ]);      // Get all
+    Route::post('/add-subscription-plan', [
+        SubscriptionPlanController::class,
+     'store'
+    ]);     // Create
+    Route::get('/get_plan_by_id/{id}', [
+        SubscriptionPlanController::class,
+     'show'
+    ]);   // Single
+    Route::put('/update_plan_by_id/{id}', [
+        SubscriptionPlanController::class,
+     'update'
+    ]); // Update
+    Route::delete('/delete_plan_by_id/{id}', [
+        SubscriptionPlanController::class,
+     'destroy'
+    ]); // Delete
 
     // api for post end..........
 
