@@ -690,7 +690,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('/update_plan_by_id/{id}', [
         SubscriptionPlanController::class,
      'update'
-    ]); // Update
+    ]); // Update.......
     Route::delete('/delete_plan_by_id/{id}', [
         SubscriptionPlanController::class,
      'destroy'
