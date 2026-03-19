@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Validator;
+use App\Models\ProductClick;
 
 class ProductApiController extends Controller
 {
@@ -420,5 +421,15 @@ class ProductApiController extends Controller
                 'message' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function userProductClick()
+    {
+        return response()->json([
+                'status' => true,
+                'message' => 'Product clicked successfully',
+                
+            ], 200);
+    
     }
 }

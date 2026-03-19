@@ -17,6 +17,7 @@ use App\Http\Controllers\api\site\MasterPostApiController;
 use App\Http\Controllers\api\site\PageController;
 use App\Http\Controllers\api\site\PostApiController;
 use App\Http\Controllers\api\site\ProductApiController;
+use App\Http\Controllers\api\site\ProductClickController;
 use App\Http\Controllers\api\site\ProfileApiController;
 use App\Http\Controllers\api\site\ProfileLinkClickController;
 use App\Http\Controllers\api\site\ProfileViewController;
@@ -25,6 +26,8 @@ use App\Http\Controllers\api\site\SubscriptionApiController;
 use App\Http\Controllers\api\site\UserAnalyticsController;
 use App\Http\Controllers\api\site\UserListController;
 use App\Http\Controllers\api\site\UserReviewApiController;
+use App\Http\Controllers\frontend\site\ReviewController;
+use App\Http\Controllers\frontend\site\SubscriptionPlanController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
@@ -429,6 +432,19 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'getAllDistricts',
     ]);
 
+    Route::post('/update-event/{id}', [
+        MasterEventApiController::class,
+        'updateEvent',
+    ]);
+    Route::get('/event/{id}', [
+        MasterEventApiController::class,
+        'getEvent',
+    ]);
+    Route::post('/delete-event-image', [
+        MasterEventApiController::class,
+        'deleteEventImage',
+    ]);
+
     Route::post('/upload-profile-pic', [
         AuthApiController::class,
         'uploadProfilePic',
@@ -558,6 +574,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'store',
     ]);
 
+    Route::post('/user-review/find', [
+        UserReviewApiController::class,
+        'findReview',
+    ]);
+
     // ✅ Get Reviews of a User (to_user_id)
     Route::get('/user-reviews/{userId}', [
         UserReviewApiController::class,
@@ -632,6 +653,47 @@ Route::middleware(['auth:sanctum'])->group(function () {
         LeadCategoryController::class,
         'getByUserId',
     ]);
+
+    Route::post('/reviews/generate', [
+        ReviewController::class,
+        'generateReview',
+    ])->name('reviews.generate');
+
+    Route::post('/product-click', [
+        ProductClickController::class,
+        'store',
+    ]);
+
+    Route::get('/product-click', [
+        ProductClickController::class,
+        'index',
+    ]);
+
+    Route::post('/profile-product-clicks', [
+        ProductClickController::class,
+        'getProfileProductClicks',
+    ]);
+
+     Route::get('/get-subscription-plan', [
+        SubscriptionPlanController::class,
+      'index'
+     ]);      // Get all
+    Route::post('/add-subscription-plan', [
+        SubscriptionPlanController::class,
+     'store'
+    ]);     // Create
+    Route::get('/get_plan_by_id/{id}', [
+        SubscriptionPlanController::class,
+     'show'
+    ]);   // Single
+    Route::put('/update_plan_by_id/{id}', [
+        SubscriptionPlanController::class,
+     'update'
+    ]); // Update
+    Route::delete('/delete_plan_by_id/{id}', [
+        SubscriptionPlanController::class,
+     'destroy'
+    ]); // Delete
 
     // api for post end..........
 

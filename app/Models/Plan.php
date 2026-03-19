@@ -2,11 +2,29 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Plan extends Model
+class SubscriptionPlan extends Model
 {
-    use HasFactory;
-    protected $fillable = ['name', 'price', 'interval', 'duration_days', 'features', 'description', 'status'];
+    // Agar table ka naam 'subscription_plans' hai toh ye line optional hai
+    protected $table = 'subscription_plans'; 
+
+    protected $fillable = [
+        'name', 
+        'slug', 
+        'description', 
+        'type', 
+        'is_free', 
+        'price', 
+        'currency', 
+        'status'
+    ];
+
+    // Data types casting
+    protected $casts = [
+        'is_free' => 'boolean',
+        'price' => 'decimal:2',
+        'status' => 'integer',
+        'type' => 'string', // kyunki ye enum hai 
+    ];
 }
