@@ -11,17 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('plans', function (Blueprint $table) {
-            $table->id();
-            $table->string('name', 50)->nullable();
-            $table->decimal('price', 10, 2)->nullable();
-            $table->string('interval', 50)->nullable();
-            $table->integer('duration_days')->nullable();
-            $table->text('features')->nullable();
-            $table->text('description')->nullable();
-            $table->integer('status')->default(0)->comment('0 is inactive, 1 is active');
-            $table->timestamps();
-        });
+       
     }
 
     /**

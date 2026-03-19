@@ -9,35 +9,39 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
-    {
-        Schema::create('plans', function (Blueprint $table) {
-            $table->id();
+   public function up(): void
+{
+    // Agar table already exist hai to drop karo.....
+    Schema::dropIfExists('plans');
 
-            $table->string('name', 100);
-            $table->string('slug', 100)->unique();
+    // Fir new structure se create karo
+    Schema::create('plans', function (Blueprint $table) {
+        $table->id();
 
-            $table->text('description')->nullable();
+        $table->string('name', 100);
+        $table->string('slug', 100)->unique();
 
-            $table->enum('type', [
-                'daily',
-                'weekly',
-                'monthly',
-                'quarterly',
-                'yearly'
-            ]);
+        $table->text('description')->nullable();
 
-            $table->boolean('is_free')->default(false);
+        $table->enum('type', [
+            'daily',
+            'weekly',
+            'monthly',
+            'quarterly',
+            'yearly'
+        ]);
 
-            $table->decimal('price', 10, 2)->default(0);
+        $table->boolean('is_free')->default(false);
 
-            $table->string('currency', 10)->default('INR');
+        $table->decimal('price', 10, 2)->default(0);
 
-            $table->tinyInteger('status')->default(1); // 1=active, 0=inactive
+        $table->string('currency', 10)->default('INR');
 
-            $table->timestamps();
-        });
-    }
+        $table->tinyInteger('status')->default(1);
+
+        $table->timestamps();
+    });
+}
 
     /**
      * Reverse the migrations.
