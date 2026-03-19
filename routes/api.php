@@ -29,6 +29,7 @@ use App\Http\Controllers\api\site\UserReviewApiController;
 use App\Http\Controllers\frontend\site\ReviewController;
 use App\Http\Controllers\api\site\SubscriptionPlanController;
 use App\Http\Controllers\api\site\PlanFeatureController;
+use App\Http\Controllers\api\site\UserSubscriptionController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
@@ -721,6 +722,33 @@ Route::middleware(['auth:sanctum'])->group(function () {
         PlanFeatureController::class,
      'destroy'
     ]); // Delete
+
+     Route::get('/get_all_subscribe_user', [
+        UserSubscriptionController::class,
+      'index'
+     ]);
+    Route::post('/add_subscription', [
+        UserSubscriptionController::class,
+     'store'
+    ]);
+    Route::get('/get_subscription_by_id/{id}', [
+        UserSubscriptionController::class,
+     'show'
+    ]);
+    Route::put('/update_subscription_by_id/{id}', [
+        UserSubscriptionController::class,
+     'update'
+    ]);
+    Route::delete('/delete_subscription_by_id/{id}', [
+        UserSubscriptionController::class,
+     'destroy'
+    ]);
+
+    // Extra
+    Route::get('/user/{userId}/active', [
+        UserSubscriptionController::class,
+     'getUserActiveSubscription'
+    ]);
 
 
     // api for post end..........
