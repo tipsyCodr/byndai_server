@@ -27,7 +27,7 @@ use App\Http\Controllers\api\site\UserAnalyticsController;
 use App\Http\Controllers\api\site\UserListController;
 use App\Http\Controllers\api\site\UserReviewApiController;
 use App\Http\Controllers\frontend\site\ReviewController;
-use App\Http\Controllers\frontend\site\SubscriptionPlanController;
+use App\Http\Controllers\api\siteSubscriptionPlanController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
