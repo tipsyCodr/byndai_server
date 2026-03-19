@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::dropIfExists('subscriptions');
         Schema::create('user_subscriptions', function (Blueprint $table) {
             $table->id();
 
