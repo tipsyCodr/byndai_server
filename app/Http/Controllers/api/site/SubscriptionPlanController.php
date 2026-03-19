@@ -113,4 +113,22 @@ class SubscriptionPlanController extends Controller
             'message' => 'Plan deleted successfully'
         ]);
     }
+
+    // ✅ Get Plan with Features
+    public function getPlanWithFeatures($id)
+    {
+       $plan = SubscriptionPlan::with('features')->find($id);
+   
+       if (!$plan) {
+           return response()->json([
+               'status' => false,
+               'message' => 'Plan not found'
+           ], 404);
+       }
+   
+       return response()->json([
+           'status' => true,
+           'data' => $plan
+       ]);
+    }
 }
