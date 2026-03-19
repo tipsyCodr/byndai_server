@@ -20,7 +20,7 @@ class SubscriptionPlanController extends Controller
         ]);
     }
 
-    // ✅ Create Plan
+    // ✅ Create Plan....
     public function store(Request $request)
     {
         $request->validate([
