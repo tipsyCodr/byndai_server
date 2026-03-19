@@ -9,10 +9,22 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    Schema::dropIfExists('subscriptions');
     public function up(): void
     {
-        
+        Schema::create('subscriptions', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('plan_id');
+            $table->dateTime('start_date');
+            $table->dateTime('end_date');
+            $table->dateTime('trial_end_date')->nullable();
+            $table->decimal('amount', 10, 2)->default(0.00);
+            $table->unsignedBigInteger('payment_id')->nullable();
+            $table->integer('renewal_status')->default(10)->comment('10 is new plan 9 is renewal plan');
+            $table->dateTime('cancelled_at')->nullable();
+            $table->string('cancel_reason')->nullable();
+            $table->timestamps();
+        });
     }
 
     /**
