@@ -9,8 +9,10 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
-    {
+   public function up(): void
+{
+    if (!Schema::hasTable('user_subscription_features')) {
+
         Schema::create('user_subscription_features', function (Blueprint $table) {
             $table->id();
 
@@ -18,12 +20,12 @@ return new class extends Migration
             $table->unsignedBigInteger('user_subscription_id');
 
             // Feature details
-            $table->string('feature'); // e.g. connections_per_day
-            $table->string('limit_value'); // e.g. 50 / unlimited
+            $table->string('feature');
+            $table->string('limit_value');
             $table->integer('used_value')->default(0);
 
             // Optional unit
-            $table->string('unit')->nullable(); // e.g. requests, leads
+            $table->string('unit')->nullable();
 
             // Reset logic
             $table->enum('reset_period', ['daily', 'weekly', 'monthly', 'yearly'])->nullable();
@@ -37,10 +39,12 @@ return new class extends Migration
                   ->on('user_subscriptions')
                   ->onDelete('cascade');
 
-            // Index for fast lookup
+            // Index
             $table->index(['user_subscription_id', 'feature']);
         });
+
     }
+}
 
     /**
      * Reverse the migrations.
