@@ -751,6 +751,31 @@ Route::middleware(['auth:sanctum'])->group(function () {
     ]);
 
 
+     Route::get('/get_all_subs_feature', [
+        UserSubscriptionFeatureController::class,
+      'index'
+     ]);
+    Route::post('/add_subs_feature', [
+        UserSubscriptionFeatureController::class,
+     'store'
+    ]);
+    Route::get('/get_by_id/{id}', [
+        UserSubscriptionFeatureController::class,
+     'show']);
+    Route::put('/updated_by_id/{id}', [
+        UserSubscriptionFeatureController::class,
+     'update'
+    ]);
+    Route::delete('/delete_by_id/{id}', [
+        UserSubscriptionFeatureController::class,
+     'destroy'
+    ]);
+
+    // Extra
+    Route::get('/subscription/{id}', [UserSubscriptionFeatureController::class, 'getBySubscription']);
+    Route::post('/{id}/increment', [UserSubscriptionFeatureController::class, 'incrementUsage']);
+
+
     // api for post end..........
 
     Route::post('/logout', [AuthApiController::class, 'logout']);
