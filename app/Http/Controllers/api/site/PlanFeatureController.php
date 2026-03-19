@@ -23,7 +23,7 @@ class PlanFeatureController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'plan_id' => 'required|exists:subscription_plans,id'
+            'plan_id' => 'required|exists:subscription_plans,id',
             'feature' => 'required|string|max:255',
             'value' => 'required|string|max:255',
         ]);
