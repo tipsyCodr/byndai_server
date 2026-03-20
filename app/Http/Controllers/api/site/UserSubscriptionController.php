@@ -9,6 +9,7 @@ use App\Models\PlanFeature;
 use App\Models\User;
 use App\Models\SubscriptionPlan;
 use App\Models\UserSubscriptionFeature;
+use Carbon\Carbon;
 
 class UserSubscriptionController extends Controller
 {
@@ -203,5 +204,65 @@ public function mySubscription(Request $request)
         ]);
     }
 
- 
+    public function assignFreeSubscription(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id'
+        ]);
+    
+        $userId = $request->user_id;
+    
+        // ✅ Check already subscription hai ya nahi
+        $existing = UserSubscription::where('user_id', $userId)->exists();
+    
+        if ($existing) {
+            return response()->json([
+                'status' => false,
+                'message' => 'User already has a subscription'
+            ]);
+        }
+    
+        // ✅ Free plan fetch karo
+        $freePlan = SubscriptionPlan::where('is_free', 1)->first();
+    
+        if (!$freePlan) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Free plan not found'
+            ]);
+        }
+    
+        // ✅ Subscription create karo
+        $subscription = UserSubscription::create([
+            'user_id' => $userId,
+            'plan_id' => $freePlan->id,
+            'payment_id'=> null,
+            'payment_status' => null,
+            'payment_method' => null,
+            'start_date' => Carbon::now(),
+            'end_date' => Carbon::now()->addYears(10), // long duration
+            'is_active' => 1,
+        ]);
+    
+        // ✅ Plan ke features fetch karo
+        $planFeatures = $freePlan->features;
+    
+        // ✅ Features ko user_subscription_features me insert karo
+        foreach ($planFeatures as $feature) {
+            UserSubscriptionFeature::create([
+                'user_subscription_id' => $subscription->id,
+                'feature' => $feature->feature,                
+                'used_value' => 0,
+                'unit' => $feature->unit,
+                'reset_period' => null,
+                'last_reset_date' => now(),
+            ]);
+        }
+    
+        return response()->json([
+            'status' => true,
+            'message' => 'Free subscription assigned successfully',
+            'data' => $subscription->load('features', 'plan')
+        ]);
+    }
 }

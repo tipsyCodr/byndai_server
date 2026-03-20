@@ -778,7 +778,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     ]);
 
     Route::get('user/subscription', [UserSubscriptionController::class, 'mySubscription']);
-
+    Route::post('/assign-free-subscription', [UserSubscriptionController::class, 'assignFreeSubscription']);
     // Extra
     Route::get('/subscription/{id}', [UserSubscriptionFeatureController::class, 'getBySubscription']);
     Route::post('/{id}/increment', [UserSubscriptionFeatureController::class, 'incrementUsage']);
