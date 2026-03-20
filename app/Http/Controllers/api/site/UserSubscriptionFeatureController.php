@@ -25,13 +25,12 @@ class UserSubscriptionFeatureController extends Controller
         $request->validate([
             'user_subscription_id' => 'required|exists:user_subscriptions,id',
             'feature' => 'required|string|max:255',
-            'limit_value' => 'required|string|max:255',
+            
         ]);
 
         $feature = UserSubscriptionFeature::create([
             'user_subscription_id' => $request->user_subscription_id,
-            'feature' => $request->feature,
-            'limit_value' => $request->limit_value,
+            'feature' => $request->feature,            
             'used_value' => $request->used_value ?? 0,
             'unit' => $request->unit,
             'reset_period' => $request->reset_period,
@@ -75,8 +74,7 @@ class UserSubscriptionFeatureController extends Controller
             ], 404);
         }
 
-        $feature->update([
-            'limit_value' => $request->limit_value ?? $feature->limit_value,
+        $feature->update([            
             'used_value' => $request->used_value ?? $feature->used_value,
             'unit' => $request->unit ?? $feature->unit,
             'reset_period' => $request->reset_period ?? $feature->reset_period,
