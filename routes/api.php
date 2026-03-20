@@ -773,6 +773,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
      'destroy'
     ]);
 
+    Route::get('user/subscription', [UserSubscriptionController::class, 'mySubscription']);
+
     // Extra
     Route::get('/subscription/{id}', [UserSubscriptionFeatureController::class, 'getBySubscription']);
     Route::post('/{id}/increment', [UserSubscriptionFeatureController::class, 'incrementUsage']);
