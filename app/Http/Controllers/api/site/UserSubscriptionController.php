@@ -22,6 +22,32 @@ class UserSubscriptionController extends Controller
         ]);
     }
 
+    public function mySubscription(Request $request)
+{
+    $user = $request->user(); // 🔥 token se user
+
+    $subscription = UserSubscription::with(['plan', 'features'])
+        ->where('user_id', $user->id)
+        ->where('is_active', 1)
+        ->latest()
+        ->first();
+
+    if (!$subscription) {
+        return response()->json([
+            'status' => true,
+            'data' => [
+                'plan' => 'free',
+                'features' => []
+            ]
+        ]);
+    }
+
+    return response()->json([
+        'status' => true,
+        'data' => $subscription
+    ]);
+}
+
     // ✅ Create subscription
     public function store(Request $request)
     {
