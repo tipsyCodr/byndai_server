@@ -17,7 +17,7 @@ class AdminSeeder extends Seeder
     {
         // 1. Create OR Update Admin User
         $admin = User::updateOrCreate(
-            ['email' => 'admin@grid.com'],
+            ['email' => 'admin@byndai.in'],
             [
                 'user_name' => 'admin',
                 'user_mobile' => '9999999999',
@@ -36,7 +36,7 @@ class AdminSeeder extends Seeder
             [
                 'fname' => 'Administrator',
                 'mobile_one' => '9999999999',
-                'email_one' => 'admin@grid.com',
+                'email_one' => 'admin@byndai.in',
                 'desg' => 'System administrator',
             ]
         );
