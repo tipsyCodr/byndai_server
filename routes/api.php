@@ -780,7 +780,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/{id}/increment', [UserSubscriptionFeatureController::class, 'incrementUsage']);
     Route::post('/check-feature', [UserSubscriptionFeatureController::class, 'checkFeature']);
 
-    // api for post end..........
+    // api for post end...
 
     Route::post('/logout', [AuthApiController::class, 'logout']);
 
