@@ -43,14 +43,7 @@ class UserSubscriptionFeature extends Model
         return $this->belongsTo(UserSubscription::class, 'user_subscription_id', 'id');
     }
     
-    public function planFeature()
-    {
-      return $this->hasOne(
-          PlanFeature::class,
-          'feature',   // plan_features.feature
-          'feature'    // user_subscription_features.feature
-      );
-    }
+   
 
     // Example helper: check if feature usage is exhausted
     public function isExhausted(): bool
