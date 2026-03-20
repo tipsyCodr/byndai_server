@@ -28,6 +28,8 @@ use App\Http\Controllers\api\site\UserListController;
 use App\Http\Controllers\api\site\UserReviewApiController;
 use App\Http\Controllers\frontend\site\ReviewController;
 use App\Http\Controllers\api\site\SubscriptionPlanController;
+use App\Http\Controllers\api\site\PlanFeatureController;
+use App\Http\Controllers\api\site\UserSubscriptionController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
@@ -674,6 +676,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'getProfileProductClicks',
     ]);
 
+    // subscription plan apis
+
      Route::get('/get-subscription-plan', [
         SubscriptionPlanController::class,
       'index'
@@ -689,11 +693,90 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('/update_plan_by_id/{id}', [
         SubscriptionPlanController::class,
      'update'
-    ]); // Update
+    ]); // Update.......
     Route::delete('/delete_plan_by_id/{id}', [
         SubscriptionPlanController::class,
      'destroy'
     ]); // Delete
+
+    Route::get('/plans/{id}/features', [
+        SubscriptionPlanController::class,
+         'getPlanWithFeatures'
+    ]);
+
+    Route::get('/get_all_plan_feature', [
+        PlanFeatureController::class,
+     'index'
+    ]);        // All
+    Route::post('/add_plan_feature', [
+        PlanFeatureController::class,
+     'store'
+    ]);       // Create
+    Route::get('/get_plan_feature_by_id/{id}', [
+        PlanFeatureController::class,
+     'show'
+    ]);     // Single
+    Route::put('/update_plan_feature_by_id/{id}', [
+        PlanFeatureController::class,
+     'update'
+    ]);   // Update
+    Route::delete('/delete_plan_feature_by_id/{id}', [
+        PlanFeatureController::class,
+     'destroy'
+    ]); // Delete
+
+     Route::get('/get_all_subscribe_user', [
+        UserSubscriptionController::class,
+      'index'
+     ]);
+    Route::post('/add_subscription', [
+        UserSubscriptionController::class,
+     'store'
+    ]);
+    Route::get('/get_subscription_by_id/{id}', [
+        UserSubscriptionController::class,
+     'show'
+    ]);
+    Route::put('/update_subscription_by_id/{id}', [
+        UserSubscriptionController::class,
+     'update'
+    ]);
+    Route::delete('/delete_subscription_by_id/{id}', [
+        UserSubscriptionController::class,
+     'destroy'
+    ]);
+
+    // Extra
+    Route::get('/user/{userId}/active', [
+        UserSubscriptionController::class,
+     'getUserActiveSubscription'
+    ]);
+
+
+     Route::get('/get_all_subs_feature', [
+        UserSubscriptionFeatureController::class,
+      'index'
+     ]);
+    Route::post('/add_subs_feature', [
+        UserSubscriptionFeatureController::class,
+     'store'
+    ]);
+    Route::get('/get_by_id/{id}', [
+        UserSubscriptionFeatureController::class,
+     'show']);
+    Route::put('/updated_by_id/{id}', [
+        UserSubscriptionFeatureController::class,
+     'update'
+    ]);
+    Route::delete('/delete_by_id/{id}', [
+        UserSubscriptionFeatureController::class,
+     'destroy'
+    ]);
+
+    // Extra
+    Route::get('/subscription/{id}', [UserSubscriptionFeatureController::class, 'getBySubscription']);
+    Route::post('/{id}/increment', [UserSubscriptionFeatureController::class, 'incrementUsage']);
+    Route::post('/check-feature', [UserSubscriptionFeatureController::class, 'checkFeature']);
 
     // api for post end..........
 

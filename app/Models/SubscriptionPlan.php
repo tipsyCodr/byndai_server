@@ -20,6 +20,8 @@ class SubscriptionPlan extends Model
         'status'
     ];
 
+ 
+
     // Data types casting
     protected $casts = [
         'is_free' => 'boolean',
@@ -27,4 +29,9 @@ class SubscriptionPlan extends Model
         'status' => 'integer',
         'type' => 'string', // kyunki ye enum hai 
     ];
+
+    public function features()
+    {
+        return $this->hasMany(PlanFeature::class, 'plan_id');
+    }
 }
