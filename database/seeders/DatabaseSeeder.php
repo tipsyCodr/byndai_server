@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             DistrictSeeder::class,
             MasterIndustrySeeder::class,
             MasterLinkSeeder::class,
+            AdminSeeder::class,
             UserSeeder::class,
             ProductSeerder::class,
             ProductImageSeeder::class,

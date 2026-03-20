@@ -11,6 +11,9 @@ return new class extends Migration
      */
    public function up(): void
 {
+    // Disable FK checks to allow dropping and recreating table with dependencies
+    Schema::disableForeignKeyConstraints();
+
     // Agar table already exist hai to drop karo.....
     Schema::dropIfExists('plans');
 
@@ -41,6 +44,8 @@ return new class extends Migration
 
         $table->timestamps();
     });
+
+    Schema::enableForeignKeyConstraints();
 }
 
     /**
