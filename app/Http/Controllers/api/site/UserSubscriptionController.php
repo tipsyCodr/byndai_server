@@ -325,7 +325,7 @@ public function mySubscription(Request $request)
        ]);
     }
 
-    public function upgradePlan(Request $request)
+    public function upgradeUserPlan(Request $request)
     {
        $request->validate([
            'user_id' => 'required|exists:users,id',

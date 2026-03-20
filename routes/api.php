@@ -783,7 +783,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/subscription/{id}', [UserSubscriptionFeatureController::class, 'getBySubscription']);
     Route::post('/{id}/increment', [UserSubscriptionFeatureController::class, 'incrementUsage']);
     Route::post('/check-feature', [UserSubscriptionFeatureController::class, 'checkFeature']);
-    Route::post('/upgrade-plan', [UserSubscriptionController::class, 'upgradePlan']);
+    Route::post('/upgrade-plan', [UserSubscriptionController::class, 'upgradeUserPlan']);
 
     // api for post end...
 
