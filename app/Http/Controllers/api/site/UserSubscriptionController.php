@@ -229,8 +229,9 @@ public function mySubscription(Request $request)
         $subscription = UserSubscription::create([
             'user_id' => $user->id,
             'plan_id' => $freePlan->id,
-            'payment_status' => 'paid',
-            'payment_method' => 'system',
+            'payment_status' => 'null',
+            'payment_id'=> 'null',
+            'payment_method' => 'null',
             'start_date' => now(),
             'end_date' => now()->addMonth(), // 🔥 monthly free plan
             'is_active' => 1,
@@ -240,8 +241,7 @@ public function mySubscription(Request $request)
         foreach ($planFeatures as $feature) {
             UserSubscriptionFeature::create([
                 'user_subscription_id' => $subscription->id,
-                'feature' => $feature->feature,
-                'limit_value' => $feature->value,
+                'feature' => $feature->feature,               
                 'used_value' => 0,
                 'unit' => $feature->unit,
                 'reset_period' => 'monthly',

@@ -18,8 +18,7 @@ class UserSubscriptionFeature extends Model
 
     protected $fillable = [
         'user_subscription_id',
-        'feature',
-        'limit_value',
+        'feature',        
         'used_value',
         'unit',
         'reset_period',
