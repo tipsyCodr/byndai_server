@@ -718,8 +718,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
     ]);     // Single
     Route::put('/update_plan_feature_by_id/{id}', [
         PlanFeatureController::class,
-     'update'
-    ]);   // Update
+        'update'
+    ]);  //single feature update one time
+    Route::put('/update_plan_features_by_plan/{plan_id}', [
+        PlanFeatureController::class,
+     'updateByPlan'
+    ]); // Update
     Route::delete('/delete_plan_feature_by_id/{id}', [
         PlanFeatureController::class,
      'destroy'

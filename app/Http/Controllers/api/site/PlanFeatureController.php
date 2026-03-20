@@ -105,4 +105,27 @@ class PlanFeatureController extends Controller
             'message' => 'Feature deleted successfully'
         ]);
     }
+
+    public function updateByPlan(Request $request, $plan_id)
+{
+    $request->validate([
+        'features' => 'required|array',
+        'features.*.feature' => 'required|string',
+    ]);
+
+    foreach ($request->features as $item) {
+
+        PlanFeature::where('plan_id', $plan_id)
+            ->where('feature', $item['feature'])
+            ->update([
+                'value' => $item['value'],
+                'unit' => $item['unit'] ?? null,
+            ]);
+    }
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Plan features updated successfully'
+    ]);
+}
 }
