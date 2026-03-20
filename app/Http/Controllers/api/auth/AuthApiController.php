@@ -576,8 +576,7 @@ class AuthApiController extends Controller
             foreach ($planFeatures as $feature) {
                 UserSubscriptionFeature::create([
                     'user_subscription_id' => $subscription->id,
-                    'feature' => $feature->feature,
-                    'limit_value' => $feature->value,
+                    'feature' => $feature->feature,                    
                     'used_value' => 0,
                     'unit' => $feature->unit,
                     'reset_period' => $plan->type,
