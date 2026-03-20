@@ -26,11 +26,20 @@ class UserSubscriptionController extends Controller
 {
     $user = $request->user(); // 🔥 token se user
 
-    $subscription = UserSubscription::with(['plan', 'features'])
-        ->where('user_id', $user->id)
-        ->where('is_active', 1)
-        ->latest()
-        ->first();
+    // $subscription = UserSubscription::with(['plan', 'features'])
+    //     ->where('user_id', $user->id)
+    //     ->where('is_active', 1)
+    //     ->latest()
+    //     ->first();
+
+    $subscription = UserSubscription::with([
+    'plan',
+    'features.planFeature' // 👈 ADD THIS
+    ])
+    ->where('user_id', $userId)
+    ->where('is_active', 1)
+    ->latest()
+    ->first();
 
     if (!$subscription) {
         return response()->json([
@@ -42,9 +51,25 @@ class UserSubscriptionController extends Controller
         ]);
     }
 
+    // return response()->json([
+    //     'status' => true,
+    //     'data' => $subscription
+    // ]);
+
     return response()->json([
-        'status' => true,
-        'data' => $subscription
+      'status' => true,
+      'data' => [
+          'id' => $subscription->id,
+          'plan' => $subscription->plan,
+          'features' => $subscription->features->map(function ($f) {
+              return [
+                  'feature' => $f->feature,
+                  'used' => $f->used_value,
+                  'limit' => $f->planFeature->value ?? 0, // 👈 LIMIT
+                  'unit' => $f->unit,
+              ];
+          })
+      ]
     ]);
 }
 

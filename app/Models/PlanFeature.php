@@ -11,7 +11,7 @@ class PlanFeature extends Model
     protected $fillable = [
         'plan_id',
         'feature',
-        'value',
+        'value',//feature limit
         'unit'
     ];
 
