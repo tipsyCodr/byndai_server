@@ -265,4 +265,161 @@ public function mySubscription(Request $request)
             'data' => $subscription->load('features', 'plan')
         ]);
     }
+
+    public function upgradePlan(Request $request)
+    {
+       $request->validate([
+           'user_id' => 'required|exists:users,id',
+           'plan_id' => 'required|exists:subscription_plans,id',
+       ]);
+
+       $userId = $request->user_id;
+       $newPlanId = $request->plan_id;
+
+       // ✅ New plan fetch
+       $plan = SubscriptionPlan::with('features')->find($newPlanId);
+
+       if (!$plan) {
+           return response()->json([
+               'status' => false,
+               'message' => 'Plan not found'
+           ]);
+       }
+
+       // ✅ Step 1: old active subscription deactivate karo
+       UserSubscription::where('user_id', $userId)
+           ->where('is_active', 1)
+           ->update(['is_active' => 0]);
+
+       // ✅ Step 2: new subscription create karo
+       $subscription = UserSubscription::create([
+           'user_id' => $userId,
+           'plan_id' => $plan->id,
+           'payment_status' => 'paid',
+           'payment_id' => $request->payment_id ?? null,
+           'payment_method' => $request->payment_method ?? 'online',
+           'start_date' => now(),
+           'end_date' => now()->addMonth(), // ya dynamic karo based on plan
+           'is_active' => 1,
+       ]);
+
+       // ✅ Step 3: old features delete (safety)
+       UserSubscriptionFeature::where('user_subscription_id', $subscription->id)->delete();
+
+       // ✅ Step 4: new features assign karo
+       foreach ($plan->features as $feature) {
+           UserSubscriptionFeature::create([
+               'user_subscription_id' => $subscription->id,
+               'feature' => $feature->feature,
+               'used_value' => 0,
+               'unit' => $feature->unit,
+               'reset_period' => $plan->type, // monthly/yearly
+               'last_reset_date' => now(),
+           ]);
+       }
+
+       return response()->json([
+           'status' => true,
+           'message' => 'Plan upgraded successfully 🚀',
+           'data' => $subscription->load('plan', 'features')
+       ]);
+    }
+
+    public function upgradePlan(Request $request)
+    {
+       $request->validate([
+           'user_id' => 'required|exists:users,id',
+           'plan_id' => 'required|exists:subscription_plans,id',
+       ]);
+
+       $userId = $request->user_id;
+       $newPlanId = $request->plan_id;
+
+       \DB::beginTransaction();
+
+       try {
+
+           // ✅ Plan fetch with features
+           $plan = SubscriptionPlan::with('features')->find($newPlanId);
+
+           if (!$plan) {
+               return response()->json([
+                   'status' => false,
+                   'message' => 'Plan not found'
+               ]);
+           }
+
+           // ✅ Check active subscription
+           $activeSub = UserSubscription::where('user_id', $userId)
+               ->where('is_active', 1)
+               ->first();
+
+           // 🚫 SAME PLAN DOUBLE BUY BLOCK
+           if ($activeSub && $activeSub->plan_id == $newPlanId) {
+               return response()->json([
+                   'status' => false,
+                   'message' => 'User already subscribed to this plan'
+               ]);
+           }
+
+           // ✅ Step 1: old subscription deactivate
+           if ($activeSub) {
+               $activeSub->update(['is_active' => 0]);
+           }
+
+           // ✅ Step 2: duration logic
+           $startDate = now();
+
+           $endDate = match ($plan->type) {
+               'monthly' => now()->addMonth(),
+               'yearly' => now()->addYear(),
+               'weekly' => now()->addWeek(),
+               default => now()->addMonth(),
+           };
+
+           // ✅ Step 3: create new subscription
+           $subscription = UserSubscription::create([
+               'user_id' => $userId,
+               'plan_id' => $plan->id,
+               'payment_status' => 'paid',
+               'payment_id' => $request->payment_id ?? null,
+               'payment_method' => $request->payment_method ?? 'online',
+               'start_date' => $startDate,
+               'end_date' => $endDate,
+               'is_active' => 1,
+           ]);
+
+           // ❌ IMPORTANT: NO DELETE (tu naya row chahta hai)
+           // so skip delete
+
+           // ✅ Step 4: fresh features insert (NEW ROWS ALWAYS)
+           foreach ($plan->features as $feature) {
+               UserSubscriptionFeature::create([
+                   'user_subscription_id' => $subscription->id,
+                   'feature' => $feature->feature,
+                   'used_value' => 0,
+                   'unit' => $feature->unit,
+                   'reset_period' => $plan->type,
+                   'last_reset_date' => now(),
+               ]);
+           }
+
+           \DB::commit();
+
+           return response()->json([
+               'status' => true,
+               'message' => 'Plan upgraded successfully 🚀',
+               'data' => $subscription->load('plan', 'features')
+           ]);
+
+       } catch (\Exception $e) {
+
+           \DB::rollBack();
+
+           return response()->json([
+               'status' => false,
+               'message' => $e->getMessage()
+           ]);
+       }
+    }
 }
