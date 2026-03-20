@@ -5,6 +5,7 @@ namespace App\Http\Controllers\api\site;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\UserSubscription;
+use App\Models\PlanFeature;
 
 
 class UserSubscriptionController extends Controller
@@ -22,9 +23,36 @@ class UserSubscriptionController extends Controller
         ]);
     }
 
-    public function mySubscription(Request $request)
+//     public function mySubscription(Request $request)
+// {
+//     $user = $request->user(); // 🔥 token se user
+
+//     $subscription = UserSubscription::with(['plan', 'features'])
+//         ->where('user_id', $user->id)
+//         ->where('is_active', 1)
+//         ->latest()
+//         ->first();
+
+//     if (!$subscription) {
+//         return response()->json([
+//             'status' => true,
+//             'data' => [
+//                 'plan' => 'free',
+//                 'features' => []
+//             ]
+//         ]);
+//     }
+
+//     return response()->json([
+//         'status' => true,
+//         'data' => $subscription
+//     ]);
+    
+// }
+
+public function mySubscription(Request $request)
 {
-    $user = $request->user(); // 🔥 token se user
+    $user = $request->user();
 
     $subscription = UserSubscription::with(['plan', 'features'])
         ->where('user_id', $user->id)
@@ -32,15 +60,39 @@ class UserSubscriptionController extends Controller
         ->latest()
         ->first();
 
+    // ✅ Agar subscription nahi mila → FREE return
     if (!$subscription) {
         return response()->json([
             'status' => true,
             'data' => [
-                'plan' => 'free',
+                'plan' => [
+                    'name' => 'free'
+                ],
                 'features' => []
             ]
         ]);
     }
+
+    // ✅ Plan features ek hi query me load
+    $planFeatures = PlanFeature::where('plan_id', $subscription->plan_id)
+        ->get()
+        ->keyBy('feature'); // 🔥 fast lookup
+
+    // ✅ Features me limit_value attach karo
+    $subscription->features->transform(function ($feature) use ($planFeatures) {
+
+        $planFeature = $planFeatures->get($feature->feature);
+
+        return [
+            'id' => $feature->id,
+            'feature' => $feature->feature,
+            'used_value' => $feature->used_value,
+            'limit_value' => $planFeature->value ?? null, // 🔥 yahi main cheez
+            'unit' => $feature->unit,
+            'reset_period' => $feature->reset_period,
+            'last_reset_date' => $feature->last_reset_date,
+        ];
+    });
 
     return response()->json([
         'status' => true,
