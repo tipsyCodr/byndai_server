@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\UserSubscription;
 use App\Models\PlanFeature;
-
+use App\Models\User;
+use App\Models\SubscriptionPlan;
+use App\Models\UserSubscriptionFeature;
 
 class UserSubscriptionController extends Controller
 {
@@ -23,32 +25,7 @@ class UserSubscriptionController extends Controller
         ]);
     }
 
-//     public function mySubscription(Request $request)
-// {
-//     $user = $request->user(); // 🔥 token se user
 
-//     $subscription = UserSubscription::with(['plan', 'features'])
-//         ->where('user_id', $user->id)
-//         ->where('is_active', 1)
-//         ->latest()
-//         ->first();
-
-//     if (!$subscription) {
-//         return response()->json([
-//             'status' => true,
-//             'data' => [
-//                 'plan' => 'free',
-//                 'features' => []
-//             ]
-//         ]);
-//     }
-
-//     return response()->json([
-//         'status' => true,
-//         'data' => $subscription
-//     ]);
-    
-// }
 
 public function mySubscription(Request $request)
 {
@@ -225,4 +202,60 @@ public function mySubscription(Request $request)
             'data' => $subscription
         ]);
     }
+
+    public function assignFreePlanToAllUsers()
+{
+    // ✅ Free plan nikalo
+    $freePlan = SubscriptionPlan::where('is_free', 1)->first();
+
+    if (!$freePlan) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Free plan not found'
+        ]);
+    }
+
+    // ✅ Plan ke features load karo
+    $planFeatures = PlanFeature::where('plan_id', $freePlan->id)->get();
+
+    // ✅ Un users ko nikalo jinke paas koi subscription nahi hai
+    $users = User::whereDoesntHave('subscriptions')->get();
+
+    $createdCount = 0;
+
+    foreach ($users as $user) {
+
+        // ✅ Subscription create karo
+        $subscription = UserSubscription::create([
+            'user_id' => $user->id,
+            'plan_id' => $freePlan->id,
+            'payment_status' => 'paid',
+            'payment_method' => 'system',
+            'start_date' => now(),
+            'end_date' => now()->addMonth(), // 🔥 monthly free plan
+            'is_active' => 1,
+        ]);
+
+        // ✅ Features assign karo
+        foreach ($planFeatures as $feature) {
+            UserSubscriptionFeature::create([
+                'user_subscription_id' => $subscription->id,
+                'feature' => $feature->feature,
+                'limit_value' => $feature->value,
+                'used_value' => 0,
+                'unit' => $feature->unit,
+                'reset_period' => 'monthly',
+                'last_reset_date' => now(),
+            ]);
+        }
+
+        $createdCount++;
+    }
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Free plan assigned successfully',
+        'total_users_updated' => $createdCount
+    ]);
+}
 }

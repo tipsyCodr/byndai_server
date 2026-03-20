@@ -89,6 +89,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserLink::class, 'user_id', 'id');
     }
-
+    public function subscriptions()
+    {
+      return $this->hasMany(UserSubscription::class, 'user_id');
+    }
 
 }
