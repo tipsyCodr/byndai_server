@@ -676,6 +676,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'getProfileProductClicks',
     ]);
 
+    // subscription plan apis
+
      Route::get('/get-subscription-plan', [
         SubscriptionPlanController::class,
       'index'
@@ -774,7 +776,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Extra
     Route::get('/subscription/{id}', [UserSubscriptionFeatureController::class, 'getBySubscription']);
     Route::post('/{id}/increment', [UserSubscriptionFeatureController::class, 'incrementUsage']);
-
+    Route::post('/check-feature', [UserSubscriptionFeatureController::class, 'checkFeature']);
 
     // api for post end..........
 
