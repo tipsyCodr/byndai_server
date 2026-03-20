@@ -8,6 +8,10 @@ use App\Models\ConnectionRequest;
 use App\Models\MasterUserDetail;
 use App\Models\PhoneVerification;
 use App\Models\User;
+use App\Models\UserSubscriptionFeature;
+use App\Models\PlanFeature;
+use App\Models\UserSubscription;
+use App\Models\SubscriptionPlan;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -529,6 +533,57 @@ class AuthApiController extends Controller
             // $user->otp = $otp;
             $user->remember_token = $tokenString;
             $user->save();
+
+            $plan = SubscriptionPlan::where('is_free', 1)
+                    ->where('status', 1)
+                    ->first();
+
+            $startDate = now();
+
+            switch ($plan->type) {
+                case 'daily':
+                    $endDate = now()->addDay();
+                    break;
+                case 'weekly':
+                    $endDate = now()->addWeek();
+                    break;
+                case 'monthly':
+                    $endDate = now()->addMonth();
+                    break;
+                case 'quarterly':
+                    $endDate = now()->addMonths(3);
+                    break;
+                case 'yearly':
+                    $endDate = now()->addYear();
+                    break;
+                default:
+                    $endDate = now()->addMonth();
+            } 
+
+            $subscription = UserSubscription::create([
+              'user_id' => $user->id,
+              'plan_id' => $plan->id,
+              'payment_status' => null,
+              'payment_id' => null,
+              'payment_method' => null,
+              'start_date' => $startDate,
+              'end_date' => $endDate,
+              'is_active' => 1,
+            ]);
+
+            $planFeatures = PlanFeature::where('plan_id', $plan->id)->get();
+
+            foreach ($planFeatures as $feature) {
+                UserSubscriptionFeature::create([
+                    'user_subscription_id' => $subscription->id,
+                    'feature' => $feature->feature,
+                    'limit_value' => $feature->value,
+                    'used_value' => 0,
+                    'unit' => $feature->unit,
+                    'reset_period' => $plan->type,
+                    'last_reset_date' => now(),
+                ]);
+            }
 
             $master = new MasterUserDetail;
             $master->fname = $r->name;
