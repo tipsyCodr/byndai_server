@@ -254,7 +254,7 @@ public function mySubscription(Request $request)
                 'feature' => $feature->feature,                
                 'used_value' => 0,
                 'unit' => $feature->unit,
-                'reset_period' => null,
+                'reset_period' => $freePlan->type,
                 'last_reset_date' => now(),
             ]);
         }
