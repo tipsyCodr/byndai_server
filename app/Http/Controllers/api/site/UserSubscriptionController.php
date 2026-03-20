@@ -73,7 +73,7 @@ class UserSubscriptionController extends Controller
     ]);
 }
 
-    // ✅ Create subscription
+    // ✅ Create subscription..........
     public function store(Request $request)
     {
         $request->validate([
