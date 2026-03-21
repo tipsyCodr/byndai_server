@@ -10,16 +10,18 @@ class PlanFeature extends Model
 
     protected $fillable = [
         'plan_id',
-        'feature',
-        'value',//feature limit
+        'feature_id',
+        'value',
         'unit'
     ];
 
-    /**
-     * Ek feature ek plan se belong karta hai
-     */
     public function plan()
     {
         return $this->belongsTo(SubscriptionPlan::class, 'plan_id');
+    }
+
+    public function feature()
+    {
+        return $this->belongsTo(Feature::class, 'feature_id');
     }
 }
