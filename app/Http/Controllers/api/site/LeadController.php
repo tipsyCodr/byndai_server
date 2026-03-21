@@ -99,6 +99,7 @@ class LeadController extends Controller
     // ==========================
     public function store(Request $request)
     {
+
         $request->validate([
             'name' => 'required|string',
 
@@ -806,8 +807,32 @@ class LeadController extends Controller
 
     public function helperFunctionTest(Request $request)
 {
-    $userId = current_user_id(); // direct call
+    $featureId = $request->feature_id; // ya manually bhi de sakte ho
 
-    return $userId;
+    $result = checkUserFeatureLimit($featureId);
+
+    // ❌ Agar kuch error hai
+    if (!$result['status']) {
+        return response()->json([
+            'success' => false,
+            'message' => $result['message']
+        ]);
+    }
+
+    // ❌ Limit exceed ho gaya
+    if ($result['is_exceeded']) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Feature limit exceeded',
+            'data' => $result
+        ]);
+    }
+
+    // ✅ Allowed
+    return response()->json([
+        'success' => true,
+        'message' => 'Feature allowed',
+        'data' => $result
+    ]);
 }
 }
