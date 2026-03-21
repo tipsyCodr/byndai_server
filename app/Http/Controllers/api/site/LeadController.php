@@ -98,7 +98,25 @@ class LeadController extends Controller
     // STORE
     // ==========================
     public function store(Request $request)
-    {
+    { 
+        $featureId = getFeatureId('leads_create');
+        $check = checkUserFeatureLimit($featureId);
+        // ❌ Agar kuch error hai
+        if (!$check['status']) {
+            return response()->json([
+                'success' => false,
+                'message' => $check['message']
+            ]);
+        }
+
+        // ❌ Limit exceed ho gaya
+        if ($check['is_exceeded']) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Feature limit exceeded',
+                'data' => $check
+            ]);
+        }
 
         $request->validate([
             'name' => 'required|string',
