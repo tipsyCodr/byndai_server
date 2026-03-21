@@ -251,7 +251,7 @@ public function mySubscription(Request $request)
         foreach ($planFeatures as $feature) {
             UserSubscriptionFeature::create([
                 'user_subscription_id' => $subscription->id,
-                'feature' => $feature->feature,                
+                'feature_id' => $feature->feature_id || 0,                
                 'used_value' => 0,
                 'unit' => $feature->unit,
                 'reset_period' => $freePlan->type,
@@ -310,7 +310,7 @@ public function mySubscription(Request $request)
        foreach ($plan->features as $feature) {
            UserSubscriptionFeature::create([
                'user_subscription_id' => $subscription->id,
-               'feature' => $feature->feature,
+               'feature_id' => $feature->feature_id || 0,
                'used_value' => 0,
                'unit' => $feature->unit,
                'reset_period' => $plan->type, // monthly/yearly
