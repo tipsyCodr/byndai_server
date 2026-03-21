@@ -73,8 +73,8 @@ Route::post('/check-email', [AuthApiController::class, 'checkEmail']);
 // Route::put('/leads/{id}', [LeadController::class, 'update']);
 // Route::delete('/leads/{id}', [LeadController::class, 'destroy']);
 // Route::get('/leads-list-by-user-id', [LeadController::class, 'getByUserId']);
-// Route::post('/ocr-extract', [LeadController::class, 'ocrExtract']);
-// Route::post('/gpt-ocr', [PostApiController::class, 'gptOcr']);
+Route::post('/ocr-extract', [LeadController::class, 'ocrExtract']);
+Route::post('/gpt-ocr', [PostApiController::class, 'gptOcr']);
 // Route::get('/user/{id}/master-links', [MasterLinkController::class, 'getUserLinksById']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
@@ -85,8 +85,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('/leads/{id}', [LeadController::class, 'update']);
     Route::delete('/leads/{id}', [LeadController::class, 'destroy']);
     Route::get('/leads-list-by-user-id', [LeadController::class, 'getByUserId']);
-    Route::post('/ocr-extract', [LeadController::class, 'ocrExtract']);
-    Route::post('/gpt-ocr', [PostApiController::class, 'gptOcr']);
+    // Route::post('/ocr-extract', [LeadController::class, 'ocrExtract']);
+    // Route::post('/gpt-ocr', [PostApiController::class, 'gptOcr']);
     Route::get('/user/{id}/master-links', [MasterLinkController::class, 'getUserLinksById']);
 
     Route::get('/master-country', [MasterApiController::class, 'getCountry']);
