@@ -100,7 +100,16 @@ class LeadController extends Controller
     public function store(Request $request)
     { 
         $featureId = getFeatureId('leads_create');
+
+        if (!$featureId) {
+          return response()->json([
+              'success' => false,
+              'message' => 'Invalid feature configuration'
+          ]);
+        }
+
         $check = checkUserFeatureLimit($featureId);
+        
         // ❌ Agar kuch error hai
         if (!$check['status']) {
             return response()->json([
@@ -128,7 +137,7 @@ class LeadController extends Controller
             'address' => 'nullable|string',
 
             'category' => 'nullable|integer',
-            'user_id' => 'required|integer',
+            // 'user_id' => 'required|integer',
 
             'lead_image' => 'nullable|string',
             'image_filename' => 'nullable|string',
@@ -146,6 +155,8 @@ class LeadController extends Controller
             'selfy_video' => 'nullable|string',
         ]);
 
+        $user = auth()->user();
+
         $leadData = [
             'name' => $request->name,
             'company_name' => $request->company_name ?? '',
@@ -155,7 +166,8 @@ class LeadController extends Controller
             'address' => $request->address ?? '',
 
             'category' => $request->category ?? null,
-            'user_id' => $request->user_id,
+            // 'user_id' => $request->user_id,
+            'user_id' => $user->id,
 
             'mobile_no_1' => $request->mobile_no_1,
             'mobile_no_2' => $request->mobile_no_2 ?? null,
@@ -235,6 +247,8 @@ class LeadController extends Controller
         if ($lead->selfy_video) {
             $lead->selfy_video_url = asset('storage/'.$lead->selfy_video);
         }
+
+        incrementFeatureUsage($featureId);
 
         return response()->json([
             'success' => true,

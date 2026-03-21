@@ -175,3 +175,38 @@ if (!function_exists('checkUserFeatureLimit')) {
         }
     }
 }
+
+if (!function_exists('incrementFeatureUsage')) {
+
+    function incrementFeatureUsage($featureId, $incrementBy = 1)
+    {
+        try {
+            // ✅ Auth user
+            $user = auth()->user();
+            if (!$user) return false;
+
+            // ✅ Active subscription
+            $subscription = UserSubscription::where('user_id', $user->id)
+                ->where('is_active', 1)
+                ->first();
+
+            if (!$subscription) return false;
+
+            // ✅ User feature row
+            $userFeature = UserSubscriptionFeature::where('user_subscription_id', $subscription->id)
+                ->where('feature_id', $featureId)
+                ->first();
+
+            if (!$userFeature) return false;
+
+            // ✅ Increment usage
+            $userFeature->increment('used_value', $incrementBy);
+
+            return true;
+
+        } catch (\Exception $e) {
+            \Log::error('Feature usage increment error: ' . $e->getMessage());
+            return false;
+        }
+    }
+}
