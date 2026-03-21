@@ -63,7 +63,7 @@ public function mySubscription(Request $request)
 
         return [
             'id' => $feature->id,
-            'feature' => $feature->feature,
+            'feature_id' => $feature->feature_id,
             'used_value' => $feature->used_value,
             'limit_value' => $planFeature->value ?? null, // 🔥 yahi main cheez
             'unit' => $feature->unit,

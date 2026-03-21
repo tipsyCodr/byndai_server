@@ -776,7 +776,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         UserSubscriptionFeatureController::class,
      'destroy'
     ]);
-
+    // api call  register user page
     Route::get('user/subscription', [UserSubscriptionController::class, 'mySubscription']);
     Route::post('/assign-free-subscription', [UserSubscriptionController::class, 'assignFreeSubscription']);
     // Extra

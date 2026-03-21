@@ -24,13 +24,13 @@ class UserSubscriptionFeatureController extends Controller
     {
         $request->validate([
             'user_subscription_id' => 'required|exists:user_subscriptions,id',
-            'feature' => 'required|string|max:255',
+            
             
         ]);
 
         $feature = UserSubscriptionFeature::create([
             'user_subscription_id' => $request->user_subscription_id,
-            'feature' => $request->feature,            
+            'feature_id' => $request->feature_id,            
             'used_value' => $request->used_value ?? 0,
             'unit' => $request->unit,
             'reset_period' => $request->reset_period,
@@ -162,7 +162,7 @@ class UserSubscriptionFeatureController extends Controller
 {
     $request->validate([
         'user_id' => 'required|exists:users,id',
-        'feature' => 'required|string'
+        'feature_id' => 'required|integer'
     ]);
 
     // get active subscription
