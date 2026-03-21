@@ -68,7 +68,6 @@ Route::post('/google-register', [AuthApiController::class, 'googleRegister']);
 Route::post('/check-email', [AuthApiController::class, 'checkEmail']);
 
 Route::get('/leads', [LeadController::class, 'index']);
-Route::get('/leads-helper', [LeadController::class, 'helperFunctionTest']);
 Route::post('/leads', [LeadController::class, 'store']);
 Route::get('/leads/{id}', [LeadController::class, 'show']);
 Route::put('/leads/{id}', [LeadController::class, 'update']);
@@ -785,6 +784,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/{id}/increment', [UserSubscriptionFeatureController::class, 'incrementUsage']);
     Route::post('/check-feature', [UserSubscriptionFeatureController::class, 'checkFeature']);
     Route::post('/upgrade-plan', [UserSubscriptionController::class, 'upgradeUserPlan']);
+    Route::get('/leads-helper', [LeadController::class, 'helperFunctionTest']);
 
     // api for post end...
 
