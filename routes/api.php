@@ -68,6 +68,7 @@ Route::post('/google-register', [AuthApiController::class, 'googleRegister']);
 Route::post('/check-email', [AuthApiController::class, 'checkEmail']);
 
 Route::get('/leads', [LeadController::class, 'index']);
+Route::get('/leads-helper', [LeadController::class, 'helperFunctionTest']);
 Route::post('/leads', [LeadController::class, 'store']);
 Route::get('/leads/{id}', [LeadController::class, 'show']);
 Route::put('/leads/{id}', [LeadController::class, 'update']);

@@ -803,4 +803,11 @@ class LeadController extends Controller
 
         return preg_match('/\d+/', $text) && preg_match('/[a-zA-Z]/', $text);
     }
+
+    public function helperFunctionTest(Request $request)
+{
+    $userId = current_user_id(); // direct call
+
+    return $userId;
+}
 }
