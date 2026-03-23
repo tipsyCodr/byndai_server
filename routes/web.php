@@ -33,5 +33,5 @@ Route::middleware(['auth'])->group(function () {
 
 Route::get('/product/{id}', [IndexController::class, 'product'])->name('single-product');
 
-Route::post('/reviews/generate', [ReviewController::class, 'generateReview'])->name('reviews.generate');
+Route::post('/reviews/generate', [ReviewController::class, 'generateReview'])->name('reviews.generate.web');
 Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');

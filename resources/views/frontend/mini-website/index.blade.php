@@ -625,7 +625,7 @@
                             generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating AI Review...';
 
                             try {
-                                const res = await fetch('{{ route('reviews.generate') }}', {
+                                const res = await fetch('{{ route('reviews.generate.web') }}', {
                                     method: 'POST',
                                     headers: {
                                         'Content-Type': 'application/json',
