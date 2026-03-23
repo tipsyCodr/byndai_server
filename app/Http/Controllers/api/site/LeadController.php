@@ -109,7 +109,7 @@ class LeadController extends Controller
         }
 
         $check = checkUserFeatureLimit($featureId);
-        
+        \Log::info('Feature Check', $check);
         // ❌ Agar kuch error hai
         if (!$check['status']) {
             return response()->json([
