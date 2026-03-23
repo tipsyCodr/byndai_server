@@ -343,6 +343,37 @@ class ConnectionApiController extends Controller
 
     public function updateConnectionRequestStatus(Request $request)
     {
+
+        $featureId = getFeatureId('connection_request_accept');
+
+        if (!$featureId) {
+          return response()->json([
+              'success' => false,
+              'message' => 'Invalid feature configuration'
+          ]);
+        }
+
+        $check = checkUserFeatureLimit($featureId);
+        \Log::info('Feature Check', $check);
+        // ❌ Agar kuch error hai
+        if (!$check['status']) {
+            return response()->json([
+                'success' => false,
+                'message' => $check['message']
+            ]);
+        }
+
+        // ❌ Limit exceed ho gaya
+       if ($check['is_exceeded'] === true) {
+           \Log::info('LIMIT BLOCK HIT 🚫');
+
+           return response()->json([
+               'success' => false,
+               'message' => 'Feature limit exceeded',
+               'data' => $check
+           ], 403); // ✅ FIX
+        }
+
         $data = $request->validate([
             'sender_id' => 'required|exists:users,id',
             'receiver_id' => 'required|exists:users,id',
@@ -375,6 +406,8 @@ class ConnectionApiController extends Controller
                 'connected_at' => now(),
             ]);
         }
+
+        incrementFeatureUsage($featureId);
 
         return response()->json([
             'status' => true,
