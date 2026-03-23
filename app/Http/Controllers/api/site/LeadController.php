@@ -94,9 +94,9 @@ class LeadController extends Controller
         ]);
     }
 
-    // ==========================
+    // ==============================
     // STORE
-    // ==========================
+    // =============================
     public function store(Request $request)
     { 
         $featureId = getFeatureId('leads_create');
