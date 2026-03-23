@@ -119,13 +119,14 @@ class LeadController extends Controller
         }
 
         // ❌ Limit exceed ho gaya
-        if ($check['is_exceeded']) {
-            \Log::info('LIMIT BLOCK HIT 🚫');
-            return response()->json([
-                'success' => false,
-                'message' => 'Feature limit exceeded',
-                'data' => $check
-            ], 201);
+       if ($check['is_exceeded'] === true) {
+           \Log::info('LIMIT BLOCK HIT 🚫');
+
+           return response()->json([
+               'success' => false,
+               'message' => 'Feature limit exceeded',
+               'data' => $check
+           ], 403); // ✅ FIX
         }
 
         $request->validate([
