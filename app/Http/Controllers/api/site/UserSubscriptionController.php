@@ -59,7 +59,7 @@ public function mySubscription(Request $request)
     // ✅ Plan features ek hi query me load  
     $planFeatures = PlanFeature::where('plan_id', $subscription->plan_id)
         ->get()
-        ->keyBy('feature'); // 🔥 fast lookup
+        ->keyBy('feature_id'); // 🔥 fast lookup
 
       Log::info('📊2. Plan Features:', [
         'planFeatures' => $planFeatures->toArray()
