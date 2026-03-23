@@ -70,7 +70,8 @@ public function mySubscription(Request $request)
 
         Log::info('🚨 3.Check  $feature Columns:', $feature->toArray());
 
-        $planFeature = $planFeatures->get($feature->feature);
+        // $planFeature = $planFeatures->get($feature->feature);
+        $planFeature = $planFeatures->get($feature->feature_id);
 
         return [
             'id' => $feature->id,
