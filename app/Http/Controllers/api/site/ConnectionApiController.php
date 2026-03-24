@@ -78,6 +78,43 @@ class ConnectionApiController extends Controller
         return response()->json(['status' => true, 'message' => 'Connection request sent successfully', 'data' => $create_connection], 201);
     }
 
+     public function scannerConnectionCreate(Request $r)
+    {
+        $data = $r->validate([
+            'receiver_id' => 'required|exists:users,id',
+        ]);
+        $sender_id = Auth::id();
+
+        Log::info('Scdanner connection Sender ID:', [
+               'sender_id' => $sender_id
+           ]);
+
+        if ($sender_id == $data['receiver_id']) {
+            return response()->json(['status' => false, 'message' => 'You cannot send a request to yourself'], 400);
+        }
+        $existing = ConnectionRequest::where('sender_id', $sender_id)->where('receiver_id', $data['receiver_id'])->where('request_type', 'friend_request')->latest('requested_at')->first();
+        if ($existing) {
+            // Case 1: Pending or Accepted request already exists
+            if (in_array($existing->status, [0, 2])) {
+                return response()->json(['status' => false, 'message' => 'Request already sent or exists'], 409);
+            }
+            // Case 2: If Rejected (status = 1), check time gap
+            if ($existing->status == 1) {
+                $hoursPassed = now()->diffInHours($existing->requested_at);
+                if ($hoursPassed < 24) {
+                    $remaining = 24 - $hoursPassed;
+
+                    return response()->json(['status' => false, 'message' => "You can send a new request after $remaining hour(s)"], 429);
+                }
+            }
+        }
+        $create_connection = ConnectionRequest::create(['sender_id' => $sender_id, 'receiver_id' => $data['receiver_id'], 'request_type' => 'friend_request', 'status' => 0, 'requested_at' => now()]);
+
+        $this->sendFcmConnectionRequestNotification($sender_id, $data['receiver_id']);
+
+        return response()->json(['status' => true, 'message' => 'Connection request sent successfully', 'data' => $create_connection], 201);
+    }
+
     public function connectionAccept($rid)
     {
         $users = Auth::user();
@@ -600,55 +637,7 @@ class ConnectionApiController extends Controller
         ], 200);
     }
 
-    // public function deleteConnectionRequest(Request $request)
-    // {
-    //     $data = $request->validate([
-    //         'sender_id' => 'required|exists:users,id',
-    //         'receiver_id' => 'required|exists:users,id',
-    //         'status' => 'nullable|in:0,1,2',
-    //     ]);
-
-    //     // ✅ optional security: only sender/receiver hi delete kar sake
-    //     $authId = Auth::id();
-
-    //     if ($authId != $data['sender_id'] && $authId != $data['receiver_id']) {
-    //         return response()->json([
-    //             'status' => false,
-    //             'message' => 'Unauthorized: You cannot delete this request',
-    //         ], 403);
-    //     }
-
-    //     // 🔍 find request
-    //     $query = ConnectionRequest::where('sender_id', $data['sender_id'])
-    //         ->where('receiver_id', $data['receiver_id']);
-
-    //     // ✅ agar status bhi pass hua hai to status bhi match karega
-    //     if (isset($data['status'])) {
-    //         $query->where('status', $data['status']);
-    //     }
-
-    //     $requestRow = $query->first();
-
-    //     if (! $requestRow) {
-    //         return response()->json([
-    //             'status' => false,
-    //             'message' => 'Connection request not found',
-    //         ], 404);
-    //     }
-
-    //     // 🗑 delete
-    //     $requestRow->delete();
-
-    //     return response()->json([
-    //         'status' => true,
-    //         'message' => 'Connection request deleted successfully',
-    //         'data' => [
-    //             'sender_id' => $data['sender_id'],
-    //             'receiver_id' => $data['receiver_id'],
-    //             'status' => $requestRow->status,
-    //         ],
-    //     ], 200);
-    // }
+    
 
     public function deleteConnectionRequest(Request $request)
     {

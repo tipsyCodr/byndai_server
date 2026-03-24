@@ -311,6 +311,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'connectionCreate',
     ]);
 
+     Route::post('/scanner-connection-create', [
+        ConnectionApiController::class,
+        'scannerConnectionCreate',
+    ]);
+
     Route::delete('/connections/remove', [
         ConnectionApiController::class,
         'removeConnection',
