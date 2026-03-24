@@ -48,6 +48,37 @@ class ConnectionApiController extends Controller
 
     public function connectionCreate(Request $r)
     {
+
+        $featureId = getFeatureId('connection_request_send');
+
+        if (!$featureId) {
+          return response()->json([
+              'success' => false,
+              'message' => 'Invalid feature configuration'
+          ]);
+        }
+
+        $check = checkUserFeatureLimit($featureId);
+        \Log::info('Feature Check', $check);
+        // ❌ Agar kuch error hai
+        if (!$check['status']) {
+            return response()->json([
+                'success' => false,
+                'message' => $check['message']
+            ]);
+        }
+
+        // ❌ Limit exceed ho gaya
+       if ($check['is_exceeded'] === true) {
+           \Log::info('LIMIT BLOCK HIT 🚫');
+
+           return response()->json([
+               'success' => false,
+               'message' => 'Feature limit exceeded',
+               'data' => $check
+           ], 403); // ✅ FIX
+        }
+       
         $data = $r->validate([
             'receiver_id' => 'required|exists:users,id',
         ]);
@@ -74,6 +105,8 @@ class ConnectionApiController extends Controller
         $create_connection = ConnectionRequest::create(['sender_id' => $sender_id, 'receiver_id' => $data['receiver_id'], 'request_type' => 'friend_request', 'status' => 0, 'requested_at' => now()]);
 
         $this->sendFcmConnectionRequestNotification($sender_id, $data['receiver_id']);
+
+        incrementFeatureUsage($featureId);
 
         return response()->json(['status' => true, 'message' => 'Connection request sent successfully', 'data' => $create_connection], 201);
     }
