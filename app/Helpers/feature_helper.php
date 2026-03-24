@@ -19,6 +19,7 @@ if (!function_exists('getFeatureId')) {
             'leads_create'              => 3,
             'generate_ai_feedback'      => 4,
             'profile_view'              => 5,
+            'ai_generated_feedback'     => 6,
         ];
 
         // 🔥 Cache key

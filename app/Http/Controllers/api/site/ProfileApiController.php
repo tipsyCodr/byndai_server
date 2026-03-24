@@ -302,7 +302,7 @@ class ProfileApiController extends Controller
             ]);
         } else {
 
-$featureId = getFeatureId('profile_view');
+        $featureId = getFeatureId('profile_view');
 
         if (!$featureId) {
           return response()->json([
