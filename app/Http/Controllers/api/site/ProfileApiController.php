@@ -351,4 +351,60 @@ class ProfileApiController extends Controller
         ], 500);
       }
     }
+
+     public function downloadFlyer()
+    {
+      try {
+        // Auth se login user id
+        $authUserId = auth()->id();
+        
+
+        $featureId = getFeatureId('create-flyer');
+
+        if (!$featureId) {
+          return response()->json([
+              'success' => false,
+              'message' => 'Invalid feature configuration'
+          ]);
+        }
+
+        $check = checkUserFeatureLimit($featureId);
+        \Log::info('Feature Check', $check);
+        // ❌ Agar kuch error hai
+        if (!$check['status']) {
+            return response()->json([
+                'success' => false,
+                'message' => $check['message']
+            ]);
+        }
+
+        // ❌ Limit exceed ho gaya
+       if ($check['is_exceeded'] === true) {
+           \Log::info('LIMIT BLOCK HIT 🚫');
+
+           return response()->json([
+               'success' => false,
+               'message' => 'Feature limit exceeded',
+               'data' => $check
+           ], 403); // ✅ FIX
+        }
+
+
+         incrementFeatureUsage($featureId);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'create flyer successfully',
+                
+            ]);
+        
+
+      } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'error',
+            'error' => $e->getMessage()
+        ], 500);
+      }
+    }
 }

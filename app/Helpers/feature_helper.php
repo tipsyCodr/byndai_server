@@ -20,6 +20,7 @@ if (!function_exists('getFeatureId')) {
             'generate_ai_feedback'      => 4,
             'profile_view'              => 5,
             'ai_generated_feedback'     => 6,
+            'create-flyer'              => 7,
         ];
 
         // 🔥 Cache key

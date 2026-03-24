@@ -135,6 +135,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'viewProfile',
     ]);
 
+     Route::post('/download-flyer', [
+        ProfileApiController::class,
+        'downloadFlyer',
+    ]);
+
     Route::post('/customer-master/index', [
         CustomerMasterApiController::class,
         'index',
