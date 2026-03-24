@@ -293,6 +293,7 @@ class ProfileApiController extends Controller
 
         // Check same or not
         if ($authUserId == $profileId) {
+            
             return response()->json([
                 'success' => true,
                 'message' => 'same',
@@ -300,6 +301,40 @@ class ProfileApiController extends Controller
                 'profile_id' => $profileId
             ]);
         } else {
+
+$featureId = getFeatureId('profile_view');
+
+        if (!$featureId) {
+          return response()->json([
+              'success' => false,
+              'message' => 'Invalid feature configuration'
+          ]);
+        }
+
+        $check = checkUserFeatureLimit($featureId);
+        \Log::info('Feature Check', $check);
+        // ❌ Agar kuch error hai
+        if (!$check['status']) {
+            return response()->json([
+                'success' => false,
+                'message' => $check['message']
+            ]);
+        }
+
+        // ❌ Limit exceed ho gaya
+       if ($check['is_exceeded'] === true) {
+           \Log::info('LIMIT BLOCK HIT 🚫');
+
+           return response()->json([
+               'success' => false,
+               'message' => 'Feature limit exceeded',
+               'data' => $check
+           ], 403); // ✅ FIX
+        }
+
+
+         incrementFeatureUsage($featureId);
+
             return response()->json([
                 'success' => true,
                 'message' => 'not match',
