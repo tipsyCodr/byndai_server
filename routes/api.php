@@ -130,6 +130,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'BusinessInfo',
     ]);
 
+     Route::post('/view-profile', [
+        ProfileApiController::class,
+        'viewProfile',
+    ]);
+
     Route::post('/customer-master/index', [
         CustomerMasterApiController::class,
         'index',
