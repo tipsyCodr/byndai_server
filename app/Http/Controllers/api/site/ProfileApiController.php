@@ -407,4 +407,61 @@ class ProfileApiController extends Controller
         ], 500);
       }
     }
+    
+
+     public function showMiniWebsite()
+    {
+      try {
+        // Auth se login user id
+        $authUserId = auth()->id();
+        
+
+        $featureId = getFeatureId('mini-website');
+
+        if (!$featureId) {
+          return response()->json([
+              'success' => false,
+              'message' => 'Invalid feature configuration'
+          ]);
+        }
+
+        $check = checkUserFeatureLimit($featureId);
+        \Log::info('Feature Check', $check);
+        // ❌ Agar kuch error hai
+        if (!$check['status']) {
+            return response()->json([
+                'success' => false,
+                'message' => $check['message']
+            ]);
+        }
+
+        // ❌ Limit exceed ho gaya
+       if ($check['is_exceeded'] === true) {
+           \Log::info('LIMIT BLOCK HIT 🚫');
+
+           return response()->json([
+               'success' => false,
+               'message' => 'Feature limit exceeded',
+               'data' => $check
+           ], 403); // ✅ FIX
+        }
+
+
+         incrementFeatureUsage($featureId);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'send mini-website-link successfully',
+                
+            ]);
+        
+
+      } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'error',
+            'error' => $e->getMessage()
+        ], 500);
+      }
+    }
 }
