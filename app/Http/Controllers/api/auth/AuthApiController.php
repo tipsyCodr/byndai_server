@@ -609,19 +609,20 @@ class AuthApiController extends Controller
             // =======================================
             // 1. CHECK CONNECTION EXISTS
             // =======================================
+          
             $connectionExists = Connection::where(function ($q) use ($systemUserId, $newUserId) {
-                $q->where('sender_id', $systemUserId)
-                  ->where('receiver_id', $newUserId);
+                $q->where('user_id', $systemUserId)
+                  ->where('friend_id', $newUserId);
             })->orWhere(function ($q) use ($systemUserId, $newUserId) {
-                $q->where('sender_id', $newUserId)
-                  ->where('receiver_id', $systemUserId);
+                $q->where('user_id', $newUserId)
+                  ->where('friend_id', $systemUserId);
             })->exists();
             
             if (!$connectionExists) {
                 Connection::create([
-                    'sender_id' => $systemUserId,
-                    'receiver_id' => $newUserId,
-                    'status' => 2, // accepted
+                    'user_id' => $systemUserId,
+                    'friend_id' => $newUserId,
+                    'connected_at' => now(),
                 ]);
             }
             
