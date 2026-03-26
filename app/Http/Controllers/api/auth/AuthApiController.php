@@ -12,6 +12,8 @@ use App\Models\UserSubscriptionFeature;
 use App\Models\PlanFeature;
 use App\Models\UserSubscription;
 use App\Models\SubscriptionPlan;
+use App\Models\Chat;
+use App\Models\ChatMessage;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -534,6 +536,8 @@ class AuthApiController extends Controller
             $user->remember_token = $tokenString;
             $user->save();
 
+            // register user default subscribe free plan
+
             $plan = SubscriptionPlan::where('is_free', 1)
                     ->where('status', 1)
                     ->first();
@@ -594,6 +598,59 @@ class AuthApiController extends Controller
             DB::commit();
             Auth::login($user);
             $apiToken = $user->createToken('API Token')->plainTextToken;
+
+            //create user connection
+
+            // ✅ system user id
+            $systemUserId = 1;
+            // ✅ new user id
+            $newUserId = $user->id;
+            
+            // =======================================
+            // 1. CHECK CONNECTION EXISTS
+            // =======================================
+            $connectionExists = Connection::where(function ($q) use ($systemUserId, $newUserId) {
+                $q->where('sender_id', $systemUserId)
+                  ->where('receiver_id', $newUserId);
+            })->orWhere(function ($q) use ($systemUserId, $newUserId) {
+                $q->where('sender_id', $newUserId)
+                  ->where('receiver_id', $systemUserId);
+            })->exists();
+            
+            if (!$connectionExists) {
+                Connection::create([
+                    'sender_id' => $systemUserId,
+                    'receiver_id' => $newUserId,
+                    'status' => 2, // accepted
+                ]);
+            }
+            
+            // =======================================
+            // 2. CHECK CHAT EXISTS
+            // =======================================
+            $chat = Chat::where(function ($q) use ($systemUserId, $newUserId) {
+                $q->where('user_one', $systemUserId)
+                  ->where('user_two', $newUserId);
+            })->orWhere(function ($q) use ($systemUserId, $newUserId) {
+                $q->where('user_one', $newUserId)
+                  ->where('user_two', $systemUserId);
+            })->first();
+            
+            // =======================================
+            // 3. CREATE CHAT + MESSAGE IF NOT EXISTS
+            // =======================================
+            if (!$chat) {
+                $chat = Chat::create([
+                    'user_one' => $systemUserId,
+                    'user_two' => $newUserId,
+                ]);
+            
+                ChatMessage::create([
+                    'chat_id' => $chat->id,
+                    'sender_id' => $systemUserId,
+                    'message' => 'Welcome to PathIdea 🚀',
+                ]);
+            }
 
             return response()->json(
                 [
