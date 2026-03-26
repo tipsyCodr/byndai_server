@@ -626,32 +626,51 @@ class AuthApiController extends Controller
                 ]);
             }
             
-            // =======================================
-            // 2. CHECK CHAT EXISTS
-            // =======================================
-            $chat = Chat::where(function ($q) use ($systemUserId, $newUserId) {
-                $q->where('user_one', $systemUserId)
-                  ->where('user_two', $newUserId);
-            })->orWhere(function ($q) use ($systemUserId, $newUserId) {
-                $q->where('user_one', $newUserId)
-                  ->where('user_two', $systemUserId);
-            })->first();
-            
-            // =======================================
-            // 3. CREATE CHAT + MESSAGE IF NOT EXISTS
-            // =======================================
-            if (!$chat) {
-                $chat = Chat::create([
-                    'user_one' => $systemUserId,
-                    'user_two' => $newUserId,
-                ]);
-            
-                ChatMessage::create([
-                    'chat_id' => $chat->id,
-                    'sender_id' => $systemUserId,
-                    'message' => 'Welcome to PathIdea 🚀',
-                ]);
-            }
+           // =======================================
+           // 2. CHECK CHAT EXISTS
+           // =======================================
+           $chat = Chat::where(function ($q) use ($systemUserId, $newUserId) {
+               $q->where('sender_id', $systemUserId)
+                 ->where('receiver_id', $newUserId);
+           })->orWhere(function ($q) use ($systemUserId, $newUserId) {
+               $q->where('sender_id', $newUserId)
+                 ->where('receiver_id', $systemUserId);
+           })->first();
+           
+           
+           // =======================================
+           // 3. CREATE CHAT IF NOT EXISTS
+           // =======================================
+           if (!$chat) {
+               $chat = Chat::create([
+                   'sender_id' => $systemUserId,
+                   'receiver_id' => $newUserId,
+               ]);
+           }
+           
+           
+           // =======================================
+           // 4. CHECK WELCOME MESSAGE EXISTS
+           // =======================================
+           $welcomeMessage = ChatMessage::where('chat_id', $chat->id)
+               ->where('sender_id', $systemUserId)
+               ->where('message', 'Welcome to PathIdea 🚀')
+               ->exists();
+           
+           
+           // =======================================
+           // 5. CREATE MESSAGE IF NOT EXISTS
+           // =======================================
+           if (!$welcomeMessage) {
+               ChatMessage::create([
+                   'chat_id'        => $chat->id,
+                   'sender_id'      => $systemUserId,
+                   'message'        => 'Welcome to PathIdea 🚀',
+                   'is_read'        => 0,
+                   'is_deleted'     => 0,
+                   'is_delivered'   => 1,
+               ]);
+           }
 
             return response()->json(
                 [
