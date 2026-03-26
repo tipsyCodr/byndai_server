@@ -602,7 +602,7 @@ class AuthApiController extends Controller
             //create user connection
 
             // ✅ system user id
-            $systemUserId = 37;
+            $systemUserId = 35;
             // ✅ new user id
             $newUserId = $user->id;
             
