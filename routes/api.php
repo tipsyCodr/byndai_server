@@ -31,6 +31,7 @@ use App\Http\Controllers\api\site\SubscriptionPlanController;
 use App\Http\Controllers\api\site\PlanFeatureController;
 use App\Http\Controllers\api\site\UserSubscriptionController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\api\site\TransactionApiController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/test-notification', [NotificationController::class, 'test']);
@@ -815,6 +816,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/check-feature', [UserSubscriptionFeatureController::class, 'checkFeature']);
     Route::post('/upgrade-plan', [UserSubscriptionController::class, 'upgradeUserPlan']);
     Route::get('/leads-helper', [LeadController::class, 'helperFunctionTest']);
+
+    //Transaction api
+    Route::post('/create-order', [TransactionApiController::class, 'createOrder']);
+    Route::post('/verify-payment', [TransactionApiController::class, 'verifyPayment']);
+   
+
 
     // api for post end...
 
