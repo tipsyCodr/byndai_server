@@ -12,6 +12,8 @@ use App\Models\UserSubscriptionFeature;
 use App\Models\PlanFeature;
 use App\Models\UserSubscription;
 use App\Models\SubscriptionPlan;
+use App\Models\Chat;
+use App\Models\ChatMessage;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -534,6 +536,8 @@ class AuthApiController extends Controller
             $user->remember_token = $tokenString;
             $user->save();
 
+            // register user default subscribe free plan
+
             $plan = SubscriptionPlan::where('is_free', 1)
                     ->where('status', 1)
                     ->first();
@@ -576,7 +580,7 @@ class AuthApiController extends Controller
             foreach ($planFeatures as $feature) {
                 UserSubscriptionFeature::create([
                     'user_subscription_id' => $subscription->id,
-                    'feature' => $feature->feature,                    
+                    'feature_id' => $feature->feature_id,                    
                     'used_value' => 0,
                     'unit' => $feature->unit,
                     'reset_period' => $plan->type,
@@ -594,6 +598,79 @@ class AuthApiController extends Controller
             DB::commit();
             Auth::login($user);
             $apiToken = $user->createToken('API Token')->plainTextToken;
+
+            //create user connection
+
+            // ✅ system user id
+            $systemUserId = 35;
+            // ✅ new user id
+            $newUserId = $user->id;
+            
+            // =======================================
+            // 1. CHECK CONNECTION EXISTS
+            // =======================================
+          
+            $connectionExists = Connection::where(function ($q) use ($systemUserId, $newUserId) {
+                $q->where('user_id', $systemUserId)
+                  ->where('friend_id', $newUserId);
+            })->orWhere(function ($q) use ($systemUserId, $newUserId) {
+                $q->where('user_id', $newUserId)
+                  ->where('friend_id', $systemUserId);
+            })->exists();
+            
+            if (!$connectionExists) {
+                Connection::create([
+                    'user_id' => $systemUserId,
+                    'friend_id' => $newUserId,
+                    'connected_at' => now(),
+                ]);
+            }
+            
+           // =======================================
+           // 2. CHECK CHAT EXISTS
+           // =======================================
+           $chat = Chat::where(function ($q) use ($systemUserId, $newUserId) {
+               $q->where('sender_id', $systemUserId)
+                 ->where('receiver_id', $newUserId);
+           })->orWhere(function ($q) use ($systemUserId, $newUserId) {
+               $q->where('sender_id', $newUserId)
+                 ->where('receiver_id', $systemUserId);
+           })->first();
+           
+           
+           // =======================================
+           // 3. CREATE CHAT IF NOT EXISTS
+           // =======================================
+           if (!$chat) {
+               $chat = Chat::create([
+                   'sender_id' => $systemUserId,
+                   'receiver_id' => $newUserId,
+               ]);
+           }
+           
+           
+           // =======================================
+           // 4. CHECK WELCOME MESSAGE EXISTS
+           // =======================================
+           $welcomeMessage = ChatMessage::where('chat_id', $chat->id)
+               ->where('sender_id', $systemUserId)
+               ->where('message', 'Welcome to PathIdea 🚀')
+               ->exists();
+           
+           
+           // =======================================
+           // 5. CREATE MESSAGE IF NOT EXISTS
+           // =======================================
+           if (!$welcomeMessage) {
+               ChatMessage::create([
+                   'chat_id'        => $chat->id,
+                   'sender_id'      => $systemUserId,
+                   'message'        => 'Welcome to PathIdea 🚀',
+                   'is_read'        => 0,
+                   'is_deleted'     => 0,
+                   'is_delivered'   => 1,
+               ]);
+           }
 
             return response()->json(
                 [
@@ -986,6 +1063,59 @@ class AuthApiController extends Controller
             $master->email_one = $request->email;
             $master->user_id = $user->id;
             $master->save();
+
+            // ---------------------------
+            // FREE PLAN ASSIGN
+            // ---------------------------
+            $plan = SubscriptionPlan::where('is_free', 1)
+                ->where('status', 1)
+                ->first();
+
+            $startDate = now();
+
+            switch ($plan->type) {
+                case 'daily':
+                    $endDate = now()->addDay();
+                    break;
+                case 'weekly':
+                    $endDate = now()->addWeek();
+                    break;
+                case 'monthly':
+                    $endDate = now()->addMonth();
+                    break;
+                case 'quarterly':
+                    $endDate = now()->addMonths(3);
+                    break;
+                case 'yearly':
+                    $endDate = now()->addYear();
+                    break;
+                default:
+                    $endDate = now()->addMonth();
+            }
+
+            $subscription = UserSubscription::create([
+                'user_id' => $user->id,
+                'plan_id' => $plan->id,
+                'payment_status' => null,
+                'payment_id' => null,
+                'payment_method' => null,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'is_active' => 1,
+            ]);
+            
+            $planFeatures = PlanFeature::where('plan_id', $plan->id)->get();
+
+            foreach ($planFeatures as $feature) {
+                UserSubscriptionFeature::create([
+                    'user_subscription_id' => $subscription->id,
+                    'feature_id' => $feature->feature_id,
+                    'used_value' => 0,
+                    'unit' => $feature->unit,
+                    'reset_period' => $plan->type,
+                    'last_reset_date' => now(),
+                ]);
+            }
 
             DB::commit();
 

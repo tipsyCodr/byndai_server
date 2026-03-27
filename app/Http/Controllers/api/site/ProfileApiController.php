@@ -240,38 +240,7 @@ class ProfileApiController extends Controller
             'message' => 'User profile card fetched successfully',
             'data' => $data,
         ], 200);
-    }
-
-    // public function usersNameProfileData($user_name)
-    // {
-    //     $data1 = User::where('user_name', $user_name)->first();
-
-    //     if (! $data1) {
-    //         return response()->json([
-    //             'status' => false,
-    //             'message' => 'Profile not found',
-    //         ], 404);
-    //     }
-
-    //     $user_id = $data1->id;
-
-    //     $data = MasterUserDetail::with(['user.businessInfo'])
-    //         ->where('user_id', $user_id)
-    //         ->first();
-
-    //     if (! $data) {
-    //         return response()->json([
-    //             'status' => false,
-    //             'message' => 'Profile not found',
-    //         ], 404);
-    //     }
-
-    //     return response()->json([
-    //         'status' => true,
-    //         'message' => 'User profile fetched successfully',
-    //         'data' => $data,
-    //     ], 200);
-    // }
+    }    
 
     public function usersNameProfileData($user_name)
     {
@@ -303,5 +272,196 @@ class ProfileApiController extends Controller
             'message' => 'User profile fetched successfully',
             'data' => $data,
         ], 200);
+    }
+
+    public function viewProfile(Request $request)
+    {
+      try {
+        // Auth se login user id
+        $authUserId = auth()->id();
+
+        // Request se profile_id
+        $profileId = $request->input('profile_id');
+
+        // Validation
+        if (!$profileId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'profile_id required'
+            ], 400);
+        }
+
+        // Check same or not
+        if ($authUserId == $profileId) {
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'same',
+                'auth_user_id' => $authUserId,
+                'profile_id' => $profileId
+            ]);
+        } else {
+
+        $featureId = getFeatureId('profile_view');
+
+        if (!$featureId) {
+          return response()->json([
+              'success' => false,
+              'message' => 'Invalid feature configuration'
+          ]);
+        }
+
+        $check = checkUserFeatureLimit($featureId);
+        \Log::info('Feature Check', $check);
+        // ❌ Agar kuch error hai
+        if (!$check['status']) {
+            return response()->json([
+                'success' => false,
+                'message' => $check['message']
+            ]);
+        }
+
+        // ❌ Limit exceed ho gaya
+       if ($check['is_exceeded'] === true) {
+           \Log::info('LIMIT BLOCK HIT 🚫');
+
+           return response()->json([
+               'success' => false,
+               'message' => 'Feature limit exceeded',
+               'data' => $check
+           ], 403); // ✅ FIX
+        }
+
+
+         incrementFeatureUsage($featureId);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'not match',
+                'auth_user_id' => $authUserId,
+                'profile_id' => $profileId
+            ]);
+        }
+
+      } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'error',
+            'error' => $e->getMessage()
+        ], 500);
+      }
+    }
+
+     public function downloadFlyer()
+    {
+      try {
+        // Auth se login user id
+        $authUserId = auth()->id();
+        
+
+        $featureId = getFeatureId('create-flyer');
+
+        if (!$featureId) {
+          return response()->json([
+              'success' => false,
+              'message' => 'Invalid feature configuration'
+          ]);
+        }
+
+        $check = checkUserFeatureLimit($featureId);
+        \Log::info('Feature Check', $check);
+        // ❌ Agar kuch error hai
+        if (!$check['status']) {
+            return response()->json([
+                'success' => false,
+                'message' => $check['message']
+            ]);
+        }
+
+        // ❌ Limit exceed ho gaya
+       if ($check['is_exceeded'] === true) {
+           \Log::info('LIMIT BLOCK HIT 🚫');
+
+           return response()->json([
+               'success' => false,
+               'message' => 'Feature limit exceeded',
+               'data' => $check
+           ], 403); // ✅ FIX
+        }
+
+
+         incrementFeatureUsage($featureId);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'create flyer successfully',
+                
+            ]);
+        
+
+      } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'error',
+            'error' => $e->getMessage()
+        ], 500);
+      }
+    }
+    
+
+     public function showMiniWebsite()
+    {
+      try {
+        // Auth se login user id
+        $authUserId = auth()->id();
+        
+
+        $featureId = getFeatureId('mini-website');
+
+        if (!$featureId) {
+          return response()->json([
+              'success' => false,
+              'message' => 'Invalid feature configuration'
+          ]);
+        }
+
+        $check = checkUserFeatureLimit($featureId);
+        \Log::info('Feature Check', $check);
+        // ❌ Agar kuch error hai
+        if (!$check['status']) {
+            return response()->json([
+                'success' => false,
+                'message' => $check['message']
+            ]);
+        }
+
+        // ❌ Limit exceed ho gaya
+       if ($check['is_exceeded'] === true) {
+           \Log::info('LIMIT BLOCK HIT 🚫');
+
+           return response()->json([
+               'success' => false,
+               'message' => 'Feature limit exceeded',
+               'data' => $check
+           ], 403); // ✅ FIX
+        }
+
+
+         incrementFeatureUsage($featureId);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'send mini-website-link successfully',
+                
+            ]);
+        
+
+      } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'error',
+            'error' => $e->getMessage()
+        ], 500);
+      }
     }
 }

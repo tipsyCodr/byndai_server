@@ -31,6 +31,7 @@ use App\Http\Controllers\api\site\SubscriptionPlanController;
 use App\Http\Controllers\api\site\PlanFeatureController;
 use App\Http\Controllers\api\site\UserSubscriptionController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\api\site\TransactionApiController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/test-notification', [NotificationController::class, 'test']);
@@ -67,24 +68,24 @@ Route::post('/google-login', [AuthApiController::class, 'googleLogin']);
 Route::post('/google-register', [AuthApiController::class, 'googleRegister']);
 Route::post('/check-email', [AuthApiController::class, 'checkEmail']);
 
-Route::get('/leads', [LeadController::class, 'index']);
-Route::post('/leads', [LeadController::class, 'store']);
-Route::get('/leads/{id}', [LeadController::class, 'show']);
-Route::put('/leads/{id}', [LeadController::class, 'update']);
-Route::delete('/leads/{id}', [LeadController::class, 'destroy']);
-Route::get('/leads-list-by-user-id', [LeadController::class, 'getByUserId']);
+// Route::get('/leads', [LeadController::class, 'index']);
+// Route::post('/leads', [LeadController::class, 'store']);
+// Route::get('/leads/{id}', [LeadController::class, 'show']);
+// Route::put('/leads/{id}', [LeadController::class, 'update']);
+// Route::delete('/leads/{id}', [LeadController::class, 'destroy']);
+// Route::get('/leads-list-by-user-id', [LeadController::class, 'getByUserId']);
 Route::post('/ocr-extract', [LeadController::class, 'ocrExtract']);
 Route::post('/gpt-ocr', [PostApiController::class, 'gptOcr']);
 // Route::get('/user/{id}/master-links', [MasterLinkController::class, 'getUserLinksById']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
 
-    // Route::get('/leads', [LeadController::class, 'index']);
-    // Route::post('/leads', [LeadController::class, 'store']);
-    // Route::get('/leads/{id}', [LeadController::class, 'show']);
-    // Route::put('/leads/{id}', [LeadController::class, 'update']);
-    // Route::delete('/leads/{id}', [LeadController::class, 'destroy']);
-    // Route::get('/leads-list-by-user-id', [LeadController::class, 'getByUserId']);
+    Route::get('/leads', [LeadController::class, 'index']);
+    Route::post('/leads', [LeadController::class, 'store']);
+    Route::get('/leads/{id}', [LeadController::class, 'show']);
+    Route::put('/leads/{id}', [LeadController::class, 'update']);
+    Route::delete('/leads/{id}', [LeadController::class, 'destroy']);
+    Route::get('/leads-list-by-user-id', [LeadController::class, 'getByUserId']);
     // Route::post('/ocr-extract', [LeadController::class, 'ocrExtract']);
     // Route::post('/gpt-ocr', [PostApiController::class, 'gptOcr']);
     Route::get('/user/{id}/master-links', [MasterLinkController::class, 'getUserLinksById']);
@@ -128,6 +129,21 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::match(['get', 'post'], '/business-info', [
         ProfileApiController::class,
         'BusinessInfo',
+    ]);
+
+     Route::post('/view-profile', [
+        ProfileApiController::class,
+        'viewProfile',
+    ]);
+
+    Route::post('/show-mini-website', [
+        ProfileApiController::class,
+        'showMiniWebsite',
+    ]);
+
+        Route::post('/download-flyer', [
+        ProfileApiController::class,
+        'downloadFlyer',
     ]);
 
     Route::post('/customer-master/index', [
@@ -309,6 +325,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/connection-create', [
         ConnectionApiController::class,
         'connectionCreate',
+    ]);
+
+     Route::post('/scanner-connection-create', [
+        ConnectionApiController::class,
+        'scannerConnectionCreate',
     ]);
 
     Route::delete('/connections/remove', [
@@ -795,6 +816,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/check-feature', [UserSubscriptionFeatureController::class, 'checkFeature']);
     Route::post('/upgrade-plan', [UserSubscriptionController::class, 'upgradeUserPlan']);
     Route::get('/leads-helper', [LeadController::class, 'helperFunctionTest']);
+
+    //Transaction api
+    Route::post('/create-order', [TransactionApiController::class, 'createOrder']);
+    Route::post('/verify-payment', [TransactionApiController::class, 'verifyPayment']);
+   
+
 
     // api for post end...
 

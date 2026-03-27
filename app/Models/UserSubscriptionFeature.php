@@ -47,7 +47,8 @@ class UserSubscriptionFeature extends Model
     // Example helper: check if feature usage is exhausted
     public function isExhausted(): bool
     {
-        if (!$this->limit_value || $this->limit_value === 'unlimited') {
+        // if (!$this->limit_value || $this->limit_value === 'unlimited') {
+        if ($this->limit_value == -1 || $this->limit_value === null) {
             return false;
         }
     
@@ -57,7 +58,8 @@ class UserSubscriptionFeature extends Model
     // Example: remaining value
     public function remaining(): int
     {
-        if (!$this->limit_value || $this->limit_value === 'unlimited') {
+        // if (!$this->limit_value || $this->limit_value === 'unlimited') {
+         if ($this->limit_value == -1 || $this->limit_value === null) {
             return PHP_INT_MAX;
         }
     

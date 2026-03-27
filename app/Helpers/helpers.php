@@ -71,22 +71,7 @@ if (!function_exists('checkUserFeatureLimit')) {
                 ];
             }
 
-            // ✅ 4. Sync missing features into user_subscription_features
-            // foreach ($planFeatures as $pf) {
-
-            //     $exists = UserSubscriptionFeature::where('user_subscription_id', $subscriptionId)
-            //         ->where('feature_id', $pf->feature_id)
-            //         ->exists();
-
-            //     if (!$exists) {
-            //         UserSubscriptionFeature::create([
-            //             'user_subscription_id' => $subscriptionId,
-            //             'feature_id' => $pf->feature_id,
-            //             'used_value' => 0,
-            //             'unit' => $pf->unit ?? null,
-            //         ]);
-            //     }
-            // }
+            
 
             // ✅ 4. Sync missing features into user_subscription_features
            foreach ($planFeatures as $pf) {
@@ -131,11 +116,13 @@ if (!function_exists('checkUserFeatureLimit')) {
                 ];
             }
 
-            $limit = $planFeature->value; // plan limit
+            // $limit = $planFeature->value; // plan limit
+            $limit = is_numeric($planFeature->value) ? (int)$planFeature->value : $planFeature->value;
             $used = $userFeature->used_value;
 
             // ✅ 7. Unlimited check
-            if ($limit === 'unlimited' || $limit === null) {
+            // if ($limit === 'unlimited' || $limit === null) {
+            if ($limit === -1 || $limit === null) {
                 return [
                     'status' => true,
                     'is_exceeded' => false,

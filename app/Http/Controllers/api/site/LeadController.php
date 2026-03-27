@@ -109,7 +109,7 @@ class LeadController extends Controller
         }
 
         $check = checkUserFeatureLimit($featureId);
-        
+        \Log::info('Feature Check', $check);
         // ❌ Agar kuch error hai
         if (!$check['status']) {
             return response()->json([
@@ -119,12 +119,14 @@ class LeadController extends Controller
         }
 
         // ❌ Limit exceed ho gaya
-        if ($check['is_exceeded']) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Feature limit exceeded',
-                'data' => $check
-            ]);
+       if ($check['is_exceeded'] === true) {
+           \Log::info('LIMIT BLOCK HIT 🚫');
+
+           return response()->json([
+               'success' => false,
+               'message' => 'Feature limit exceeded',
+               'data' => $check
+           ], 403); // ✅ FIX
         }
 
         $request->validate([

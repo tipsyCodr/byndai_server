@@ -55,6 +55,39 @@ class ReviewController extends Controller
     }
     public function generateReview(Request $request)
     {
+
+        
+       $featureId = getFeatureId('ai_generated_feedback');
+
+        if (!$featureId) {
+          return response()->json([
+              'success' => false,
+              'message' => 'Invalid feature configuration'
+          ]);
+        }
+
+        $check = checkUserFeatureLimit($featureId);
+        \Log::info('Feature Check', $check);
+        // ❌ Agar kuch error hai
+        if (!$check['status']) {
+            return response()->json([
+                'success' => false,
+                'message' => $check['message']
+            ]);
+        }
+
+        // ❌ Limit exceed ho gaya
+       if ($check['is_exceeded'] === true) {
+           \Log::info('LIMIT BLOCK HIT 🚫');
+
+           return response()->json([
+               'success' => false,
+               'message' => 'Feature limit exceeded',
+               'data' => $check
+           ], 403); // ✅ FIX
+        }
+
+
         $request->validate([
             'to_user_id' => 'required|exists:users,id',
             'rating'     => 'nullable|integer|min:1|max:5',
@@ -116,6 +149,9 @@ class ReviewController extends Controller
             $result = $response->json();
             $content = trim($result['choices'][0]['message']['content'] ?? '', '"');
 
+
+            incrementFeatureUsage($featureId);
+            
             return response()->json([
                 'success' => true,
                 'content' => $content,

@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\SubscriptionPlan;
 use App\Models\UserSubscriptionFeature;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class UserSubscriptionController extends Controller
 {
@@ -38,6 +39,10 @@ public function mySubscription(Request $request)
         ->latest()
         ->first();
 
+      Log::info('📦 1.Subscription Data:', [
+            'subscription' => $subscription ? $subscription->toArray() : null
+        ]);
+
     // ✅ Agar subscription nahi mila → FREE return
     if (!$subscription) {
         return response()->json([
@@ -51,15 +56,22 @@ public function mySubscription(Request $request)
         ]);
     }
 
-    // ✅ Plan features ek hi query me load
+    // ✅ Plan features ek hi query me load  
     $planFeatures = PlanFeature::where('plan_id', $subscription->plan_id)
         ->get()
-        ->keyBy('feature'); // 🔥 fast lookup
+        ->keyBy('feature_id'); // 🔥 fast lookup
+
+      Log::info('📊2. Plan Features:', [
+        'planFeatures' => $planFeatures->toArray()
+       ]);
 
     // ✅ Features me limit_value attach karo
     $subscription->features->transform(function ($feature) use ($planFeatures) {
 
-        $planFeature = $planFeatures->get($feature->feature);
+        Log::info('🚨 3.Check  $feature Columns:', $feature->toArray());
+
+        // $planFeature = $planFeatures->get($feature->feature);
+        $planFeature = $planFeatures->get($feature->feature_id);
 
         return [
             'id' => $feature->id,

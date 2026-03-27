@@ -16,8 +16,11 @@ if (!function_exists('getFeatureId')) {
         $staticFeatures = [
             'connection_request_send'   => 1,
             'connection_request_accept' => 2,
-            'leads_create'              => 3,
-            'generate_ai_feedback'      => 4,
+            'leads_create'              => 3,            
+            'profile_view'              => 5,
+            'ai_generated_feedback'     => 6,
+            'create-flyer'              => 7,
+            'mini-website'              => 8,
         ];
 
         // 🔥 Cache key
