@@ -274,7 +274,7 @@ class ProfileApiController extends Controller
     //     ], 200);
     // }
 
-    public function getUserProfileByUsername($username)
+    public function usersNameProfileData($username)
 {
     $user = User::where('user_name', $username)->first();
 
