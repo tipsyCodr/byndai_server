@@ -242,37 +242,93 @@ class ProfileApiController extends Controller
         ], 200);
     }    
 
-    public function usersNameProfileData($user_name)
-    {
-        $data1 = User::where('user_name', $user_name)->first();
+    // public function usersNameProfileData($user_name)
+    // {
+    //     $data1 = User::where('user_name', $user_name)->first();
 
-        if (! $data1) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Profile not found',
-            ], 404);
-        }
+    //     if (! $data1) {
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => 'Profile not found',
+    //         ], 404);
+    //     }
 
-        $user_id = $data1->id;
+    //     $user_id = $data1->id;
 
-        $data = MasterUserDetail::with([
-            'user.businessInfo.industry',
-        ])->where('user_id', $user_id)
-            ->first();
+    //     $data = MasterUserDetail::with([
+    //         'user.businessInfo.industry',
+    //     ])->where('user_id', $user_id)
+    //         ->first();
 
-        if (! $data) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Profile not found',
-            ], 404);
-        }
+    //     if (! $data) {
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => 'Profile not found',
+    //         ], 404);
+    //     }
 
+    //     return response()->json([
+    //         'status' => true,
+    //         'message' => 'User profile fetched successfully',
+    //         'data' => $data,
+    //     ], 200);
+    // }
+
+    public function getUserProfileByUsername($username)
+{
+    $user = User::where('user_name', $username)->first();
+
+    if (!$user) {
         return response()->json([
-            'status' => true,
-            'message' => 'User profile fetched successfully',
-            'data' => $data,
-        ], 200);
+            'status' => false,
+            'message' => 'User not found',
+            'data' => null
+        ], 404);
     }
+
+    $authUser = auth()->user();
+
+    // ✅ Default
+    $connectionStatus = 'none';
+
+    if ($authUser) {
+
+        // Already friend check
+        $alreadyFriend = Connection::where(function ($q) use ($authUser, $user) {
+            $q->where('sender_id', $authUser->id)
+              ->where('receiver_id', $user->id)
+              ->where('status', 'accepted');
+        })->orWhere(function ($q) use ($authUser, $user) {
+            $q->where('sender_id', $user->id)
+              ->where('receiver_id', $authUser->id)
+              ->where('status', 'accepted');
+        })->exists();
+
+        // Request sent check
+        $requestSent = Connection::where('sender_id', $authUser->id)
+            ->where('receiver_id', $user->id)
+            ->where('status', 'pending')
+            ->exists();
+
+        if ($alreadyFriend) {
+            $connectionStatus = 'connected';
+        } elseif ($requestSent) {
+            $connectionStatus = 'pending';
+        }
+    }
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Profile fetched successfully',
+        'data' => [
+            'user_id' => $user->id,
+            'fname' => $user->fname,
+            'profile_pic' => $user->profile_pic,
+            'profile_logo' => $user->profile_logo,
+            'connection_status' => $connectionStatus, // ✅ NEW FIELD
+        ]
+    ]);
+}
 
     public function viewProfile(Request $request)
     {
