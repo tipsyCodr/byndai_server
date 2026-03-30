@@ -277,39 +277,51 @@ class ProfileApiController extends Controller
 
     public function usersNameProfileData($username)
 {
-    $user = User::where('user_name', $username)->first();
+    \Log::info("===== PROFILE API START =====");
+\Log::info("USERNAME RECEIVED: " . $username);
 
-    if (!$user) {
-        return response()->json([
-            'status' => false,
-            'message' => 'User not found',
-            'data' => null
-        ], 404);
-    }
+$user = User::where('user_name', $username)->first();
 
-    $authUser = auth()->user();
+if (!$user) {
+    \Log::error("❌ USER NOT FOUND");
+    return response()->json([
+        'status' => false,
+        'message' => 'User not found',
+        'data' => null
+    ], 404);
+}
 
-    // ✅ Default
-    $connectionStatus = 'none';
+\Log::info("✅ USER FOUND: ID = " . $user->id);
+
+$authUser = auth()->user();
+\Log::info("AUTH USER: " . ($authUser ? $authUser->id : 'NULL'));
+
+$connectionStatus = 'none';
+
+try {
 
     if ($authUser) {
 
-        // Already friend check
+        \Log::info("🔍 Checking connection...");
+
         $alreadyFriend = Connection::where(function ($q) use ($authUser, $user) {
-            $q->where('sender_id', $authUser->id)
-              ->where('receiver_id', $user->id)
+            $q->where('user_id', $authUser->id) // ⚠️ CHANGE HERE
+              ->where('friend_id', $user->id)
               ->where('status', 'accepted');
         })->orWhere(function ($q) use ($authUser, $user) {
-            $q->where('sender_id', $user->id)
-              ->where('receiver_id', $authUser->id)
+            $q->where('user_id', $user->id)
+              ->where('friend_id', $authUser->id)
               ->where('status', 'accepted');
         })->exists();
 
-        // Request sent check
-        $requestSent = Connection::where('sender_id', $authUser->id)
-            ->where('receiver_id', $user->id)
+        \Log::info("Already Friend: " . ($alreadyFriend ? 'YES' : 'NO'));
+
+        $requestSent = Connection::where('user_id', $authUser->id)
+            ->where('friend_id', $user->id)
             ->where('status', 'pending')
             ->exists();
+
+        \Log::info("Request Sent: " . ($requestSent ? 'YES' : 'NO'));
 
         if ($alreadyFriend) {
             $connectionStatus = 'connected';
@@ -318,17 +330,23 @@ class ProfileApiController extends Controller
         }
     }
 
-    return response()->json([
-        'status' => true,
-        'message' => 'Profile fetched successfully',
-        'data' => [
-            'user_id' => $user->id,
-            'fname' => $user->fname,
-            'profile_pic' => $user->profile_pic,
-            'profile_logo' => $user->profile_logo,
-            'connection_status' => $connectionStatus, // ✅ NEW FIELD
-        ]
-    ]);
+} catch (\Exception $e) {
+    \Log::error("🚨 CONNECTION ERROR: " . $e->getMessage());
+}
+
+\Log::info("FINAL STATUS: " . $connectionStatus);
+
+return response()->json([
+    'status' => true,
+    'message' => 'Profile fetched successfully',
+    'data' => [
+        'user_id' => $user->id,
+        'fname' => $user->fname,
+        'profile_pic' => $user->profile_pic,
+        'profile_logo' => $user->profile_logo,
+        'connection_status' => $connectionStatus,
+    ]
+]);
 }
 
     public function viewProfile(Request $request)
