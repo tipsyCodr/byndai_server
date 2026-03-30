@@ -4,6 +4,7 @@ namespace App\Http\Controllers\api\site;
 
 use App\Http\Controllers\Controller;
 use App\Models\BusinessInfo;
+use App\Models\Connection;
 use App\Models\MasterUserDetail;
 use App\Models\User;
 use App\Models\UserLink;
