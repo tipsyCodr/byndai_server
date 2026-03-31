@@ -800,6 +800,9 @@ class AuthApiController extends Controller
             'busi_type' => 'nullable|string|max:100',
             'social_links' => 'nullable|string',
 
+            'jci_member' => 'nullable|in:0,1',
+            'bni_member' => 'nullable|in:0,1',
+
             // media
             'profile_pic' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
             'profile_logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
@@ -853,6 +856,9 @@ class AuthApiController extends Controller
 
         $detail->busi_type = $request->busi_type ?? $detail->busi_type;
         $detail->social_links = $request->social_links ?? $detail->social_links;
+
+        $detail->jci_member = $request->jci_member ?? $detail->jci_member ?? 0;
+        $detail->bni_member = $request->bni_member ?? $detail->bni_member ?? 0;
 
         // ============================
         // MEDIA UPLOAD (old keep)
