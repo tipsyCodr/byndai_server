@@ -277,17 +277,130 @@ class ProfileApiController extends Controller
     //     ], 200);
     // }
 
-    public function usersNameProfileData($username)
+//     public function usersNameProfileData($username)
+// {
+//     Log::info("===== PROFILE API START =====");
+//     Log::info("USERNAME RECEIVED", ['username' => $username]);
+
+//     // 🔍 Find user
+//     $user = User::where('user_name', $username)->first();
+
+//     if (!$user) {
+//         Log::error("❌ USER NOT FOUND", ['username' => $username]);
+
+//         return response()->json([
+//             'status' => false,
+//             'message' => 'User not found',
+//             'data' => null
+//         ], 404);
+//     }
+
+//     Log::info("✅ USER FOUND", ['user_id' => $user->id]);
+
+//     // 🔐 Auth user
+//     $authUser = auth()->user();
+//     Log::info("AUTH USER", [
+//         'auth_id' => $authUser ? $authUser->id : null
+//     ]);
+
+//     $connectionStatus = 'none';
+
+//     try {
+
+//         if ($authUser) {
+
+//             Log::info("🔍 Checking connection status", [
+//                 'auth_id' => $authUser->id,
+//                 'profile_id' => $user->id
+//             ]);
+
+//             // ✅ 1. Check already connected (NO status column here)
+//             $alreadyFriend = Connection::where(function ($q) use ($authUser, $user) {
+//                 $q->where('user_id', $authUser->id)
+//                   ->where('friend_id', $user->id);
+//             })->orWhere(function ($q) use ($authUser, $user) {
+//                 $q->where('user_id', $user->id)
+//                   ->where('friend_id', $authUser->id);
+//             })->exists();
+
+//             Log::info("Already Friend Result", [
+//                 'result' => $alreadyFriend
+//             ]);
+
+//             // ✅ 2. Check pending request
+//             $requestSent = ConnectionRequest::where('sender_id', $authUser->id)
+//                 ->where('receiver_id', $user->id)
+//                 ->where('status', 0) // 0 = pending
+//                 ->exists();
+
+//             Log::info("Request Sent Result", [
+//                 'result' => $requestSent
+//             ]);
+
+//             // ✅ 3. Check received request (optional but useful)
+//             $requestReceived = ConnectionRequest::where('sender_id', $user->id)
+//                 ->where('receiver_id', $authUser->id)
+//                 ->where('status', 0)
+//                 ->exists();
+
+//             Log::info("Request Received Result", [
+//                 'result' => $requestReceived
+//             ]);
+
+//             // 🎯 Final decision
+//             if ($alreadyFriend) {
+//                 $connectionStatus = 'connected';
+//             } elseif ($requestSent) {
+//                 $connectionStatus = 'pending';
+//             } elseif ($requestReceived) {
+//                 $connectionStatus = 'received';
+//             } else {
+//                 $connectionStatus = 'none';
+//             }
+//         }
+
+//     } catch (\Exception $e) {
+//         Log::error("🚨 CONNECTION ERROR", [
+//             'message' => $e->getMessage(),
+//             'line' => $e->getLine(),
+//             'file' => $e->getFile()
+//         ]);
+//     }
+
+//     Log::info("FINAL CONNECTION STATUS", [
+//         'status' => $connectionStatus
+//     ]);
+
+//     Log::info("===== PROFILE API END =====");
+
+   
+
+//     $responseData = [
+//     'status' => true,
+//     'message' => 'Profile fetched successfully',
+//     'data' => [
+//         'user_id' => $user->id,
+//         'fname' => $user->fname,
+//         'profile_pic' => $user->profile_pic,
+//         'profile_logo' => $user->profile_logo,
+//         'connection_status' => $connectionStatus,
+//     ]
+// ];
+
+// // ✅ FULL RESPONSE LOG
+// Log::info("🚀 FINAL API RESPONSE", $responseData);
+
+// return response()->json($responseData);
+// }
+
+public function usersNameProfileData($username)
 {
     Log::info("===== PROFILE API START =====");
-    Log::info("USERNAME RECEIVED", ['username' => $username]);
 
-    // 🔍 Find user
-    $user = User::where('user_name', $username)->first();
+    // ✅ relation load karo
+    $user = User::with('masterUser')->where('user_name', $username)->first();
 
     if (!$user) {
-        Log::error("❌ USER NOT FOUND", ['username' => $username]);
-
         return response()->json([
             'status' => false,
             'message' => 'User not found',
@@ -295,26 +408,12 @@ class ProfileApiController extends Controller
         ], 404);
     }
 
-    Log::info("✅ USER FOUND", ['user_id' => $user->id]);
-
-    // 🔐 Auth user
     $authUser = auth()->user();
-    Log::info("AUTH USER", [
-        'auth_id' => $authUser ? $authUser->id : null
-    ]);
-
     $connectionStatus = 'none';
 
     try {
-
         if ($authUser) {
 
-            Log::info("🔍 Checking connection status", [
-                'auth_id' => $authUser->id,
-                'profile_id' => $user->id
-            ]);
-
-            // ✅ 1. Check already connected (NO status column here)
             $alreadyFriend = Connection::where(function ($q) use ($authUser, $user) {
                 $q->where('user_id', $authUser->id)
                   ->where('friend_id', $user->id);
@@ -323,84 +422,52 @@ class ProfileApiController extends Controller
                   ->where('friend_id', $authUser->id);
             })->exists();
 
-            Log::info("Already Friend Result", [
-                'result' => $alreadyFriend
-            ]);
-
-            // ✅ 2. Check pending request
             $requestSent = ConnectionRequest::where('sender_id', $authUser->id)
                 ->where('receiver_id', $user->id)
-                ->where('status', 0) // 0 = pending
+                ->where('status', 0)
                 ->exists();
 
-            Log::info("Request Sent Result", [
-                'result' => $requestSent
-            ]);
-
-            // ✅ 3. Check received request (optional but useful)
             $requestReceived = ConnectionRequest::where('sender_id', $user->id)
                 ->where('receiver_id', $authUser->id)
                 ->where('status', 0)
                 ->exists();
 
-            Log::info("Request Received Result", [
-                'result' => $requestReceived
-            ]);
-
-            // 🎯 Final decision
             if ($alreadyFriend) {
                 $connectionStatus = 'connected';
             } elseif ($requestSent) {
                 $connectionStatus = 'pending';
             } elseif ($requestReceived) {
                 $connectionStatus = 'received';
-            } else {
-                $connectionStatus = 'none';
             }
         }
 
     } catch (\Exception $e) {
-        Log::error("🚨 CONNECTION ERROR", [
-            'message' => $e->getMessage(),
-            'line' => $e->getLine(),
-            'file' => $e->getFile()
-        ]);
+        Log::error("ERROR", ['msg' => $e->getMessage()]);
     }
 
-    Log::info("FINAL CONNECTION STATUS", [
-        'status' => $connectionStatus
-    ]);
-
-    Log::info("===== PROFILE API END =====");
-
-    // return response()->json([
-    //     'status' => true,
-    //     'message' => 'Profile fetched successfully',
-    //     'data' => [
-    //         'user_id' => $user->id,
-    //         'fname' => $user->fname,
-    //         'profile_pic' => $user->profile_pic,
-    //         'profile_logo' => $user->profile_logo,
-    //         'connection_status' => $connectionStatus,
-    //     ]
-    // ]);
-
+    // ✅ FINAL RESPONSE
     $responseData = [
-    'status' => true,
-    'message' => 'Profile fetched successfully',
-    'data' => [
-        'user_id' => $user->id,
-        'fname' => $user->fname,
-        'profile_pic' => $user->profile_pic,
-        'profile_logo' => $user->profile_logo,
-        'connection_status' => $connectionStatus,
-    ]
-];
+        'status' => true,
+        'message' => 'Profile fetched successfully',
+        'data' => [
+            'user_id' => $user->id,
 
-// ✅ FULL RESPONSE LOG
-Log::info("🚀 FINAL API RESPONSE", $responseData);
+            // ✅ master user data
+            'master_user' => $user->masterUser,
 
-return response()->json($responseData);
+            // ✅ optional direct fields
+            'fname' => $user->masterUser->fname ?? null,
+            'profile_pic' => $user->masterUser->profile_pic ?? null,
+            'profile_logo' => $user->masterUser->profile_logo ?? null,
+
+            // ✅ connection status
+            'connection_status' => $connectionStatus,
+        ]
+    ];
+
+    Log::info("🚀 FINAL API RESPONSE", $responseData);
+
+    return response()->json($responseData);
 }
 
     public function viewProfile(Request $request)
