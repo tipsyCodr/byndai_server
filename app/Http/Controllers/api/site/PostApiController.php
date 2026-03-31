@@ -11,6 +11,8 @@ use App\Models\PostMedia;
 use App\Models\PostReaction;
 use App\Models\PostReport;
 use App\Models\PostSave;
+use App\Models\SubscriptionPlan;
+use App\Models\UserSubscription;
 use App\Models\PostShare;
 use App\Models\PostView;
 use App\Models\User;
@@ -1812,28 +1814,7 @@ Rules:
         ]);
     }
 
-    // public function getUserDetails($id)
-    // {
-    //     $user = User::with([
-    //         'masterUser',
-    //         'masterUser.country',
-    //         'masterUser.state',
-    //         'masterUser.district',
-    //     ])->find($id);
-
-    //     if (! $user) {
-    //         return response()->json([
-    //             'status' => false,
-    //             'message' => 'User not found',
-    //         ], 404);
-    //     }
-
-    //     return response()->json([
-    //         'status' => true,
-    //         'message' => 'User details fetched successfully',
-    //         'data' => $user,
-    //     ], 200);
-    // }
+   
 
     public function getUserDetails($id)
     {
