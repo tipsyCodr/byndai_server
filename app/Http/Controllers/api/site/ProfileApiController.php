@@ -373,17 +373,34 @@ class ProfileApiController extends Controller
 
     Log::info("===== PROFILE API END =====");
 
-    return response()->json([
-        'status' => true,
-        'message' => 'Profile fetched successfully',
-        'data' => [
-            'user_id' => $user->id,
-            'fname' => $user->fname,
-            'profile_pic' => $user->profile_pic,
-            'profile_logo' => $user->profile_logo,
-            'connection_status' => $connectionStatus,
-        ]
-    ]);
+    // return response()->json([
+    //     'status' => true,
+    //     'message' => 'Profile fetched successfully',
+    //     'data' => [
+    //         'user_id' => $user->id,
+    //         'fname' => $user->fname,
+    //         'profile_pic' => $user->profile_pic,
+    //         'profile_logo' => $user->profile_logo,
+    //         'connection_status' => $connectionStatus,
+    //     ]
+    // ]);
+
+    $responseData = [
+    'status' => true,
+    'message' => 'Profile fetched successfully',
+    'data' => [
+        'user_id' => $user->id,
+        'fname' => $user->fname,
+        'profile_pic' => $user->profile_pic,
+        'profile_logo' => $user->profile_logo,
+        'connection_status' => $connectionStatus,
+    ]
+];
+
+// ✅ FULL RESPONSE LOG
+Log::info("🚀 FINAL API RESPONSE", $responseData);
+
+return response()->json($responseData);
 }
 
     public function viewProfile(Request $request)
