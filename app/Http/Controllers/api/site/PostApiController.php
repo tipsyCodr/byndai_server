@@ -1825,6 +1825,7 @@ Rules:
             'masterUser.district',
             'businessInfo', // <-- ye add kiya
             'businessInfo.industry', // <-- agar industry details bhi chahiye
+            'userSubscriptions.plan'
         ])->find($id);
 
         if (! $user) {
