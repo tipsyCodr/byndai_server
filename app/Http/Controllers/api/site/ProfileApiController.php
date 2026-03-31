@@ -398,7 +398,11 @@ public function usersNameProfileData($username)
     Log::info("===== PROFILE API START =====");
 
     // ✅ relation load karo
-    $user = User::with('masterUser')->where('user_name', $username)->first();
+    // $user = User::with('masterUser')->where('user_name', $username)->first();
+    $user = User::with([
+    'masterUser',
+    'businessInfo.industry' // 🔥 ADD THIS
+])->where('user_name', $username)->first();
 
     if (!$user) {
         return response()->json([
@@ -454,7 +458,7 @@ public function usersNameProfileData($username)
 
             // ✅ master user data
             'master_user' => $user->masterUser,
-
+            'business_info' => $user->businessInfo,
             // ✅ optional direct fields
             'fname' => $user->masterUser->fname ?? null,
             'profile_pic' => $user->masterUser->profile_pic ?? null,
