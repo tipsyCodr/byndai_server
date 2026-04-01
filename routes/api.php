@@ -29,13 +29,17 @@ use App\Http\Controllers\api\site\UserReviewApiController;
 use App\Http\Controllers\frontend\site\ReviewController;
 use App\Http\Controllers\api\site\SubscriptionPlanController;
 use App\Http\Controllers\api\site\PlanFeatureController;
+use App\Http\Controllers\api\site\ImageController;
 use App\Http\Controllers\api\site\UserSubscriptionController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\api\site\TransactionApiController;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/test-notification', [NotificationController::class, 'test']);
 
+Route::post('/upload-tag-images', [ImageController::class, 'upload']);
+Route::get('/get-tag-images', [ImageController::class, 'getImages']);
+
+Route::post('/test-notification', [NotificationController::class, 'test']);
 Route::post('/check-mobile', [AuthApiController::class, 'checkMobile']);
 Route::post('/check-sms-delivery', [AuthApiController::class, 'checkSmsDelivery']);
 Route::post('/reset-pin-otp', [AuthApiController::class, 'resetPinOtp']);
