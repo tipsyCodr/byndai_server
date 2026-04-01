@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers\api\site;
 
+
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Image;
 use Illuminate\Support\Facades\Storage;
 
 class ImageController extends Controller
 {
-    // ✅ Upload API
+    // ✅ Upload Images
     public function upload(Request $request)
     {
         $request->validate([
@@ -16,53 +18,75 @@ class ImageController extends Controller
             'images.*' => 'required|image|mimes:jpg,jpeg,png,webp'
         ]);
 
-        $tag = $request->tag;
-        $paths = [];
+        $tag = preg_replace('/[^A-Za-z0-9\-]/', '', $request->tag);
+        $data = [];
 
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $index => $image) {
+        foreach ($request->file('images') as $index => $image) {
 
-                // unique name
-                $fileName = time().'_'.$index.'.'.$image->getClientOriginalExtension();
+            $fileName = time().'_'.$index.'.'.$image->getClientOriginalExtension();
 
-                // store in storage/app/public/{tag}
-                $path = $image->storeAs("public/$tag", $fileName);
+            // store in storage
+            $path = $image->storeAs("public/$tag", $fileName);
 
-                // generate URL
-                $paths[] = asset('storage/'.$tag.'/'.$fileName);
-            }
+            // save in DB
+            $img = Image::create([
+                'tag' => $tag,
+                'file_name' => $fileName,
+                'file_path' => "storage/$tag/$fileName"
+            ]);
+
+            $data[] = asset($img->file_path);
         }
 
         return response()->json([
-            'message' => 'Images uploaded successfully',
-            'data' => $paths
+            'message' => 'Uploaded Successfully',
+            'data' => $data
         ]);
     }
 
-    // ✅ Get API (Grouped by Tag)
+    // ✅ Get Images Grouped by Tag
     public function getImages()
     {
-        $basePath = storage_path('app/public');
-        $result = [];
+        $images = Image::all();
 
-        // get all folders (tags)
-        $folders = array_filter(glob($basePath . '/*'), 'is_dir');
+        $grouped = [];
 
-        foreach ($folders as $folder) {
-            $tag = basename($folder);
-
-            $files = glob($folder . '/*');
-
-            $urls = [];
-
-            foreach ($files as $file) {
-                $fileName = basename($file);
-                $urls[] = asset("storage/$tag/$fileName");
-            }
-
-            $result[$tag] = $urls;
+        foreach ($images as $img) {
+            $grouped[$img->tag][] = asset($img->file_path);
         }
 
-        return response()->json($result);
+        return response()->json($grouped);
+    }
+
+    // ✅ Delete Single Image
+    public function deleteImage($id)
+    {
+        $image = Image::find($id);
+
+        if (!$image) {
+            return response()->json(['message' => 'Image not found'], 404);
+        }
+
+        // delete file
+        Storage::delete('public/' . $image->tag . '/' . $image->file_name);
+
+        // delete DB
+        $image->delete();
+
+        return response()->json(['message' => 'Image deleted']);
+    }
+
+    // ✅ Delete Whole Tag Folder
+    public function deleteTag($tag)
+    {
+        $tag = preg_replace('/[^A-Za-z0-9\-]/', '', $tag);
+
+        // delete folder
+        Storage::deleteDirectory("public/$tag");
+
+        // delete DB records
+        Image::where('tag', $tag)->delete();
+
+        return response()->json(['message' => 'Tag deleted']);
     }
 }

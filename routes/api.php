@@ -38,6 +38,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/upload-tag-images', [ImageController::class, 'upload']);
 Route::get('/get-tag-images', [ImageController::class, 'getImages']);
+Route::delete('/delete-image/{id}', [ImageController::class, 'deleteImage']);
+Route::delete('/delete-tag/{tag}', [ImageController::class, 'deleteTag']);
 
 Route::post('/test-notification', [NotificationController::class, 'test']);
 Route::post('/check-mobile', [AuthApiController::class, 'checkMobile']);
