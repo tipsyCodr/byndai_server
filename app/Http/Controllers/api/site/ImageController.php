@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\api\site;
 
-
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Image;
@@ -15,30 +14,35 @@ class ImageController extends Controller
     {
         $request->validate([
             'tag' => 'required|string',
-            'images.*' => 'required|image|mimes:jpg,jpeg,png,webp'
+            'images.*' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120'
         ]);
 
+        // clean tag
         $tag = preg_replace('/[^A-Za-z0-9\-]/', '', $request->tag);
+
         $data = [];
 
         foreach ($request->file('images') as $index => $image) {
 
             $fileName = time().'_'.$index.'.'.$image->getClientOriginalExtension();
 
-            // store in storage
-            $path = $image->storeAs("public/$tag", $fileName);
+            // ✅ CORRECT STORAGE (public disk)
+            $path = $image->storeAs($tag, $fileName, 'public');
+            // ye store karega: storage/app/public/MakarSankranti/file.png
 
-            // save in DB
+            // ✅ DB SAVE (ONLY RELATIVE PATH)
             $img = Image::create([
                 'tag' => $tag,
                 'file_name' => $fileName,
-                'file_path' => "storage/$tag/$fileName"
+                'file_path' => $path // e.g. MakarSankranti/file.png
             ]);
 
-            $data[] = asset($img->file_path);
+            // ✅ RETURN FULL URL
+            $data[] = asset('storage/'.$path);
         }
 
         return response()->json([
+            'status' => true,
             'message' => 'Uploaded Successfully',
             'data' => $data
         ]);
@@ -52,7 +56,7 @@ class ImageController extends Controller
         $grouped = [];
 
         foreach ($images as $img) {
-            $grouped[$img->tag][] = asset($img->file_path);
+            $grouped[$img->tag][] = asset('storage/'.$img->file_path);
         }
 
         return response()->json($grouped);
@@ -64,16 +68,22 @@ class ImageController extends Controller
         $image = Image::find($id);
 
         if (!$image) {
-            return response()->json(['message' => 'Image not found'], 404);
+            return response()->json([
+                'status' => false,
+                'message' => 'Image not found'
+            ], 404);
         }
 
-        // delete file
-        Storage::delete('public/' . $image->tag . '/' . $image->file_name);
+        // ✅ DELETE FILE
+        Storage::disk('public')->delete($image->file_path);
 
-        // delete DB
+        // ✅ DELETE DB
         $image->delete();
 
-        return response()->json(['message' => 'Image deleted']);
+        return response()->json([
+            'status' => true,
+            'message' => 'Image deleted successfully'
+        ]);
     }
 
     // ✅ Delete Whole Tag Folder
@@ -81,12 +91,15 @@ class ImageController extends Controller
     {
         $tag = preg_replace('/[^A-Za-z0-9\-]/', '', $tag);
 
-        // delete folder
-        Storage::deleteDirectory("public/$tag");
+        // ✅ DELETE FOLDER
+        Storage::disk('public')->deleteDirectory($tag);
 
-        // delete DB records
+        // ✅ DELETE DB RECORDS
         Image::where('tag', $tag)->delete();
 
-        return response()->json(['message' => 'Tag deleted']);
+        return response()->json([
+            'status' => true,
+            'message' => 'Tag deleted successfully'
+        ]);
     }
 }
