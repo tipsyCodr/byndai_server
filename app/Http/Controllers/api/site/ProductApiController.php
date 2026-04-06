@@ -9,6 +9,7 @@ use App\Models\ProductLink;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use App\Models\ProductClick;
 
@@ -178,20 +179,14 @@ class ProductApiController extends Controller
 
             // ✅ IMAGE SAVE (DB column = product_images)
             if ($request->hasFile('product_image')) {
-
                 $file = $request->file('product_image');
 
-                $folder = public_path('uploads/products');
-                if (! File::exists($folder)) {
-                    File::makeDirectory($folder, 0777, true);
-                }
-
                 $fileName = time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
-                $file->move($folder, $fileName);
+                $path = $file->storeAs('uploads/products', $fileName, 'public');
 
                 ProductImage::create([
                     'prod_id' => $product->id,
-                    'product_images' => 'uploads/products/'.$fileName,
+                    'product_images' => 'storage/'.$path,
                     'status' => 1,
                 ]);
             }
@@ -317,26 +312,28 @@ class ProductApiController extends Controller
                 $oldImages = ProductImage::where('prod_id', $product->id)->get();
 
                 foreach ($oldImages as $img) {
-                    $path = public_path($img->product_images);
-                    if (File::exists($path)) {
-                        File::delete($path);
+                    $imgPath = $img->product_images;
+                    if (str_starts_with($imgPath, 'storage/')) {
+                        $relativePath = str_replace('storage/', '', $imgPath);
+                        if (Storage::disk('public')->exists($relativePath)) {
+                            Storage::disk('public')->delete($relativePath);
+                        }
+                    } else {
+                        $fullPath = public_path($imgPath);
+                        if (File::exists($fullPath)) {
+                            File::delete($fullPath);
+                        }
                     }
-                    ProductImage::where('id', $img->id)->delete();
+                    $img->delete();
                 }
 
                 $file = $request->file('product_image');
-
-                $folder = public_path('uploads/products');
-                if (! File::exists($folder)) {
-                    File::makeDirectory($folder, 0777, true);
-                }
-
                 $fileName = time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
-                $file->move($folder, $fileName);
+                $path = $file->storeAs('uploads/products', $fileName, 'public');
 
                 ProductImage::create([
                     'prod_id' => $product->id,
-                    'product_images' => 'uploads/products/'.$fileName,
+                    'product_images' => 'storage/'.$path,
                     'status' => 1,
                 ]);
             }
@@ -398,11 +395,19 @@ class ProductApiController extends Controller
             // delete images
             $images = ProductImage::where('prod_id', $product->id)->get();
             foreach ($images as $img) {
-                $path = public_path($img->product_images);
-                if (File::exists($path)) {
-                    File::delete($path);
+                $imgPath = $img->product_images;
+                if (str_starts_with($imgPath, 'storage/')) {
+                    $relativePath = str_replace('storage/', '', $imgPath);
+                    if (Storage::disk('public')->exists($relativePath)) {
+                        Storage::disk('public')->delete($relativePath);
+                    }
+                } else {
+                    $fullPath = public_path($imgPath);
+                    if (File::exists($fullPath)) {
+                        File::delete($fullPath);
+                    }
                 }
-                ProductImage::where('id', $img->id)->delete();
+                $img->delete();
             }
 
             // delete links
