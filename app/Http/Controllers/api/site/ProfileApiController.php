@@ -11,7 +11,9 @@ use App\Models\User;
 use App\Models\UserLink;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class ProfileApiController extends Controller
 {
@@ -26,10 +28,10 @@ class ProfileApiController extends Controller
             return response()->json(['message' => 'Users not found'], 404);
         }
         if ($r->isMethod('get')) {
-            $users_detail->profile_pic = $users_detail->profile_pic ? asset('assets/uploads/profile_pics/'.$users_detail->profile_pic) : null;
-            $users_detail->profile_video = $users_detail->profile_video ? asset('assets/uploads/profile_videos/'.$users_detail->profile_video) : null;
-            $users_detail->profile_logo = $users_detail->profile_logo ? asset('assets/uploads/profile_logos/'.$users_detail->profile_logo) : null;
-            $users_detail->profile_banner = $users_detail->profile_banner ? asset('assets/uploads/profile_banners/'.$users_detail->profile_banner) : null;
+            $users_detail->profile_pic = $this->getMediaUrl($users_detail->profile_pic, 'profile_pics');
+            $users_detail->profile_video = $this->getMediaUrl($users_detail->profile_video, 'profile_videos');
+            $users_detail->profile_logo = $this->getMediaUrl($users_detail->profile_logo, 'profile_logos');
+            $users_detail->profile_banner = $this->getMediaUrl($users_detail->profile_banner, 'profile_banners');
             $busi_info = BusinessInfo::with('user')
                 ->whereHas('user', function ($q) use ($users) {
                     $q->where('id', $users);
@@ -39,28 +41,28 @@ class ProfileApiController extends Controller
         }
         if ($r->isMethod('post')) {
             if ($r->hasFile('profile_pic')) {
+                $this->deleteMedia($users_detail->profile_pic, 'profile_pics');
                 $file = $r->file('profile_pic');
-                $fileName = time().'_'.$file->getClientOriginalName();
-                $file->move(public_path('assets/uploads/profile_pics'), $fileName);
-                $users_detail->profile_pic = $fileName;
+                $path = $file->storeAs('uploads/profile_pics', time().'_'.$file->getClientOriginalName(), 'public');
+                $users_detail->profile_pic = 'storage/'.$path;
             }
             if ($r->hasFile('profile_video')) {
+                $this->deleteMedia($users_detail->profile_video, 'profile_videos');
                 $file = $r->file('profile_video');
-                $fileName = time().'_'.$file->getClientOriginalName();
-                $file->move(public_path('assets/uploads/profile_videos'), $fileName);
-                $users_detail->profile_video = $fileName;
+                $path = $file->storeAs('uploads/profile_videos', time().'_'.$file->getClientOriginalName(), 'public');
+                $users_detail->profile_video = 'storage/'.$path;
             }
             if ($r->hasFile('profile_logo')) {
+                $this->deleteMedia($users_detail->profile_logo, 'profile_logos');
                 $file = $r->file('profile_logo');
-                $fileName = time().'_'.$file->getClientOriginalName();
-                $file->move(public_path('assets/uploads/profile_logos'), $fileName);
-                $users_detail->profile_logo = $fileName;
+                $path = $file->storeAs('uploads/profile_logos', time().'_'.$file->getClientOriginalName(), 'public');
+                $users_detail->profile_logo = 'storage/'.$path;
             }
             if ($r->hasFile('profile_banner')) {
+                $this->deleteMedia($users_detail->profile_banner, 'profile_banners');
                 $file = $r->file('profile_banner');
-                $fileName = time().'_'.$file->getClientOriginalName();
-                $file->move(public_path('assets/uploads/profile_banners'), $fileName);
-                $users_detail->profile_banner = $fileName;
+                $path = $file->storeAs('uploads/profile_banners', time().'_'.$file->getClientOriginalName(), 'public');
+                $users_detail->profile_banner = 'storage/'.$path;
             }
             $users_detail->fill($r->only(['fname', 'dept', 'desg', 'busi_type', 'country_id', 'state_id', 'district_id']));
             $users_detail->save();
@@ -167,7 +169,7 @@ class ProfileApiController extends Controller
                 return response()->json(['status' => false, 'message' => 'No Business Info found for this user'], 404);
             }
             if ($busi_info->payment_qr) {
-                $busi_info->payment_qr = asset('assets/uploads/payment_qrcode/'.$busi_info->payment_qr);
+                $busi_info->payment_qr = $this->getMediaUrl($busi_info->payment_qr, 'payment_qrcode');
             }
 
             return response()->json(['status' => true, 'data' => $busi_info]);
@@ -184,10 +186,10 @@ class ProfileApiController extends Controller
             ]);
             $busi_info = BusinessInfo::updateOrCreate(['user_id' => $users->id], ['legal_name' => $r->company_name ?? '', 'gst_no' => $r->gst_no ?? '', 'address' => $r->address ?? '', 'bank_acc_no' => $r->bank_acc_no ?? '', 'ifsc_code' => $r->ifsc_code ?? '', 'branch_name' => $r->branch_name ?? '']);
             if ($r->hasFile('payment_qr')) {
+                $this->deleteMedia($busi_info->payment_qr, 'payment_qrcode');
                 $file = $r->file('payment_qr');
-                $fileName = time().'_'.$file->getClientOriginalName();
-                $file->move(public_path('assets/uploads/payment_qrcode'), $fileName);
-                $busi_info->payment_qr = $fileName;
+                $path = $file->storeAs('uploads/payment_qrcode', time().'_'.$file->getClientOriginalName(), 'public');
+                $busi_info->payment_qr = 'storage/'.$path;
                 $busi_info->save();
             }
 
@@ -206,9 +208,9 @@ class ProfileApiController extends Controller
             return response()->json(['status' => false, 'message' => 'Profile not found'], 404);
         }
 
-        $data->profile_pic = $data->profile_pic ? asset('assets/uploads/profile_pics/'.$data->profile_pic) : null;
-        $data->profile_logo = $data->profile_logo ? asset('assets/uploads/profile_logos/'.$data->profile_logo) : null;
-        $data->profile_banner = $data->profile_banner ? asset('assets/uploads/profile_banners/'.$data->profile_banner) : null;
+        $data->profile_pic = $this->getMediaUrl($data->profile_pic, 'profile_pics');
+        $data->profile_logo = $this->getMediaUrl($data->profile_logo, 'profile_logos');
+        $data->profile_banner = $this->getMediaUrl($data->profile_banner, 'profile_banners');
 
         return response()->json(['status' => true, 'message' => 'User profile card fetched successfully', 'data' => $data], 200);
     }
@@ -226,17 +228,9 @@ class ProfileApiController extends Controller
             ], 404);
         }
 
-        $data->profile_pic = $data->profile_pic
-            ? asset('assets/uploads/profile_pics/'.$data->profile_pic)
-            : null;
-
-        $data->profile_logo = $data->profile_logo
-            ? asset('assets/uploads/profile_logos/'.$data->profile_logo)
-            : null;
-
-        $data->profile_banner = $data->profile_banner
-            ? asset('assets/uploads/profile_banners/'.$data->profile_banner)
-            : null;
+        $data->profile_pic = $this->getMediaUrl($data->profile_pic, 'profile_pics');
+        $data->profile_logo = $this->getMediaUrl($data->profile_logo, 'profile_logos');
+        $data->profile_banner = $this->getMediaUrl($data->profile_banner, 'profile_banners');
 
         return response()->json([
             'status' => true,
@@ -663,5 +657,32 @@ public function usersNameProfileData($username)
             'error' => $e->getMessage()
         ], 500);
       }
+    }
+
+    private function getMediaUrl($path, $folder)
+    {
+        if (! $path) {
+            return null;
+        }
+
+        return str_starts_with($path, 'storage/') ? asset($path) : asset('assets/uploads/'.$folder.'/'.$path);
+    }
+
+    private function deleteMedia($path, $folder)
+    {
+        if (! $path) {
+            return;
+        }
+        if (str_starts_with($path, 'storage/')) {
+            $relativePath = str_replace('storage/', '', $path);
+            if (Storage::disk('public')->exists($relativePath)) {
+                Storage::disk('public')->delete($relativePath);
+            }
+        } else {
+            $fullPath = public_path('assets/uploads/'.$folder.'/'.$path);
+            if (File::exists($fullPath)) {
+                File::delete($fullPath);
+            }
+        }
     }
 }
