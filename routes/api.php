@@ -30,6 +30,7 @@ use App\Http\Controllers\frontend\site\ReviewController;
 use App\Http\Controllers\api\site\SubscriptionPlanController;
 use App\Http\Controllers\api\site\PlanFeatureController;
 use App\Http\Controllers\api\site\ImageController;
+use App\Http\Controllers\api\site\UserVideoApiController;
 use App\Http\Controllers\api\site\UserSubscriptionController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\api\site\TransactionApiController;
@@ -655,6 +656,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
         ProfileLinkClickController::class,
         'click',
     ]);
+
+    // User Videos (YouTube)
+    Route::get('/user-videos/{user_id}', [UserVideoApiController::class, 'index']);
+    Route::post('/user-videos', [UserVideoApiController::class, 'store']);
+    Route::delete('/user-videos/{id}', [UserVideoApiController::class, 'delete']);
 
     Route::get('/check-friendship/{userId}/{viewerId}', [
         ConnectionApiController::class,
