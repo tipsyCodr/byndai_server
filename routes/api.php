@@ -788,6 +788,16 @@ Route::middleware(['auth:sanctum'])->group(function () {
     ]);
 
     // Extra
+    Route::get('/is-pro', [
+        UserSubscriptionController::class,
+        'isPro'
+    ]);
+
+    Route::get('/user/{id}/is-pro', [
+        UserSubscriptionController::class,
+        'checkUserPro'
+    ]);
+
     Route::get('/user/{userId}/active', [
         UserSubscriptionController::class,
      'getUserActiveSubscription'

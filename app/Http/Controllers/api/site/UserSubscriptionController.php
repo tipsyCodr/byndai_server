@@ -216,6 +216,64 @@ public function mySubscription(Request $request)
         ]);
     }
 
+    /**
+     * Check if the currently authenticated user is a PRO user
+     */
+    public function isPro(Request $request)
+    {
+        $user = $request->user();
+        
+        $activeSubscription = UserSubscription::with('plan')
+            ->where('user_id', $user->id)
+            ->where('is_active', 1)
+            ->where('end_date', '>=', now())
+            ->latest()
+            ->first();
+
+        $isPro = false;
+        $planName = 'free';
+
+        if ($activeSubscription && $activeSubscription->plan) {
+            $isPro = !$activeSubscription->plan->is_free;
+            $planName = $activeSubscription->plan->name;
+        }
+
+        return response()->json([
+            'status' => true,
+            'is_pro' => $isPro,
+            'plan_name' => $planName,
+            'expires_at' => $activeSubscription->end_date ?? null
+        ]);
+    }
+
+    /**
+     * Check if a specific user is a PRO user
+     */
+    public function checkUserPro($userId)
+    {
+        $activeSubscription = UserSubscription::with('plan')
+            ->where('user_id', $userId)
+            ->where('is_active', 1)
+            ->where('end_date', '>=', now())
+            ->latest()
+            ->first();
+
+        $isPro = false;
+        $planName = 'free';
+
+        if ($activeSubscription && $activeSubscription->plan) {
+            $isPro = !$activeSubscription->plan->is_free;
+            $planName = $activeSubscription->plan->name;
+        }
+
+        return response()->json([
+            'status' => true,
+            'is_pro' => $isPro,
+            'plan_name' => $planName,
+            'expires_at' => $activeSubscription->end_date ?? null
+        ]);
+    }
+
     public function assignFreeSubscription(Request $request)
     {
         $request->validate([
