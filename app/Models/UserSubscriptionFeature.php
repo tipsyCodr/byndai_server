@@ -41,6 +41,11 @@ class UserSubscriptionFeature extends Model
     {
         return $this->belongsTo(UserSubscription::class, 'user_subscription_id', 'id');
     }
+
+    public function feature(): BelongsTo
+    {
+        return $this->belongsTo(Feature::class, 'feature_id');
+    }
     
    
 
