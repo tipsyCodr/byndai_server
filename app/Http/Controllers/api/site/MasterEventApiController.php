@@ -83,7 +83,13 @@ class MasterEventApiController extends Controller
         }
 
         // ✅ IMPORTANT: Only show events where end_date >= current date (ONLY DATE compare)
-        $query->whereDate('end_date', '>=', now()->format('Y-m-d'));
+        $query->where(function ($q) {
+            $q->whereDate('end_date', '>=', now()->toDateString())
+              ->orWhere(function ($q2) {
+                  $q2->whereNull('end_date')
+                     ->whereDate('start_date', '>=', now()->toDateString());
+              });
+        });
 
         // ✅ Latest first
         $query->orderBy('id', 'DESC');
