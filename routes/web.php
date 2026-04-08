@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 // Backend Auth & Dashboard
 use App\Http\Controllers\Backend\AuthController;
 use App\Http\Controllers\Backend\DashboardController;
+use App\Http\Controllers\NotificationController;
 
 Route::get('/', function () {
     return view('index');
