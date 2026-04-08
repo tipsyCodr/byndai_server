@@ -31,7 +31,7 @@ use App\Http\Controllers\api\site\SubscriptionPlanController;
 use App\Http\Controllers\api\site\PlanFeatureController;
 use App\Http\Controllers\api\site\ImageController;
 use App\Http\Controllers\api\site\UserSubscriptionController;
-use App\Http\Controllers\api\site\NotificationController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\api\site\TransactionApiController;
 use Illuminate\Support\Facades\Route;
 
