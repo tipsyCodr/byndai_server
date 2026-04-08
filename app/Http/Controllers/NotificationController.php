@@ -29,7 +29,7 @@ class NotificationController extends Controller
             'title' => 'required|string|max:100',
             'body' => 'required|string|max:255',
             'target_type' => 'required|in:all,single',
-            'user_id' => 'required_if:target_type,single|exists:users,id',
+            'user_id' => 'nullable|required_if:target_type,single|exists:users,id',
             'image_url' => 'nullable|url',
             'image_file' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'screen' => 'nullable|string|max:50',
