@@ -29,6 +29,10 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Notifications
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('admin.notifications.index');
+    Route::post('/notifications/send', [NotificationController::class, 'send'])->name('admin.notifications.send');
 });
 
 Route::get('/product/{id}', [IndexController::class, 'product'])->name('single-product');

@@ -181,6 +181,13 @@
                             </a>
                         </li>
                         <li>
+                            <a href="{{ route('admin.notifications.index') }}"
+                                class="nav-link {{ request()->routeIs('admin.notifications.index') ? 'active' : '' }}">
+                                <i data-lucide="bell" style="margin-right: 1rem; width: 18px;"></i>
+                                Notifications
+                            </a>
+                        </li>
+                        <li>
                             <a href="#" class="nav-link">
                                 <i data-lucide="users" style="margin-right: 1rem; width: 18px;"></i>
                                 Users
