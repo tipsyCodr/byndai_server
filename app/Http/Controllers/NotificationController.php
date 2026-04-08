@@ -30,7 +30,10 @@ class NotificationController extends Controller
             'body' => 'required|string|max:255',
             'target_type' => 'required|in:all,single',
             'user_id' => 'required_if:target_type,single|exists:users,id',
-            'image_url' => 'nullable|url'
+            'image_url' => 'nullable|url',
+            'image_file' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'screen' => 'nullable|string|max:50',
+            'item_id' => 'nullable|string|max:50'
         ]);
 
         $serviceAccountPath = config('firebase.credentials');
@@ -41,6 +44,13 @@ class NotificationController extends Controller
         try {
             $factory = (new Factory)->withServiceAccount($serviceAccountPath);
             $messaging = $factory->createMessaging();
+
+            // Handle Image Upload
+            $finalImageUrl = $request->image_url;
+            if ($request->hasFile('image_file')) {
+                $path = $request->file('image_file')->store('notifications', 'public');
+                $finalImageUrl = asset('storage/' . $path);
+            }
 
             $tokens = [];
             if ($request->target_type === 'all') {
@@ -57,7 +67,7 @@ class NotificationController extends Controller
             }
 
             $count = 0;
-            $chunks = array_chunk($tokens, 500); // FCM limit for multicast is 500
+            $chunks = array_chunk($tokens, 500);
 
             foreach ($chunks as $chunk) {
                 foreach ($chunk as $token) {
@@ -69,12 +79,14 @@ class NotificationController extends Controller
                         ],
                         'data' => [
                             'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
-                            'type' => 'custom'
+                            'type' => 'custom',
+                            'screen' => $request->screen ?? 'home',
+                            'item_id' => (string)$request->item_id ?? ''
                         ]
                     ];
 
-                    if ($request->image_url) {
-                        $messageData['notification']['image'] = $request->image_url;
+                    if ($finalImageUrl) {
+                        $messageData['notification']['image'] = $finalImageUrl;
                     }
 
                     $message = CloudMessage::fromArray($messageData);
