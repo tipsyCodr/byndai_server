@@ -34,6 +34,19 @@ Route::middleware(['auth'])->group(function () {
     // Notifications
     Route::get('/notifications', [NotificationController::class, 'index'])->name('admin.notifications.index');
     Route::post('/notifications/send', [NotificationController::class, 'send'])->name('admin.notifications.send');
+
+    // Subscription Management
+    Route::resource('plans', \App\Http\Controllers\Backend\PlanController::class, ['as' => 'admin']);
+    Route::post('plans/{id}/features', [\App\Http\Controllers\Backend\PlanController::class, 'addFeature'])->name('admin.plans.addFeature');
+    Route::delete('plans/{id}/features/{featureId}', [\App\Http\Controllers\Backend\PlanController::class, 'removeFeature'])->name('admin.plans.removeFeature');
+    
+    Route::resource('features', \App\Http\Controllers\Backend\FeatureController::class, ['as' => 'admin']);
+    
+    Route::prefix('subscriptions')->name('admin.subscriptions.')->group(function() {
+        Route::get('/', [\App\Http\Controllers\Backend\SubscriptionManagementController::class, 'index'])->name('index');
+        Route::get('/{id}', [\App\Http\Controllers\Backend\SubscriptionManagementController::class, 'show'])->name('show');
+        Route::post('/usage/{id}/update', [\App\Http\Controllers\Backend\SubscriptionManagementController::class, 'updateUsage'])->name('updateUsage');
+    });
 });
 
 Route::get('/product/{id}', [IndexController::class, 'product'])->name('single-product');

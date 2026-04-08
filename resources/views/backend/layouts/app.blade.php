@@ -193,16 +193,25 @@
                                 Users
                             </a>
                         </li>
+                        <li style="margin-top: 1.5rem; margin-bottom: 0.5rem;">
+                            <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.05em; padding-left: 1rem;">Subscription Mgmt</span>
+                        </li>
                         <li>
-                            <a href="#" class="nav-link">
-                                <i data-lucide="users" style="margin-right: 1rem; width: 18px;"></i>
-                                Plans
+                            <a href="{{ route('admin.plans.index') }}" class="nav-link {{ request()->routeIs('admin.plans.*') ? 'active' : '' }}">
+                                <i data-lucide="package" style="margin-right: 1rem; width: 18px;"></i>
+                                Subscription Plans
                             </a>
                         </li>
                         <li>
-                            <a href="#" class="nav-link">
-                                <i data-lucide="users" style="margin-right: 1rem; width: 18px;"></i>
-                                Subscriptions
+                            <a href="{{ route('admin.features.index') }}" class="nav-link {{ request()->routeIs('admin.features.*') ? 'active' : '' }}">
+                                <i data-lucide="list-checks" style="margin-right: 1rem; width: 18px;"></i>
+                                Master Features
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.subscriptions.index') }}" class="nav-link {{ request()->routeIs('admin.subscriptions.*') ? 'active' : '' }}">
+                                <i data-lucide="credit-card" style="margin-right: 1rem; width: 18px;"></i>
+                                User Subscriptions
                             </a>
                         </li>
                         <li>
