@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class MasterEventApiController extends Controller
@@ -98,11 +99,20 @@ class MasterEventApiController extends Controller
         $perPage = 10;
         $data_provider = $query->paginate($perPage);
 
-        // ✅ Add created_by user info inside each event
+        // ✅ Add extra info and full image URLs
         $data_provider->getCollection()->transform(function ($event) {
 
             $event->created_by_user_name = $event->createdByUser->user_name ?? null;
             $event->created_by_fname = $event->createdByUser->masterUser->fname ?? null;
+
+            // Transform image paths to full URLs
+            if ($event->images) {
+                $event->images->transform(function ($img) {
+                    $img->full_url = $this->getMediaUrl($img->event_img_path);
+
+                    return $img;
+                });
+            }
 
             return $event;
         });
@@ -134,20 +144,17 @@ class MasterEventApiController extends Controller
 
                 $fileName = time().'_'.uniqid().'_'.$file->getClientOriginalName();
 
-                $folderPath = "assets/uploads/event/$title/";
-                $fullPath = public_path($folderPath);
+                // Sanitize title for folder name
+                $folderTitle = preg_replace('/[^a-zA-Z0-9_-]/', '_', $title);
+                $folderPath = "event/{$folderTitle}/";
 
-                if (! file_exists($fullPath)) {
-                    mkdir($fullPath, 0777, true);
-                }
-
-                // ✅ ab move
-                $file->move($fullPath, $fileName);
+                // ✅ Store using Storage facade
+                $path = $file->storeAs($folderPath, $fileName, 'public');
 
                 MasterEventImage::create([
                     'event_id' => $event_id,
                     'event_img' => $fileName,
-                    'event_img_path' => $folderPath.$fileName,
+                    'event_img_path' => 'storage/'.$path,
                     'type' => $type,
                 ]);
             }
@@ -201,19 +208,23 @@ class MasterEventApiController extends Controller
     {
         $event = MasterEvent::with('images')->findOrFail($eid);
 
-        // ✅ Folder path (title ke naam ka)
-        $folderPath = public_path('assets/uploads/event/'.$event->title);
+        // ✅ Delete all images using Storage
+        foreach ($event->images as $image) {
+            $this->deleteMedia($image->event_img_path);
+        }
 
-        // ✅ Delete all images rows
+        // ✅ Delete total folder if it exists in storage
+        $folderTitle = preg_replace('/[^a-zA-Z0-9_-]/', '_', $event->title);
+        $folderPath = "event/{$folderTitle}";
+        if (Storage::disk('public')->exists($folderPath)) {
+            Storage::disk('public')->deleteDirectory($folderPath);
+        }
+
+        // ✅ Delete images rows
         MasterEventImage::where('event_id', $eid)->delete();
 
         // ✅ Delete Event
         $event->delete();
-
-        // ✅ Delete folder (title wala)
-        if (File::exists($folderPath)) {
-            File::deleteDirectory($folderPath);
-        }
 
         return response()->json([
             'status' => true,
@@ -256,10 +267,18 @@ class MasterEventApiController extends Controller
         $perPage = $r->per_page ?? 10;
         $data_provider = $query->paginate($perPage);
 
-        // ✅ extra created_by info
+        // ✅ extra created_by info and full URLs
         $data_provider->getCollection()->transform(function ($event) {
             $event->created_by_user_name = $event->createdByUser->user_name ?? null;
             $event->created_by_fname = $event->createdByUser->masterUser->fname ?? null;
+
+            if ($event->images) {
+                $event->images->transform(function ($img) {
+                    $img->full_url = $this->getMediaUrl($img->event_img_path);
+
+                    return $img;
+                });
+            }
 
             return $event;
         });
@@ -377,10 +396,7 @@ class MasterEventApiController extends Controller
                         ->first();
 
                     if ($image) {
-                        $fullPath = public_path($image->event_img_path);
-                        if (File::exists($fullPath)) {
-                            File::delete($fullPath);
-                        }
+                        $this->deleteMedia($image->event_img_path);
                         $image->delete();
                     }
                 }
@@ -485,12 +501,7 @@ class MasterEventApiController extends Controller
 
         // Sanitize title for folder name
         $folderTitle = preg_replace('/[^a-zA-Z0-9_-]/', '_', $event->title);
-        $folderPath = "assets/uploads/event/{$folderTitle}/";
-        $fullPath = public_path($folderPath);
-
-        if (! file_exists($fullPath)) {
-            mkdir($fullPath, 0777, true);
-        }
+        $folderPath = "event/{$folderTitle}/";
 
         foreach ($files as $index => $file) {
             try {
@@ -501,21 +512,11 @@ class MasterEventApiController extends Controller
                     continue;
                 }
 
-                // Get file contents directly
-                $fileContent = file_get_contents($file->getRealPath());
-                if ($fileContent === false) {
-                    throw new \Exception('Could not read file contents');
-                }
-
                 $extension = $file->getClientOriginalExtension();
                 $fileName = time().'_'.uniqid().'_'.$index.'.'.$extension;
 
-                // Write file manually
-                $writeSuccess = file_put_contents($fullPath.$fileName, $fileContent);
-
-                if ($writeSuccess === false) {
-                    throw new \Exception('Failed to write file to destination');
-                }
+                // ✅ Store using Storage facade
+                $path = $file->storeAs($folderPath, $fileName, 'public');
 
                 $mimeType = $file->getMimeType();
                 $type = str_contains($mimeType, 'video') ? 1 : 0;
@@ -523,7 +524,7 @@ class MasterEventApiController extends Controller
                 MasterEventImage::create([
                     'event_id' => $event->id,
                     'event_img' => $fileName,
-                    'event_img_path' => $folderPath.$fileName,
+                    'event_img_path' => 'storage/'.$path,
                     'type' => $type,
                 ]);
 
@@ -578,21 +579,12 @@ class MasterEventApiController extends Controller
                 ->where('event_img_path', $request->image_path)
                 ->first();
 
-            if ($image) {
-                // Delete physical file
-                $fullPath = public_path($image->event_img_path);
-                if (File::exists($fullPath)) {
-                    File::delete($fullPath);
-                }
+             if ($image) {
+                // Delete using helper
+                $this->deleteMedia($image->event_img_path);
 
                 // Delete database record
                 $image->delete();
-
-                // If folder is empty, delete it
-                $folderPath = dirname($fullPath);
-                if (is_dir($folderPath) && count(scandir($folderPath)) == 2) {
-                    rmdir($folderPath);
-                }
             }
 
             return response()->json([
@@ -630,9 +622,17 @@ class MasterEventApiController extends Controller
                 ], 404);
             }
 
-            // Add created by user info
+            // Add created by user info and full URLs
             $event->created_by_user_name = $event->createdByUser->user_name ?? null;
             $event->created_by_fname = $event->createdByUser->masterUser->fname ?? null;
+
+            if ($event->images) {
+                $event->images->transform(function ($img) {
+                    $img->full_url = $this->getMediaUrl($img->event_img_path);
+
+                    return $img;
+                });
+            }
 
             return response()->json([
                 'status' => true,
@@ -645,6 +645,44 @@ class MasterEventApiController extends Controller
                 'status' => false,
                 'message' => 'Error fetching event: '.$e->getMessage(),
             ], 500);
+        }
+    }
+    /**
+     * Helper to get full media URL
+     */
+    private function getMediaUrl($path)
+    {
+        if (! $path) {
+            return null;
+        }
+
+        if (str_starts_with($path, 'storage/')) {
+            return asset($path);
+        }
+
+        // Fallback for old public/assets path
+        return asset($path);
+    }
+
+    /**
+     * Helper to delete media
+     */
+    private function deleteMedia($path)
+    {
+        if (! $path) {
+            return;
+        }
+
+        if (str_starts_with($path, 'storage/')) {
+            $relativePath = str_replace('storage/', '', $path);
+            if (Storage::disk('public')->exists($relativePath)) {
+                Storage::disk('public')->delete($relativePath);
+            }
+        } else {
+            $fullPath = public_path($path);
+            if (File::exists($fullPath)) {
+                File::delete($fullPath);
+            }
         }
     }
 }
