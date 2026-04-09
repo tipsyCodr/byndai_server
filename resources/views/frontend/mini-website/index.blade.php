@@ -303,40 +303,62 @@
             overflow: hidden;
         }
 
-        /* Video Modal */
+        /* Video Modal - Shorts Experience */
         #videoModal {
             display: none;
             position: fixed;
             inset: 0;
             z-index: 9999;
-            background: rgba(0,0,0,0.95);
+            background: #000;
+            flex-direction: column;
+        }
+        #videoModal .modal-close-overlay {
+            position: absolute;
+            top: 1rem;
+            right: 1.5rem;
+            color: #fff;
+            font-size: 2.5rem;
+            cursor: pointer;
+            z-index: 100;
+            text-shadow: 0 0 10px rgba(0,0,0,0.5);
+            line-height: 1;
+        }
+        .shorts-container {
+            flex: 1;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .shorts-container::-webkit-scrollbar { display: none; }
+        .video-slide {
+            width: 100%;
+            height: 100vh;
+            scroll-snap-align: start;
+            position: relative;
+            display: flex;
             align-items: center;
             justify-content: center;
-            padding: 1rem;
+            background: #000;
         }
-        #videoModal .modal-content-custom {
+        .video-slide .player-wrapper {
             width: 100%;
+            height: 100%;
             max-width: 500px;
             aspect-ratio: 9/16;
             position: relative;
-            background: #000;
-            border-radius: 1rem;
-            overflow: hidden;
         }
-        #videoModal iframe {
+        .video-slide iframe {
             width: 100%;
             height: 100%;
             border: none;
         }
-        #videoModal .close-modal {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            color: #fff;
-            font-size: 2rem;
-            cursor: pointer;
-            z-index: 10;
-            line-height: 1;
+        /* Mobile optimization */
+        @media (max-width: 576px) {
+            .video-slide .player-wrapper {
+                max-width: 100%;
+                height: 100%;
+            }
         }
     </style>
     <style>
@@ -487,11 +509,7 @@
                 <div class="col-12 col-lg-7 col-xl-7">
                     
                     <!-- Businesses Section -->
-                    {{-- @include('frontend.mini-website.partials.footer') --}}
                         <section class="mb-4">
-                            {{-- <h2 class="text-lg font-semibold text-foreground mb-3">
-                                <i class="fas fa-building me-2 text-primary"></i> {{ $user->businesses->count() > 1 ? 'Businesses' : 'Business' }}
-                            </h2> --}}
                             <div class="row g-3">
                                 @foreach ($user->businesses as $biz)
                                     <div class="col-12{{ $user->businesses->count() > 1 ? ' col-md-6' : '' }}">
@@ -557,7 +575,7 @@
                                     }
                                     $thumbUrl = $videoId ? "https://img.youtube.com/vi/{$videoId}/hqdefault.jpg" : 'https://placehold.co/360x640?text=Video';
                                 @endphp
-                                <div class="short-card" onclick="openVideo('{{ $vid->video_url }}')">
+                                <div class="short-card" onclick="openVideo({{ $loop->index }})">
                                     <div class="play-icon">
                                         <i class="fas fa-play"></i>
                                     </div>
@@ -583,7 +601,6 @@
                                             $image = $productImages->firstWhere('prod_id', $value->id);
                                         @endphp
                                         <div class="relative w-full aspect-square">
-                                            {{-- <a href="{{ route('single-product', ['id' => encrypt($value->id)]) }}"> --}}
                                                 @php
                                                     $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400"><rect width="400" height="400" fill="#1e293b"/><svg x="125" y="125" width="150" height="150" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg></svg>';
                                                     $imgSrc = 'data:image/svg+xml;base64,' . base64_encode($svg);
@@ -595,15 +612,12 @@
                                                 @endphp
                                                 <img src="{{ $imgSrc }}"
                                                     alt="{{ $value->product_name }}" class="w-full h-full object-cover p-2 rounded-2xl"/>
-                                            {{-- </a> --}}
                                         </div>
                                         <div class="p-4 d-flex flex-column flex-grow-1">
                                             <div class="d-flex align-items-start justify-content-between mb-2 gap-2">
-                                                {{-- <a href="{{ route('single-product', ['id' => encrypt($value->id)]) }}" class="text-decoration-none" style="min-width: 0;"> --}}
                                                     <h3 class="font-semibold text-foreground mb-0 truncate" style="font-size: 1.1rem; line-height: 1.3;" title="{{ $value->product_name }}">
                                                         {{ $value->product_name }}
                                                     </h3>
-                                                {{-- </a> --}}
                                                 <div class="text-primary font-bold whitespace-nowrap">
                                                     ₹{{ $value->product_price }}
                                                 </div>
@@ -877,47 +891,91 @@
             <i class="fas fa-address-book"></i> Save Contact
         </a>
 
-        <!-- Video Modal -->
+        <!-- Video Modal - Layout Change for Scrolling -->
+        @if(isset($videos) && $videos->count() > 0)
         <div id="videoModal">
-            <span class="close-modal" onclick="closeVideo()">&times;</span>
-            <div class="modal-content-custom">
-                <iframe id="videoPlayer" src="" allow="autoplay; encrypted-media" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+            <span class="modal-close-overlay" onclick="closeVideo()">&times;</span>
+            <div class="shorts-container" id="shortsContainer">
+                @foreach($videos as $vid)
+                    @php
+                        $videoId = '';
+                        if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/', $vid->video_url, $match)) {
+                            $videoId = $match[1];
+                        } elseif (preg_match('/youtube\.com\/shorts\/([^"&?\/\s]{11})/', $vid->video_url, $match)) {
+                            $videoId = $match[1];
+                        }
+                    @endphp
+                    <div class="video-slide" data-index="{{ $loop->index }}" data-video-id="{{ $videoId }}" data-url="{{ $vid->video_url }}">
+                        <div class="player-wrapper">
+                            {{-- iframe will be injected by JS --}}
+                        </div>
+                    </div>
+                @endforeach
             </div>
         </div>
+        @endif
     </div>
 
     <script>
-        function openVideo(url) {
-            let videoId = '';
-            if (url.includes('youtube.com/shorts/')) {
-                videoId = url.split('shorts/')[1].split('?')[0].split('&')[0];
-            } else if (url.includes('youtube.com/watch?v=')) {
-                videoId = url.split('v=')[1].split('&')[0];
-            } else if (url.includes('youtu.be/')) {
-                videoId = url.split('youtu.be/')[1].split('?')[0].split('&')[0];
-            }
+        let shortsObserver = null;
+        let shortsModal = document.getElementById('videoModal');
+        let shortsContainer = document.getElementById('shortsContainer');
+
+        function initShortsObserver() {
+            if (shortsObserver) return;
+
+            shortsObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const slide = entry.target;
+                    const wrapper = slide.querySelector('.player-wrapper');
+                    const videoId = slide.getAttribute('data-video-id');
+                    
+                    if (entry.isIntersecting) {
+                        if (videoId) {
+                            const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&enablejsapi=1&referrerpolicy=strict-origin-when-cross-origin`;
+                            wrapper.innerHTML = `<iframe src="${embedUrl}" allow="autoplay; encrypted-media" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+                        }
+                    } else {
+                        wrapper.innerHTML = '';
+                    }
+                });
+            }, {
+                threshold: 0.8
+            });
+
+            document.querySelectorAll('.video-slide').forEach(slide => {
+                shortsObserver.observe(slide);
+            });
+        }
+
+        function openVideo(index) {
+            if (!shortsModal) return;
             
-            if (videoId) {
-                const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
-                document.getElementById('videoPlayer').src = embedUrl;
-                document.getElementById('videoModal').style.display = 'flex';
-                document.body.style.overflow = 'hidden';
-            } else {
-                window.open(url, '_blank');
-            }
+            shortsModal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            
+            setTimeout(() => {
+                const targetSlide = document.querySelector(`.video-slide[data-index="${index}"]`);
+                if (targetSlide) {
+                    targetSlide.scrollIntoView({ behavior: 'auto' });
+                }
+                initShortsObserver();
+            }, 10);
         }
 
         function closeVideo() {
-            document.getElementById('videoModal').style.display = 'none';
-            document.getElementById('videoPlayer').src = '';
+            if (!shortsModal) return;
+            
+            shortsModal.style.display = 'none';
             document.body.style.overflow = '';
+            
+            document.querySelectorAll('.video-slide .player-wrapper').forEach(wrapper => {
+                wrapper.innerHTML = '';
+            });
         }
 
-        window.onclick = function(event) {
-            const modal = document.getElementById('videoModal');
-            if (event.target == modal) {
-                closeVideo();
-            }
-        }
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeVideo();
+        });
     </script>
 @endsection
