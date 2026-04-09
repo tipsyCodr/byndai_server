@@ -625,26 +625,18 @@
 
                                 {{-- JCI Badge --}}
                                 @if($user->masterUser?->jci_member)
-                                    <div class="premium-badge" style="background: #fff; border-color: #eee;">
-                                        <div class="premium-badge-icon" style="width: 3rem;">
+                                    <div class="premium-badge" style="background: #fff; border-color: #eee; min-width: auto; padding: 0.6rem;">
+                                        <div class="premium-badge-icon" style="width: 2.5rem; height: 2.5rem;">
                                             <img src="{{ asset('assets/icons/jci.jpeg') }}" class="badge-logo-img" alt="JCI">
-                                        </div>
-                                        <div class="premium-badge-info">
-                                            <span class="premium-badge-title" style="color: #004a8e;">JCI</span>
-                                            <span class="premium-badge-subtitle">Member</span>
                                         </div>
                                     </div>
                                 @endif
 
                                 {{-- BNI Badge --}}
                                 @if($user->masterUser?->bni_member)
-                                    <div class="premium-badge" style="background: #cf202e; border-color: #9e1a23;">
-                                        <div class="premium-badge-icon" style="width: 2.5rem;">
+                                    <div class="premium-badge" style="background: #cf202e; border-color: #9e1a23; min-width: auto; padding: 0.6rem;">
+                                        <div class="premium-badge-icon" style="width: 2.5rem; height: 2.5rem;">
                                             <img src="{{ asset('assets/icons/BNI.png') }}" class="badge-logo-img" alt="BNI">
-                                        </div>
-                                        <div class="premium-badge-info">
-                                            <span class="premium-badge-title" style="color: #fff;">BNI</span>
-                                            <span class="premium-badge-subtitle" style="color: #ffd1d5;">Member</span>
                                         </div>
                                     </div>
                                 @endif
@@ -674,7 +666,7 @@
                                             <a href="{{ $link['url'] }}" class="social-link-item" target="_blank" title="{{ $link['label'] }}">
                                                 <div class="social-link-icon" style="background:{{ $link['color'] }}; padding: {{ $link['image'] ? '4px' : '0' }}">
                                                     @if($link['image'])
-                                                        <img src="{{ $link['image'] }}" class="w-full h-full object-cover rounded-xl" style="background: #fff;">
+                                                        <img src="{{ $link['image'] }}" class="object-contain" style="width: 28px; height: 28px; border-radius: 4px; background: #fff;">
                                                     @else
                                                         <i class="{{ $link['icon'] }} fa-lg"></i>
                                                     @endif
