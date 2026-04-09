@@ -114,7 +114,7 @@
 
     function openEditModal(id, name) {
         document.getElementById('modalTitle').innerText = 'Edit Feature';
-        document.getElementById('featureForm').action = "/admin/features/" + id;
+        document.getElementById('featureForm').action = "/features/" + id;
         document.getElementById('methodField').innerHTML = '<input type="hidden" name="_method" value="PUT">';
         document.getElementById('featureInput').value = name;
         document.getElementById('featureModal').style.display = 'flex';

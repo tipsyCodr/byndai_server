@@ -153,7 +153,7 @@
         
         if (plan) {
             title.innerText = 'Edit Subscription Plan';
-            form.action = `/admin/plans/${plan.id}`;
+            form.action = `/plans/${plan.id}`;
             method.innerHTML = '<input type="hidden" name="_method" value="PUT">';
             
             document.getElementById('nameInput').value = plan.name;

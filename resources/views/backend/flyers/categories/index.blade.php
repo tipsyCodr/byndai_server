@@ -165,7 +165,7 @@
 
     function openEditModal(category) {
         document.getElementById('modalTitle').innerText = 'Edit Category';
-        document.getElementById('categoryForm').action = "/admin/flyer-categories/" + category.id;
+        document.getElementById('categoryForm').action = "/flyer-categories/" + category.id;
         document.getElementById('methodField').innerHTML = '<input type="hidden" name="_method" value="PUT">';
         document.getElementById('nameInput').value = category.name;
         document.getElementById('typeInput').value = category.type;
