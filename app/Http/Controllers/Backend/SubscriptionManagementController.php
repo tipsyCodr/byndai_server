@@ -73,4 +73,29 @@ class SubscriptionManagementController extends Controller
 
         return back()->with('success', 'User usage updated successfully.');
     }
+
+    /**
+     * Update BNI and JCI badges for the user
+     */
+    public function updateBadges(Request $request, $id)
+    {
+        $subscription = UserSubscription::findOrFail($id);
+        $user = $subscription->user;
+        
+        if (!$user) {
+            return back()->with('error', 'User not found.');
+        }
+
+        $userDetail = $user->masterUser;
+        if (!$userDetail) {
+            return back()->with('error', 'User details not found.');
+        }
+
+        $userDetail->update([
+            'jci_member' => $request->has('jci_member') ? 1 : 0,
+            'bni_member' => $request->has('bni_member') ? 1 : 0,
+        ]);
+
+        return back()->with('success', 'Badges updated successfully.');
+    }
 }

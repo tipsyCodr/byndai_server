@@ -46,6 +46,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [\App\Http\Controllers\Backend\SubscriptionManagementController::class, 'index'])->name('index');
         Route::get('/{id}', [\App\Http\Controllers\Backend\SubscriptionManagementController::class, 'show'])->name('show');
         Route::post('/usage/{id}/update', [\App\Http\Controllers\Backend\SubscriptionManagementController::class, 'updateUsage'])->name('updateUsage');
+        Route::post('/{id}/update-badges', [\App\Http\Controllers\Backend\SubscriptionManagementController::class, 'updateBadges'])->name('updateBadges');
     });
 });
 

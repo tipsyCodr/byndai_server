@@ -1,6 +1,56 @@
 @extends('backend.layouts.app')
 
 @section('content')
+<style>
+    /* Toggle Switch CSS */
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 26px;
+    }
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(255,255,255,0.1);
+        transition: .4s;
+        border: 1px solid var(--glass-border);
+    }
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .4s;
+    }
+    input:checked + .slider {
+        background-color: #4ade80;
+    }
+    input:focus + .slider {
+        box-shadow: 0 0 1px #4ade80;
+    }
+    input:checked + .slider:before {
+        transform: translateX(24px);
+    }
+    .slider.round {
+        border-radius: 34px;
+    }
+    .slider.round:before {
+        border-radius: 50%;
+    }
+</style>
 <div class="container">
     <div class="header-area" style="margin-bottom: 3rem; display: flex; justify-content: space-between; align-items: flex-end;">
         <div>
@@ -20,6 +70,39 @@
             @else
                 <strong style="color: #f87171;">EXPIRED</strong>
             @endif
+        </div>
+    </div>
+    
+    <div class="header-area" style="margin-bottom: 2rem;">
+        <div class="premium-glass" style="padding: 2rem; border-radius: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1.3rem; font-weight: 700;">Managed Badges</h3>
+                <span style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Public Profile Badges</span>
+            </div>
+            
+            <form action="{{ route('admin.subscriptions.updateBadges', $subscription->id) }}" method="POST" style="display: flex; gap: 2rem; align-items: center;">
+                @csrf
+                <div style="display: flex; align-items: center; gap: 0.8rem;">
+                    <label class="switch" style="position: relative; display: inline-block; width: 50px; height: 26px;">
+                        <input type="checkbox" name="jci_member" value="1" {{ ($subscription->user->masterUser->jci_member ?? 0) ? 'checked' : '' }} onchange="this.form.submit()">
+                        <span class="slider round"></span>
+                    </label>
+                    <span style="font-weight: 600;">JCI Badge</span>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 0.8rem;">
+                    <label class="switch" style="position: relative; display: inline-block; width: 50px; height: 26px;">
+                        <input type="checkbox" name="bni_member" value="1" {{ ($subscription->user->masterUser->bni_member ?? 0) ? 'checked' : '' }} onchange="this.form.submit()">
+                        <span class="slider round"></span>
+                    </label>
+                    <span style="font-weight: 600;">BNI Badge</span>
+                </div>
+                
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0; margin-left: auto;">
+                    <i data-lucide="info" style="width: 14px; display: inline-block; vertical-align: middle;"></i>
+                    Toggling will automatically save and update the user's public profile.
+                </p>
+            </form>
         </div>
     </div>
 
