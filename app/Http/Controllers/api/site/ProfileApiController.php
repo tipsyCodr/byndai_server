@@ -228,9 +228,9 @@ class ProfileApiController extends Controller
             ], 404);
         }
 
-        $data->profile_pic = $this->getMediaUrl($data->profile_pic, 'profile_pics');
-        $data->profile_logo = $this->getMediaUrl($data->profile_logo, 'profile_logos');
-        $data->profile_banner = $this->getMediaUrl($data->profile_banner, 'profile_banners');
+        // $data->profile_pic = $this->getMediaUrl($data->profile_pic, 'profile_pics');
+        // $data->profile_logo = $this->getMediaUrl($data->profile_logo, 'profile_logos');
+        // $data->profile_banner = $this->getMediaUrl($data->profile_banner, 'profile_banners');
 
         return response()->json([
             'status' => true,
@@ -659,30 +659,30 @@ public function usersNameProfileData($username)
       }
     }
 
-    private function getMediaUrl($path, $folder)
-    {
-        if (! $path) {
-            return null;
-        }
+    // private function getMediaUrl($path, $folder)
+    // {
+    //     if (! $path) {
+    //         return null;
+    //     }
 
-        // If it's already a full URL, return as is
-        if (str_starts_with($path, 'http')) {
-            return $path;
-        }
+    //     // If it's already a full URL, return as is
+    //     if (str_starts_with($path, 'http')) {
+    //         return $path;
+    //     }
 
-        // Handle path that already starts with 'storage/'
-        if (str_starts_with($path, 'storage/')) {
-            return asset($path);
-        }
+    //     // Handle path that already starts with 'storage/'
+    //     if (str_starts_with($path, 'storage/')) {
+    //         return asset($path);
+    //     }
 
-        // Handle path that starts with 'uploads/' (modern storeAs behavior)
-        if (str_starts_with($path, 'uploads/')) {
-            return asset('storage/' . $path);
-        }
+    //     // Handle path that starts with 'uploads/' (modern storeAs behavior)
+    //     if (str_starts_with($path, 'uploads/')) {
+    //         return asset('storage/' . $path);
+    //     }
 
-        // Fallback for legacy filenames (not paths)
-        // return asset('assets/uploads/' . $folder . '/' . $path);
-    }
+    //     // Fallback for legacy filenames (not paths)
+    //     // return asset('assets/uploads/' . $folder . '/' . $path);
+    // }
 
     private function deleteMedia($path, $folder)
     {
