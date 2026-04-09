@@ -681,7 +681,7 @@ public function usersNameProfileData($username)
         }
 
         // Fallback for legacy filenames (not paths)
-        return asset('assets/uploads/' . $folder . '/' . $path);
+        // return asset('assets/uploads/' . $folder . '/' . $path);
     }
 
     private function deleteMedia($path, $folder)
