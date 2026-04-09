@@ -665,7 +665,23 @@ public function usersNameProfileData($username)
             return null;
         }
 
-        return str_starts_with($path, 'storage/') ? asset($path) : asset('assets/uploads/'.$folder.'/'.$path);
+        // If it's already a full URL, return as is
+        if (str_starts_with($path, 'http')) {
+            return $path;
+        }
+
+        // Handle path that already starts with 'storage/'
+        if (str_starts_with($path, 'storage/')) {
+            return asset($path);
+        }
+
+        // Handle path that starts with 'uploads/' (modern storeAs behavior)
+        if (str_starts_with($path, 'uploads/')) {
+            return asset('storage/' . $path);
+        }
+
+        // Fallback for legacy filenames (not paths)
+        return asset('assets/uploads/' . $folder . '/' . $path);
     }
 
     private function deleteMedia($path, $folder)
@@ -673,13 +689,23 @@ public function usersNameProfileData($username)
         if (! $path) {
             return;
         }
+
+        // Case 1: Path starts with 'storage/'
         if (str_starts_with($path, 'storage/')) {
             $relativePath = str_replace('storage/', '', $path);
             if (Storage::disk('public')->exists($relativePath)) {
                 Storage::disk('public')->delete($relativePath);
             }
-        } else {
-            $fullPath = public_path('assets/uploads/'.$folder.'/'.$path);
+        } 
+        // Case 2: Path starts with 'uploads/' (but without storage/ prefix in DB)
+        elseif (str_starts_with($path, 'uploads/')) {
+            if (Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->delete($path);
+            }
+        }
+        // Case 3: Legacy path (just filename or local assets)
+        else {
+            $fullPath = public_path('assets/uploads/' . $folder . '/' . $path);
             if (File::exists($fullPath)) {
                 File::delete($fullPath);
             }

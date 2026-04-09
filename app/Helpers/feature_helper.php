@@ -21,6 +21,7 @@ if (!function_exists('getFeatureId')) {
             'ai_generated_feedback'     => 6,
             'create-flyer'              => 7,
             'mini-website'              => 8,
+            'product_short_videos'      => 9,
         ];
 
         // 🔥 Cache key

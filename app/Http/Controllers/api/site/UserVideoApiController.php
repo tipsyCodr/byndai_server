@@ -63,6 +63,32 @@ class UserVideoApiController extends Controller
                 ], 422);
             }
 
+            // --- QUOTA CHECK START ---
+            $featureId = getFeatureId('product_short_videos');
+            if (!$featureId) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Feature configuration error (product_short_videos not found)'
+                ], 500);
+            }
+
+            $check = checkUserFeatureLimit($featureId);
+            if (!$check['status']) {
+                return response()->json([
+                    'status' => false,
+                    'message' => $check['message']
+                ], 403);
+            }
+
+            if ($check['is_exceeded'] === true) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Your product video limit has been exceeded for this plan.',
+                    'data' => $check
+                ], 403);
+            }
+            // --- QUOTA CHECK END ---
+
             // Optional: Extract thumbnail or video ID logic could go here
             
             $video = UserVideo::create([
@@ -72,6 +98,9 @@ class UserVideoApiController extends Controller
                 'video_type' => 'youtube',
                 'status' => $request->status ?? 1
             ]);
+
+            // Increment usage
+            incrementFeatureUsage($featureId);
 
             return response()->json([
                 'status' => true,
