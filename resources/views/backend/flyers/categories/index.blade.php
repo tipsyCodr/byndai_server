@@ -107,15 +107,16 @@
             <div class="form-group" style="margin-bottom: 1.5rem;">
                 <label style="display: block; margin-bottom: 0.8rem; color: var(--text-secondary);">Type</label>
                 <select name="type" id="typeInput" onchange="toggleDateField()" class="form-control" style="width: 100%; background: rgba(25, 33, 50, 0.9); border: 1px solid var(--glass-border); padding: 1rem; border-radius: 0.8rem; color: white;" required>
+                    <option value="festive" selected>Festive / Occasional</option>
                     <option value="general">General (Miscellaneous)</option>
-                    <option value="festive">Festive / Occasional</option>
                 </select>
             </div>
 
-            <div id="dateGroup" class="form-group" style="margin-bottom: 2rem; display: none;">
-                <label style="display: block; margin-bottom: 0.8rem; color: var(--text-secondary);">Occasion Date (MM-DD)</label>
-                <input type="text" name="date" id="dateInput" class="form-control" style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); padding: 1rem; border-radius: 0.8rem; color: white;" placeholder="e.g. 08-15">
-                <small style="color: var(--text-secondary); margin-top: 0.5rem; display: block;">Use MM-DD format for annual recurring dates.</small>
+            <div id="dateGroup" class="form-group" style="margin-bottom: 2rem;">
+                <label style="display: block; margin-bottom: 0.8rem; color: var(--text-secondary);">Occasion Date</label>
+                <input type="date" name="date_picker" id="datePicker" onchange="updateDateValue()" class="form-control" style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); padding: 1rem; border-radius: 0.8rem; color: white;">
+                <input type="hidden" name="date" id="dateInput">
+                <small style="color: var(--text-secondary); margin-top: 0.5rem; display: block;">Select the date for the occasion (stored as recurring annually).</small>
             </div>
             
             <button type="submit" class="gradient-btn" style="width: 100%; padding: 1.2rem; border-radius: 1rem; font-size: 1.1rem;">
@@ -129,10 +130,23 @@
 
 @section('scripts')
 <script>
+    function updateDateValue() {
+        const picker = document.getElementById('datePicker');
+        if (picker.value) {
+            const date = new Date(picker.value);
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            document.getElementById('dateInput').value = `${month}-${day}`;
+        } else {
+            document.getElementById('dateInput').value = '';
+        }
+    }
+
     function toggleDateField() {
         const type = document.getElementById('typeInput').value;
         document.getElementById('dateGroup').style.display = type === 'festive' ? 'block' : 'none';
         if(type === 'general') {
+            document.getElementById('datePicker').value = '';
             document.getElementById('dateInput').value = '';
         }
     }
@@ -142,7 +156,8 @@
         document.getElementById('categoryForm').action = "{{ route('admin.flyer-categories.store') }}";
         document.getElementById('methodField').innerHTML = '';
         document.getElementById('nameInput').value = '';
-        document.getElementById('typeInput').value = 'general';
+        document.getElementById('typeInput').value = 'festive';
+        document.getElementById('datePicker').value = '';
         document.getElementById('dateInput').value = '';
         toggleDateField();
         document.getElementById('categoryModal').style.display = 'flex';
@@ -154,7 +169,16 @@
         document.getElementById('methodField').innerHTML = '<input type="hidden" name="_method" value="PUT">';
         document.getElementById('nameInput').value = category.name;
         document.getElementById('typeInput').value = category.type;
-        document.getElementById('dateInput').value = category.date || '';
+        
+        if (category.date) {
+            const year = new Date().getFullYear();
+            document.getElementById('datePicker').value = `${year}-${category.date}`;
+            document.getElementById('dateInput').value = category.date;
+        } else {
+            document.getElementById('datePicker').value = '';
+            document.getElementById('dateInput').value = '';
+        }
+        
         toggleDateField();
         document.getElementById('categoryModal').style.display = 'flex';
     }

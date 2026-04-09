@@ -86,6 +86,7 @@ Route::post('/ocr-extract', [LeadController::class, 'ocrExtract']);
 Route::post('/gpt-ocr', [PostApiController::class, 'gptOcr']);
 // Route::get('/user/{id}/master-links', [MasterLinkController::class, 'getUserLinksById']);
 
+
 Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::get('/leads', [LeadController::class, 'index']);
@@ -847,6 +848,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
 
     // api for post end...
+
 
     // Flyer API
     Route::get('/flyers', [\App\Http\Controllers\api\FlyerApiController::class, 'index']);
