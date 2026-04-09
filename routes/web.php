@@ -48,6 +48,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/usage/{id}/update', [\App\Http\Controllers\Backend\SubscriptionManagementController::class, 'updateUsage'])->name('updateUsage');
         Route::post('/{id}/update-badges', [\App\Http\Controllers\Backend\SubscriptionManagementController::class, 'updateBadges'])->name('updateBadges');
     });
+
+    // Flyer Management
+    Route::resource('flyer-categories', \App\Http\Controllers\Backend\FlyerCategoryController::class, ['as' => 'admin']);
+    Route::resource('flyers', \App\Http\Controllers\Backend\FlyerController::class, ['as' => 'admin']);
 });
 
 Route::get('/product/{id}', [IndexController::class, 'product'])->name('single-product');

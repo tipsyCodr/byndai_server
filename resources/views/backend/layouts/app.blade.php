@@ -188,9 +188,10 @@
                             </a>
                         </li>
                         <li>
-                            <a href="#" class="nav-link">
-                                <i data-lucide="users" style="margin-right: 1rem; width: 18px;"></i>
-                                Users
+                            <a href="{{ route('admin.flyer-categories.index') }}"
+                                class="nav-link {{ request()->routeIs('admin.flyer-categories.*') || request()->routeIs('admin.flyers.*') ? 'active' : '' }}">
+                                <i data-lucide="image" style="margin-right: 1rem; width: 18px;"></i>
+                                Flyer Management
                             </a>
                         </li>
                         <li style="margin-top: 1.5rem; margin-bottom: 0.5rem;">

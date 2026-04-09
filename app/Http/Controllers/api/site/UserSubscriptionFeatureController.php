@@ -5,6 +5,8 @@ namespace App\Http\Controllers\api\site;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\UserSubscriptionFeature;
+use App\Models\PlanFeature;
+use App\Models\UserSubscription;
 
 class UserSubscriptionFeatureController extends Controller
 {

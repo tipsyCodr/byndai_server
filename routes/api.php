@@ -34,6 +34,7 @@ use App\Http\Controllers\api\site\UserVideoApiController;
 use App\Http\Controllers\api\site\UserSubscriptionController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\api\site\TransactionApiController;
+use App\Http\Controllers\api\site\UserSubscriptionFeatureController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -846,6 +847,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
 
     // api for post end...
+
+    // Flyer API
+    Route::get('/flyers', [\App\Http\Controllers\api\FlyerApiController::class, 'index']);
+    Route::get('/flyers/upcoming', [\App\Http\Controllers\api\FlyerApiController::class, 'upcoming']);
+    Route::get('/flyers/category/{id}', [\App\Http\Controllers\api\FlyerApiController::class, 'show']);
 
     Route::post('/logout', [AuthApiController::class, 'logout']);
 
