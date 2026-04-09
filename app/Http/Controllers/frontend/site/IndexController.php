@@ -36,8 +36,10 @@ class IndexController extends Controller
             ->whereNotNull('message')
             ->latest()
             ->get();
+
+        $videos = \App\Models\UserVideo::where('user_id', $user->id)->where('status', 1)->latest()->get();
             
-        return view('frontend.mini-website.index', compact('user', 'products', 'productImages', 'productLinks', 'avgRating', 'reviewCount', 'reviews'));
+        return view('frontend.mini-website.index', compact('user', 'products', 'productImages', 'productLinks', 'avgRating', 'reviewCount', 'reviews', 'videos'));
     }
     public function product($id)
     {

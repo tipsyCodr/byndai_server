@@ -235,6 +235,109 @@
         @media (min-width: 768px) {
             .review-card { flex: 0 0 45%; }
         }
+
+        /* Shorts Section Styles */
+        .shorts-slider {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            gap: 0.75rem;
+            padding: 0.5rem 0 1.5rem;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .shorts-slider::-webkit-scrollbar { display: none; }
+        .short-card {
+            flex: 0 0 160px;
+            scroll-snap-align: start;
+            border-radius: 1rem;
+            overflow: hidden;
+            position: relative;
+            aspect-ratio: 9/16;
+            cursor: pointer;
+            border: 1px solid hsl(var(--border) / 0.5);
+            transition: transform 0.2s ease;
+        }
+        .short-card:hover { transform: scale(1.02); }
+        .short-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .short-card .overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 60%);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 0.75rem;
+        }
+        .short-card .play-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(4px);
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 1.25rem;
+            opacity: 0.8;
+            transition: opacity 0.2s ease;
+        }
+        .short-card:hover .play-icon { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+        .short-card .title {
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 600;
+            line-height: 1.2;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Video Modal */
+        #videoModal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(0,0,0,0.95);
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        #videoModal .modal-content-custom {
+            width: 100%;
+            max-width: 500px;
+            aspect-ratio: 9/16;
+            position: relative;
+            background: #000;
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+        #videoModal iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        #videoModal .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            color: #fff;
+            font-size: 2rem;
+            cursor: pointer;
+            z-index: 10;
+            line-height: 1;
+        }
     </style>
     <style>
         body { overflow-x: hidden; width: 100%; }
@@ -438,6 +541,36 @@
                             </div>
                         </section>
                     
+
+                    <!-- Product Short Videos (Shorts) Section -->
+                    @if(isset($videos) && $videos->count() > 0)
+                    <section class="mb-4">
+                        <h2 class="text-lg font-semibold text-foreground mb-3">Product Short Videos</h2>
+                        <div class="shorts-slider">
+                            @foreach($videos as $vid)
+                                @php
+                                    $videoId = '';
+                                    if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/', $vid->video_url, $match)) {
+                                        $videoId = $match[1];
+                                    } elseif (preg_match('/youtube\.com\/shorts\/([^"&?\/\s]{11})/', $vid->video_url, $match)) {
+                                        $videoId = $match[1];
+                                    }
+                                    $thumbUrl = $videoId ? "https://img.youtube.com/vi/{$videoId}/hqdefault.jpg" : 'https://placehold.co/360x640?text=Video';
+                                @endphp
+                                <div class="short-card" onclick="openVideo('{{ $vid->video_url }}')">
+                                    <div class="play-icon">
+                                        <i class="fas fa-play"></i>
+                                    </div>
+                                    <img src="{{ $thumbUrl }}" alt="{{ $vid->title }}">
+                                    <div class="overlay">
+                                        <div class="title">{{ $vid->title }}</div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </section>
+                    @endif
+
 
                     <!-- Products Section -->
                     <section class="mb-4">
@@ -743,5 +876,48 @@
         <a href="#" class="save-contact-btn">
             <i class="fas fa-address-book"></i> Save Contact
         </a>
+
+        <!-- Video Modal -->
+        <div id="videoModal">
+            <span class="close-modal" onclick="closeVideo()">&times;</span>
+            <div class="modal-content-custom">
+                <iframe id="videoPlayer" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            </div>
+        </div>
     </div>
+
+    <script>
+        function openVideo(url) {
+            let videoId = '';
+            if (url.includes('youtube.com/shorts/')) {
+                videoId = url.split('shorts/')[1].split('?')[0].split('&')[0];
+            } else if (url.includes('youtube.com/watch?v=')) {
+                videoId = url.split('v=')[1].split('&')[0];
+            } else if (url.includes('youtu.be/')) {
+                videoId = url.split('youtu.be/')[1].split('?')[0].split('&')[0];
+            }
+            
+            if (videoId) {
+                const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+                document.getElementById('videoPlayer').src = embedUrl;
+                document.getElementById('videoModal').style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            } else {
+                window.open(url, '_blank');
+            }
+        }
+
+        function closeVideo() {
+            document.getElementById('videoModal').style.display = 'none';
+            document.getElementById('videoPlayer').src = '';
+            document.body.style.overflow = '';
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('videoModal');
+            if (event.target == modal) {
+                closeVideo();
+            }
+        }
+    </script>
 @endsection
