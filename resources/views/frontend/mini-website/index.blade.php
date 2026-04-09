@@ -418,81 +418,142 @@
                                 </div>
                             </div>
 
-                            <!-- Socials Grid -->
+                            <!-- Socials Grid & Custom Buttons -->
                             @php
-                                // Recognized social platforms
-                                $socialPlatforms = ['twitter', 'x', 'linkedin', 'facebook', 'instagram', 'github', 'youtube', 'whatsapp', 'tiktok', 'threads', 'snapchat', 'pinterest', 'telegram'];
+                                // Expand recognized social platforms and icons
+                                $platformMap = [
+                                    'twitter'   => ['icon' => 'fab fa-x-twitter', 'color' => '#000000'],
+                                    'x'         => ['icon' => 'fab fa-x-twitter', 'color' => '#000000'],
+                                    'linkedin'  => ['icon' => 'fab fa-linkedin-in', 'color' => '#0077B5'],
+                                    'facebook'  => ['icon' => 'fab fa-facebook', 'color' => '#1877F2'],
+                                    'instagram' => ['icon' => 'fab fa-instagram', 'color' => '#E4405F'],
+                                    'github'    => ['icon' => 'fab fa-github', 'color' => '#333'],
+                                    'youtube'   => ['icon' => 'fab fa-youtube', 'color' => '#FF0000'],
+                                    'whatsapp'  => ['icon' => 'fab fa-whatsapp', 'color' => '#25D366'],
+                                    'tiktok'    => ['icon' => 'fab fa-tiktok', 'color' => '#010101'],
+                                    'threads'   => ['icon' => 'fab fa-threads', 'color' => '#000000'],
+                                    'snapchat'  => ['icon' => 'fab fa-snapchat', 'color' => '#FFFC00'],
+                                    'pinterest' => ['icon' => 'fab fa-pinterest', 'color' => '#E60023'],
+                                    'telegram'  => ['icon' => 'fab fa-telegram', 'color' => '#26A5E4'],
+                                    'justdial'  => ['icon' => 'fas fa-search', 'color' => '#ff6a00'],
+                                    'indiamart' => ['icon' => 'fas fa-store', 'color' => '#640d15'],
+                                    'google'    => ['icon' => 'fab fa-google', 'color' => '#4285F4'],
+                                    'web'       => ['icon' => 'fas fa-globe', 'color' => '#2196F3'],
+                                    'site'      => ['icon' => 'fas fa-globe', 'color' => '#2196F3'],
+                                    'store'     => ['icon' => 'fas fa-shopping-bag', 'color' => '#FF9800'],
+                                    'shop'      => ['icon' => 'fas fa-shopping-bag', 'color' => '#FF9800'],
+                                    'email'     => ['icon' => 'fas fa-envelope', 'color' => '#EA4335'],
+                                    'gmail'     => ['icon' => 'fas fa-envelope', 'color' => '#EA4335'],
+                                ];
+
                                 $socialLinks = collect();
-                                $customLinks = collect();
-                                if ($user->userLinks && $user->userLinks->count() > 0) {
-                                    foreach ($user->userLinks as $link) {
-                                        $platform = strtolower($link->masterLink?->name ?? 'link');
-                                        $isSocial = false;
-                                        foreach ($socialPlatforms as $sp) {
-                                            if (str_contains($platform, $sp)) { $isSocial = true; break; }
+                                $customButtons = collect();
+
+                                // Merge userLinks and masterLinks
+                                $allLinks = collect();
+                                if ($user->userLinks) {
+                                    foreach($user->userLinks as $ul) {
+                                        $allLinks->push([
+                                            'name' => $ul->masterLink?->name ?? $ul->tittle ?? 'Link',
+                                            'url' => $ul->link_data,
+                                            'title' => $ul->tittle ?? ($ul->masterLink?->name ?? 'Link')
+                                        ]);
+                                    }
+                                }
+                                if ($user->masterLinks) {
+                                    foreach($user->masterLinks as $ml) {
+                                        $allLinks->push([
+                                            'name' => $ml->name ?? 'Link',
+                                            'url' => $ml->link ?? '',
+                                            'title' => $ml->name ?? 'Link'
+                                        ]);
+                                    }
+                                }
+
+                                foreach ($allLinks as $linkData) {
+                                    $rawName = strtolower($linkData['name']);
+                                    $linkUrl = $linkData['url'];
+                                    $linkTitle = $linkData['title'];
+
+                                    // Handle Custom Profile Buttons (btn:)
+                                    if (str_starts_with($rawName, 'btn:')) {
+                                        $customButtons->push([
+                                            'label' => substr($linkData['name'], 4),
+                                            'url' => $linkUrl
+                                        ]);
+                                        continue;
+                                    }
+
+                                    // Match against platform map
+                                    $matched = false;
+                                    foreach ($platformMap as $key => $config) {
+                                        if (str_contains($rawName, $key)) {
+                                            $socialLinks->push([
+                                                'url' => $linkUrl,
+                                                'icon' => $config['icon'],
+                                                'color' => $config['color'],
+                                                'label' => $linkTitle
+                                            ]);
+                                            $matched = true;
+                                            break;
                                         }
-                                        if ($isSocial) {
-                                            $socialLinks->push($link);
-                                        } else {
-                                            $customLinks->push($link);
-                                        }
+                                    }
+
+                                    if (!$matched) {
+                                        // Default link icon if no platform matches
+                                        $socialLinks->push([
+                                            'url' => $linkUrl,
+                                            'icon' => 'fas fa-link',
+                                            'color' => '#2563eb',
+                                            'label' => $linkTitle
+                                        ]);
                                     }
                                 }
                             @endphp
+
                             <div class="px-4 pb-4">
                                 <div class="grid-socials">
                                     @if($socialLinks->count() > 0)
                                         @foreach ($socialLinks as $link)
-                                            @php
-                                                $platform = strtolower($link->masterLink?->name ?? 'link');
-                                                $bg = '#333';
-                                                if (str_contains($platform, 'twitter') || $platform == 'x') { $class = 'twitter'; $bg = '#000000'; }
-                                                elseif (str_contains($platform, 'linkedin')) { $class = 'linkedin-in'; $bg = '#0077B5'; }
-                                                elseif (str_contains($platform, 'facebook')) { $class = 'facebook'; $bg = '#1877F2'; }
-                                                elseif (str_contains($platform, 'instagram')) { $class = 'instagram'; $bg = '#E4405F'; }
-                                                elseif (str_contains($platform, 'github')) { $class = 'github'; $bg = '#333'; }
-                                                elseif (str_contains($platform, 'youtube')) { $class = 'youtube'; $bg = '#FF0000'; }
-                                                elseif (str_contains($platform, 'whatsapp')) { $class = 'whatsapp'; $bg = '#25D366'; }
-                                                elseif (str_contains($platform, 'tiktok')) { $class = 'tiktok'; $bg = '#010101'; }
-                                                elseif (str_contains($platform, 'threads')) { $class = 'threads'; $bg = '#000000'; }
-                                                elseif (str_contains($platform, 'snapchat')) { $class = 'snapchat'; $bg = '#FFFC00'; }
-                                                elseif (str_contains($platform, 'pinterest')) { $class = 'pinterest'; $bg = '#E60023'; }
-                                                elseif (str_contains($platform, 'telegram')) { $class = 'telegram'; $bg = '#26A5E4'; }
-                                                else { $class = 'link'; }
-                                            @endphp
-                                            <a href="{{ $link->link_data }}" class="social-link-item" target="_blank" title="{{ $link->tittle ?? ucfirst($platform) }}">
-                                                <div class="social-link-icon" style="background:{{ $bg }}">
-                                                    <i class="{{ in_array($class, ['link']) ? 'fas' : 'fab' }} fa-{{ $class }} fa-lg"></i>
+                                            <a href="{{ $link['url'] }}" class="social-link-item" target="_blank" title="{{ $link['label'] }}">
+                                                <div class="social-link-icon" style="background:{{ $link['color'] }}">
+                                                    <i class="{{ $link['icon'] }} fa-lg"></i>
                                                 </div>
-                                                <span class="social-link-label">{{ $link->tittle ?? ucfirst($platform) }}</span>
+                                                <span class="social-link-label">{{ $link['label'] }}</span>
                                             </a>
                                         @endforeach
                                     @else
                                         @php
                                             $jsonSocials = json_decode($user->masterUser?->social_links ?? $user->masterUser?->link ?? '[]', true) ?: [];
                                             $fallbacks = count($jsonSocials) > 0 ? $jsonSocials : [
-                                                'phone' => ['url' => 'tel:' . ($user->masterUser?->mobile_one ?? ''), 'icon' => 'phone', 'color' => '#4A90D9', 'label' => 'Phone'],
-                                                'whatsapp' => ['url' => 'https://wa.me/' . ($user->masterUser?->mobile_one ?? ''), 'icon' => 'whatsapp', 'color' => '#25D366', 'label' => 'WhatsApp', 'fab' => true],
-                                                'email' => ['url' => 'mailto:' . ($user->businessInfo?->contact_email ?? $user->masterUser?->email_one ?? ''), 'icon' => 'envelope', 'color' => '#EA4335', 'label' => 'Email'],
+                                                'phone' => ['url' => 'tel:' . ($user->masterUser?->mobile_one ?? ''), 'icon' => 'fas fa-phone', 'color' => '#4A90D9', 'label' => 'Phone'],
+                                                'whatsapp' => ['url' => 'https://wa.me/' . ($user->masterUser?->mobile_one ?? ''), 'icon' => 'fab fa-whatsapp', 'color' => '#25D366', 'label' => 'WhatsApp'],
+                                                'email' => ['url' => 'mailto:' . ($user->businessInfo?->contact_email ?? $user->masterUser?->email_one ?? ''), 'icon' => 'fas fa-envelope', 'color' => '#EA4335', 'label' => 'Email'],
                                             ];
                                         @endphp
                                         @foreach ($fallbacks as $platform => $data)
-                                            <a href="{{ is_array($data) ? $data['url'] : $data }}" class="social-link-item" target="_blank">
-                                                <div class="social-link-icon" style="background:{{ is_array($data) && isset($data['color']) ? $data['color'] : '#333' }}">
-                                                    <i class="{{ (is_array($data) && isset($data['fab']) && $data['fab']) || in_array($platform, ['facebook', 'twitter', 'linkedin-in', 'youtube', 'instagram', 'whatsapp']) ? 'fab' : 'fas' }} fa-{{ is_array($data) && isset($data['icon']) ? $data['icon'] : $platform }} fa-lg"></i>
+                                            @php
+                                                $url = is_array($data) ? $data['url'] : $data;
+                                                $icon = is_array($data) && isset($data['icon']) ? $data['icon'] : 'fas fa-link';
+                                                $color = is_array($data) && isset($data['color']) ? $data['color'] : '#333';
+                                                $label = is_array($data) && isset($data['label']) ? $data['label'] : ucfirst($platform);
+                                            @endphp
+                                            <a href="{{ $url }}" class="social-link-item" target="_blank">
+                                                <div class="social-link-icon" style="background:{{ $color }}">
+                                                    <i class="{{ $icon }} fa-lg"></i>
                                                 </div>
-                                                <span class="social-link-label">{{ is_array($data) && isset($data['label']) ? $data['label'] : ucfirst($platform) }}</span>
+                                                <span class="social-link-label">{{ $label }}</span>
                                             </a>
                                         @endforeach
                                     @endif
                                 </div>
 
-                                {{-- Custom Link Buttons --}}
-                                @if($customLinks->count() > 0)
+                                {{-- Custom Action Buttons (btn: prefix) --}}
+                                @if($customButtons->count() > 0)
                                     <div class="mt-3 d-flex flex-column gap-2">
-                                        @foreach ($customLinks as $link)
-                                            <a href="{{ $link->link_data }}" target="_blank" class="custom-link-btn">
-                                                <i class="fas fa-link me-2"></i> {{ $link->tittle ?? 'Link' }}
+                                        @foreach ($customButtons as $btn)
+                                            <a href="{{ $btn['url'] }}" target="_blank" class="custom-link-btn">
+                                                <i class="fas fa-external-link-alt me-2"></i> {{ $btn['label'] }}
                                             </a>
                                         @endforeach
                                     </div>

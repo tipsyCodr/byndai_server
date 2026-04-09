@@ -13,13 +13,13 @@ class IndexController extends Controller
     public function index($username = null)
     {
         if ($username) {
-            $user = \App\Models\User::with(['masterUser', 'businessInfo', 'businesses', 'userLinks.masterLink'])->where('user_name', $username)->first();
+            $user = \App\Models\User::with(['masterUser', 'businessInfo', 'businesses', 'userLinks.masterLink', 'masterLinks'])->where('user_name', $username)->first();
             if (!$user && is_numeric($username)) {
-                $user = \App\Models\User::with(['masterUser', 'businessInfo', 'businesses', 'userLinks.masterLink'])->find($username);
+                $user = \App\Models\User::with(['masterUser', 'businessInfo', 'businesses', 'userLinks.masterLink', 'masterLinks'])->find($username);
             }
         } else {
             // Default fallback User ID 2 for demo purposes
-            $user = \App\Models\User::with(['masterUser', 'businessInfo', 'businesses', 'userLinks.masterLink'])->find(2);
+            $user = \App\Models\User::with(['masterUser', 'businessInfo', 'businesses', 'userLinks.masterLink', 'masterLinks'])->find(2);
         }
 
         if (!$user) {
