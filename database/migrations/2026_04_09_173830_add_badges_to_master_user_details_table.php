@@ -12,8 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('master_user_details', function (Blueprint $table) {
-            $table->boolean('jci_member')->default(false)->after('profile_banner');
-            $table->boolean('bni_member')->default(false)->after('jci_member');
+            if (!Schema::hasColumn('master_user_details', 'jci_member')) {
+                $table->boolean('jci_member')->default(false)->after('profile_banner');
+            }
+            if (!Schema::hasColumn('master_user_details', 'bni_member')) {
+                $table->boolean('bni_member')->default(false)->after('jci_member');
+            }
         });
     }
 
