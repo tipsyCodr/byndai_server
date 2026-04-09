@@ -38,15 +38,19 @@ class FlyerApiController extends Controller
         ]);
     }
 
-    public function upcoming()
+    public function upcoming(Request $request)
     {
-        $currentMonth = Carbon::now()->format('m');
-        $currentDay = Carbon::now()->format('d');
+        $date = $request->query('date');
 
-        // Fetch festive categories for the current month or next
+        // Fallback to current date if not provided
+        if (!$date) {
+            $date = Carbon::now()->format('m-d');
+        }
+
+        // Fetch festive categories starting from the provided date
         $categories = FlyerCategory::active()
             ->where('type', 'festive')
-            ->where('date', '>=', "$currentMonth-$currentDay")
+            ->where('date', '>=', $date)
             ->orderBy('date', 'asc')
             ->with(['flyers' => function($q) {
                 $q->active();
