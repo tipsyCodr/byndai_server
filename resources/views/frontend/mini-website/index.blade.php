@@ -881,7 +881,7 @@
         <div id="videoModal">
             <span class="close-modal" onclick="closeVideo()">&times;</span>
             <div class="modal-content-custom">
-                <iframe id="videoPlayer" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                <iframe id="videoPlayer" src="" allow="autoplay; encrypted-media" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
             </div>
         </div>
     </div>
