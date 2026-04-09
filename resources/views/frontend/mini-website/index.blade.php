@@ -209,6 +209,77 @@
         #profile-wrapper .tracking-wider { letter-spacing: 0.05em; }
         #profile-wrapper .italic { font-style: italic; }
 
+        /* Premium Badges Row */
+        .badges-scroll-container {
+            display: flex;
+            overflow-x: auto;
+            gap: 0.75rem;
+            padding: 0.5rem 1.25rem 1.25rem;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+        }
+        .badges-scroll-container::-webkit-scrollbar { display: none; }
+        
+        .premium-badge {
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.6rem 1rem;
+            background: hsl(var(--secondary) / 0.5);
+            backdrop-filter: blur(8px);
+            border: 1px solid hsl(var(--border) / 0.8);
+            border-radius: 1rem;
+            min-width: 140px;
+            transition: all 0.3s ease;
+        }
+        .premium-badge:hover {
+            transform: translateY(-2px);
+            border-color: hsl(var(--primary) / 0.5);
+        }
+        .premium-badge-icon {
+            width: 2.25rem;
+            height: 2.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.75rem;
+            font-size: 1.1rem;
+        }
+        .premium-badge-info {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+        .premium-badge-title {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: hsl(var(--foreground));
+        }
+        .premium-badge-subtitle {
+            font-size: 0.65rem;
+            color: hsl(var(--muted-foreground));
+            font-weight: 500;
+        }
+        
+        /* Specific Badge Gradients */
+        .badge-pro {
+            background: linear-gradient(135deg, #d4af37 0%, #f7e08a 50%, #b8860b 100%) !important;
+            border-color: #b8860b !important;
+        }
+        .badge-pro .premium-badge-title { color: #3e2c00; }
+        .badge-pro .premium-badge-subtitle { color: #5a4300; }
+        .badge-pro .premium-badge-icon { color: #3e2c00; }
+
+        .badge-logo-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 0.4rem;
+        }
+
         /* Reviews Slider Styles */
         .reviews-slider {
             display: flex;
@@ -418,9 +489,22 @@
                                 </div>
                             </div>
 
-                            <!-- Socials Grid & Custom Buttons -->
+                            <!-- Premium Badges & Logic -->
                             @php
-                                // Expand recognized social platforms and icons
+                                // 1. PRO Status Detection
+                                $isPro = false;
+                                if ($user->masterUser?->is_pro || $user->masterUser?->is_premium) {
+                                    $isPro = true;
+                                } else {
+                                    foreach ($user->subscriptions as $sub) {
+                                        if (($sub->status == 1 || $sub->is_active == 1) && ($sub->plan_price > 0 || ($sub->plan && $sub->plan->price > 0))) {
+                                            $isPro = true;
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                // 2. Platform Map with Custom Logos
                                 $platformMap = [
                                     'twitter'   => ['icon' => 'fab fa-x-twitter', 'color' => '#000000'],
                                     'x'         => ['icon' => 'fab fa-x-twitter', 'color' => '#000000'],
@@ -435,8 +519,8 @@
                                     'snapchat'  => ['icon' => 'fab fa-snapchat', 'color' => '#FFFC00'],
                                     'pinterest' => ['icon' => 'fab fa-pinterest', 'color' => '#E60023'],
                                     'telegram'  => ['icon' => 'fab fa-telegram', 'color' => '#26A5E4'],
-                                    'justdial'  => ['icon' => 'fas fa-search', 'color' => '#ff6a00'],
-                                    'indiamart' => ['icon' => 'fas fa-store', 'color' => '#640d15'],
+                                    'justdial'  => ['image' => asset('assets/icons/justdial.png'), 'color' => '#FFFFFF'],
+                                    'indiamart' => ['image' => asset('assets/icons/indiamart.png'), 'color' => '#FFFFFF'],
                                     'google'    => ['icon' => 'fab fa-google', 'color' => '#4285F4'],
                                     'web'       => ['icon' => 'fas fa-globe', 'color' => '#2196F3'],
                                     'site'      => ['icon' => 'fas fa-globe', 'color' => '#2196F3'],
@@ -473,12 +557,14 @@
                                 foreach ($allLinks as $linkData) {
                                     $rawName = strtolower($linkData['name']);
                                     $linkUrl = $linkData['url'];
-                                    $linkTitle = $linkData['title'];
+                                    
+                                    // Formatting: Capital Case and replace _ with space
+                                    $formattedLabel = ucwords(str_replace('_', ' ', $linkData['title']));
 
                                     // Handle Custom Profile Buttons (btn:)
                                     if (str_starts_with($rawName, 'btn:')) {
                                         $customButtons->push([
-                                            'label' => substr($linkData['name'], 4),
+                                            'label' => ucwords(str_replace('_', ' ', substr($linkData['name'], 4))),
                                             'url' => $linkUrl
                                         ]);
                                         continue;
@@ -490,9 +576,10 @@
                                         if (str_contains($rawName, $key)) {
                                             $socialLinks->push([
                                                 'url' => $linkUrl,
-                                                'icon' => $config['icon'],
+                                                'icon' => $config['icon'] ?? null,
+                                                'image' => $config['image'] ?? null,
                                                 'color' => $config['color'],
-                                                'label' => $linkTitle
+                                                'label' => $formattedLabel
                                             ]);
                                             $matched = true;
                                             break;
@@ -500,24 +587,97 @@
                                     }
 
                                     if (!$matched) {
-                                        // Default link icon if no platform matches
                                         $socialLinks->push([
                                             'url' => $linkUrl,
                                             'icon' => 'fas fa-link',
                                             'color' => '#2563eb',
-                                            'label' => $linkTitle
+                                            'label' => $formattedLabel
                                         ]);
                                     }
                                 }
                             @endphp
+
+                            <!-- Badges Row -->
+                            <div class="badges-scroll-container">
+                                {{-- Reviews Badge --}}
+                                <div class="premium-badge">
+                                    <div class="premium-badge-icon text-warning">
+                                        <i class="fas fa-star"></i>
+                                    </div>
+                                    <div class="premium-badge-info">
+                                        <span class="premium-badge-title">{{ $avgRating }} ★</span>
+                                        <span class="premium-badge-subtitle">{{ $reviewCount }} Reviews</span>
+                                    </div>
+                                </div>
+
+                                {{-- PRO Badge --}}
+                                @if($isPro)
+                                    <div class="premium-badge badge-pro">
+                                        <div class="premium-badge-icon">
+                                            <i class="fas fa-crown"></i>
+                                        </div>
+                                        <div class="premium-badge-info">
+                                            <span class="premium-badge-title">PRO</span>
+                                            <span class="premium-badge-subtitle">Verified User</span>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                {{-- JCI Badge --}}
+                                @if($user->masterUser?->jci_member)
+                                    <div class="premium-badge" style="background: #fff; border-color: #eee;">
+                                        <div class="premium-badge-icon" style="width: 3rem;">
+                                            <img src="{{ asset('assets/icons/jci.jpeg') }}" class="badge-logo-img" alt="JCI">
+                                        </div>
+                                        <div class="premium-badge-info">
+                                            <span class="premium-badge-title" style="color: #004a8e;">JCI</span>
+                                            <span class="premium-badge-subtitle">Member</span>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                {{-- BNI Badge --}}
+                                @if($user->masterUser?->bni_member)
+                                    <div class="premium-badge" style="background: #cf202e; border-color: #9e1a23;">
+                                        <div class="premium-badge-icon" style="width: 2.5rem;">
+                                            <img src="{{ asset('assets/icons/BNI.png') }}" class="badge-logo-img" alt="BNI">
+                                        </div>
+                                        <div class="premium-badge-info">
+                                            <span class="premium-badge-title" style="color: #fff;">BNI</span>
+                                            <span class="premium-badge-subtitle" style="color: #ffd1d5;">Member</span>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                {{-- GST Badge --}}
+                                @php
+                                    $hasGst = false;
+                                    foreach($user->businesses as $biz) { if($biz->gst_no) { $hasGst = true; break; } }
+                                @endphp
+                                @if($hasGst)
+                                    <div class="premium-badge">
+                                        <div class="premium-badge-icon text-primary">
+                                            <i class="fas fa-certificate"></i>
+                                        </div>
+                                        <div class="premium-badge-info">
+                                            <span class="premium-badge-title">GST</span>
+                                            <span class="premium-badge-subtitle">Verified Business</span>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
 
                             <div class="px-4 pb-4">
                                 <div class="grid-socials">
                                     @if($socialLinks->count() > 0)
                                         @foreach ($socialLinks as $link)
                                             <a href="{{ $link['url'] }}" class="social-link-item" target="_blank" title="{{ $link['label'] }}">
-                                                <div class="social-link-icon" style="background:{{ $link['color'] }}">
-                                                    <i class="{{ $link['icon'] }} fa-lg"></i>
+                                                <div class="social-link-icon" style="background:{{ $link['color'] }}; padding: {{ $link['image'] ? '4px' : '0' }}">
+                                                    @if($link['image'])
+                                                        <img src="{{ $link['image'] }}" class="w-full h-full object-cover rounded-xl" style="background: #fff;">
+                                                    @else
+                                                        <i class="{{ $link['icon'] }} fa-lg"></i>
+                                                    @endif
                                                 </div>
                                                 <span class="social-link-label">{{ $link['label'] }}</span>
                                             </a>
@@ -526,9 +686,9 @@
                                         @php
                                             $jsonSocials = json_decode($user->masterUser?->social_links ?? $user->masterUser?->link ?? '[]', true) ?: [];
                                             $fallbacks = count($jsonSocials) > 0 ? $jsonSocials : [
-                                                'phone' => ['url' => 'tel:' . ($user->masterUser?->mobile_one ?? ''), 'icon' => 'fas fa-phone', 'color' => '#4A90D9', 'label' => 'Phone'],
-                                                'whatsapp' => ['url' => 'https://wa.me/' . ($user->masterUser?->mobile_one ?? ''), 'icon' => 'fab fa-whatsapp', 'color' => '#25D366', 'label' => 'WhatsApp'],
-                                                'email' => ['url' => 'mailto:' . ($user->businessInfo?->contact_email ?? $user->masterUser?->email_one ?? ''), 'icon' => 'fas fa-envelope', 'color' => '#EA4335', 'label' => 'Email'],
+                                                'Phone' => ['url' => 'tel:' . ($user->masterUser?->mobile_one ?? ''), 'icon' => 'fas fa-phone', 'color' => '#4A90D9'],
+                                                'WhatsApp' => ['url' => 'https://wa.me/' . ($user->masterUser?->mobile_one ?? ''), 'icon' => 'fab fa-whatsapp', 'color' => '#25D366'],
+                                                'Email' => ['url' => 'mailto:' . ($user->businessInfo?->contact_email ?? $user->masterUser?->email_one ?? ''), 'icon' => 'fas fa-envelope', 'color' => '#EA4335'],
                                             ];
                                         @endphp
                                         @foreach ($fallbacks as $platform => $data)
@@ -536,7 +696,7 @@
                                                 $url = is_array($data) ? $data['url'] : $data;
                                                 $icon = is_array($data) && isset($data['icon']) ? $data['icon'] : 'fas fa-link';
                                                 $color = is_array($data) && isset($data['color']) ? $data['color'] : '#333';
-                                                $label = is_array($data) && isset($data['label']) ? $data['label'] : ucfirst($platform);
+                                                $label = is_array($data) && isset($data['label']) ? $data['label'] : $platform;
                                             @endphp
                                             <a href="{{ $url }}" class="social-link-item" target="_blank">
                                                 <div class="social-link-icon" style="background:{{ $color }}">
