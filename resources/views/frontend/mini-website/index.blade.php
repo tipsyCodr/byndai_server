@@ -211,73 +211,88 @@
 
         /* Premium Badges Row */
         .badges-scroll-container {
-            display: flex;
-            overflow-x: auto;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
             gap: 0.75rem;
-            padding: 0.5rem 1.25rem 1.25rem;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-            mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
-            -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+            padding: 0.5rem 0 1.5rem;
         }
-        .badges-scroll-container::-webkit-scrollbar { display: none; }
         
         .premium-badge {
-            flex: 0 0 auto;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.6rem 1rem;
-            background: hsl(var(--secondary) / 0.5);
-            backdrop-filter: blur(8px);
-            border: 1px solid hsl(var(--border) / 0.8);
-            border-radius: 1rem;
-            min-width: 140px;
-            transition: all 0.3s ease;
-        }
-        .premium-badge:hover {
-            transform: translateY(-2px);
-            border-color: hsl(var(--primary) / 0.5);
-        }
-        .premium-badge-icon {
-            width: 2.25rem;
-            height: 2.25rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 0.75rem;
-            font-size: 1.1rem;
+            padding: 0.75rem;
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 1rem;
+            transition: all 0.3s ease;
+            height: 70px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
-        .premium-badge-info {
+        .premium-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+        }
+        .premium-badge-icon {
+            height: 100%;
             display: flex;
-            flex-direction: column;
-            line-height: 1.2;
-        }
-        .premium-badge-title {
-            font-size: 0.85rem;
-            font-weight: 800;
-            color: hsl(var(--foreground));
-        }
-        .premium-badge-subtitle {
-            font-size: 0.65rem;
-            color: hsl(var(--muted-foreground));
-            font-weight: 500;
+            align-items: center;
+            justify-content: center;
         }
         
-        /* Specific Badge Gradients */
-        .badge-pro {
-            background: linear-gradient(135deg, #d4af37 0%, #f7e08a 50%, #b8860b 100%) !important;
-            border-color: #b8860b !important;
+        /* Specific Badge Colors */
+        .badge-bni {
+            background: #ab2328 !important;
+            border-color: #921c21 !important;
         }
-        .badge-pro .premium-badge-title { color: #3e2c00; }
-        .badge-pro .premium-badge-subtitle { color: #5a4300; }
-        .badge-pro .premium-badge-icon { color: #3e2c00; }
 
         .badge-logo-img {
-            width: 100%;
-            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
             object-fit: contain;
-            border-radius: 0.4rem;
+        }
+
+        /* Social Link Grid */
+        .grid-socials {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .social-link-item {
+            text-decoration: none !important;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .social-link-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .social-link-icon:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+        }
+        .social-link-icon img {
+            width: 80%;
+            height: 80%;
+            object-fit: contain;
+        }
+        .social-link-icon i {
+            color: #fff;
+            font-size: 1.75rem;
+        }
+        .social-link-label {
+            display: none; /* Hide labels below icons as per screenshot */
         }
 
         /* Reviews Slider Styles */
@@ -623,55 +638,76 @@
                                     </div>
                                 @endif
 
-                                {{-- JCI Badge --}}
-                                @if($user->masterUser?->jci_member)
-                                    <div class="premium-badge" style="background: #fff; border-color: #eee; min-width: auto; padding: 0.6rem;">
-                                        <div class="premium-badge-icon" style="width: 2.5rem; height: 2.5rem;">
-                                            <img src="{{ asset('assets/icons/jci.jpeg') }}" class="badge-logo-img" alt="JCI">
-                                        </div>
+                            <!-- Stats Row (Reviews / PRO) -->
+                            <div class="px-3">
+                                <div class="d-flex justify-content-center gap-3 mb-4">
+                                    <div class="glass p-3 rounded-2xl text-center flex-grow-1" style="border: 1px solid hsl(var(--border));">
+                                        <div class="text-xl font-bold text-foreground">{{ $avgRating }} ★</div>
+                                        <div class="text-xs text-muted-foreground">{{ $reviewCount }} Reviews</div>
                                     </div>
-                                @endif
-
-                                {{-- BNI Badge --}}
-                                @if($user->masterUser?->bni_member)
-                                    <div class="premium-badge" style="background: #cf202e; border-color: #9e1a23; min-width: auto; padding: 0.6rem;">
-                                        <div class="premium-badge-icon" style="width: 2.5rem; height: 2.5rem;">
-                                            <img src="{{ asset('assets/icons/BNI.png') }}" class="badge-logo-img" alt="BNI">
+                                    @if($isPro)
+                                        <div class="p-3 rounded-2xl text-center flex-grow-1 badge-pro" style="background: linear-gradient(135deg, #d4af37 0%, #f7e08a 50%, #b8860b 100%); border: 1px solid #b8860b;">
+                                            <div class="text-xl font-bold" style="color: #3e2c00;">PRO</div>
+                                            <div class="text-xs" style="color: #5a4300;">Verified</div>
                                         </div>
-                                    </div>
-                                @endif
-
-                                {{-- GST Badge --}}
-                                @php
-                                    $hasGst = false;
-                                    foreach($user->businesses as $biz) { if($biz->gst_no) { $hasGst = true; break; } }
-                                @endphp
-                                @if($hasGst)
-                                    <div class="premium-badge">
-                                        <div class="premium-badge-icon text-primary">
-                                            <i class="fas fa-certificate"></i>
-                                        </div>
-                                        <div class="premium-badge-info">
-                                            <span class="premium-badge-title">GST</span>
-                                            <span class="premium-badge-subtitle">Verified Business</span>
-                                        </div>
-                                    </div>
-                                @endif
+                                    @endif
+                                </div>
                             </div>
 
+                            <!-- Primary Actions -->
+                            <div class="px-4 mb-4">
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <button type="button" class="btn btn-primary w-full py-3 rounded-xl shadow-lg border-0" style="background: #2563eb;">
+                                            <i class="fas fa-share-nodes me-2"></i> Share Profile
+                                        </button>
+                                    </div>
+                                    <div class="col-6">
+                                        <button type="button" class="btn btn-warning w-full py-3 rounded-xl shadow-lg border-0 text-white" style="background: #fb8c00;">
+                                            <i class="fas fa-address-book me-2"></i> Save Contact
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Badges Grid (JCI / BNI) -->
+                            @if($user->masterUser?->jci_member || $user->masterUser?->bni_member)
+                                <div class="px-4">
+                                    <div class="badges-scroll-container">
+                                        {{-- JCI Badge --}}
+                                        @if($user->masterUser?->jci_member)
+                                            <div class="premium-badge">
+                                                <div class="premium-badge-icon">
+                                                    <img src="{{ asset('assets/icons/jci.jpeg') }}" class="badge-logo-img" alt="JCI">
+                                                </div>
+                                            </div>
+                                        @endif
+
+                                        {{-- BNI Badge --}}
+                                        @if($user->masterUser?->bni_member)
+                                            <div class="premium-badge badge-bni">
+                                                <div class="premium-badge-icon">
+                                                    <img src="{{ asset('assets/icons/BNI.png') }}" class="badge-logo-img" alt="BNI">
+                                                </div>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endif
+
                             <div class="px-4 pb-4">
+                                <!-- Social Icons Grid -->
                                 <div class="grid-socials">
                                     @if($socialLinks->count() > 0)
                                         @foreach ($socialLinks as $link)
                                             <a href="{{ $link['url'] }}" class="social-link-item" target="_blank" title="{{ $link['label'] }}">
-                                                <div class="social-link-icon" style="background:{{ $link['color'] }}; padding: {{ $link['image'] ? '4px' : '0' }}">
+                                                <div class="social-link-icon" style="background:{{ $link['color'] }};">
                                                     @if($link['image'])
-                                                        <img src="{{ $link['image'] }}" class="object-contain" style="width: 28px; height: 28px; border-radius: 4px; background: #fff;">
+                                                        <img src="{{ $link['image'] }}" class="badge-logo-img">
                                                     @else
-                                                        <i class="{{ $link['icon'] }} fa-lg"></i>
+                                                        <i class="{{ $link['icon'] }}"></i>
                                                     @endif
                                                 </div>
-                                                <span class="social-link-label">{{ $link['label'] }}</span>
                                             </a>
                                         @endforeach
                                     @else
@@ -684,17 +720,10 @@
                                             ];
                                         @endphp
                                         @foreach ($fallbacks as $platform => $data)
-                                            @php
-                                                $url = is_array($data) ? $data['url'] : $data;
-                                                $icon = is_array($data) && isset($data['icon']) ? $data['icon'] : 'fas fa-link';
-                                                $color = is_array($data) && isset($data['color']) ? $data['color'] : '#333';
-                                                $label = is_array($data) && isset($data['label']) ? $data['label'] : $platform;
-                                            @endphp
-                                            <a href="{{ $url }}" class="social-link-item" target="_blank">
-                                                <div class="social-link-icon" style="background:{{ $color }}">
-                                                    <i class="{{ $icon }} fa-lg"></i>
+                                            <a href="{{ is_array($data) ? $data['url'] : $data }}" class="social-link-item" target="_blank">
+                                                <div class="social-link-icon" style="background:{{ is_array($data) && isset($data['color']) ? $data['color'] : '#333' }}">
+                                                    <i class="{{ is_array($data) && isset($data['icon']) ? $data['icon'] : 'fas fa-link' }}"></i>
                                                 </div>
-                                                <span class="social-link-label">{{ $label }}</span>
                                             </a>
                                         @endforeach
                                     @endif
@@ -702,10 +731,10 @@
 
                                 {{-- Custom Action Buttons (btn: prefix) --}}
                                 @if($customButtons->count() > 0)
-                                    <div class="mt-3 d-flex flex-column gap-2">
+                                    <div class="mt-4 d-flex flex-column gap-3">
                                         @foreach ($customButtons as $btn)
-                                            <a href="{{ $btn['url'] }}" target="_blank" class="custom-link-btn">
-                                                <i class="fas fa-external-link-alt me-2"></i> {{ $btn['label'] }}
+                                            <a href="{{ $btn['url'] }}" target="_blank" class="custom-link-btn shadow-lg" style="background: #1a1b2e; color: #fff; border: none; padding: 1rem;">
+                                                {{ $btn['label'] }}
                                             </a>
                                         @endforeach
                                     </div>
