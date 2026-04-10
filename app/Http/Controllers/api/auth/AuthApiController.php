@@ -517,7 +517,7 @@ class AuthApiController extends Controller
             'name' => 'required',
             'user_name' => 'required|string|unique:users,user_name',
             'email' => 'nullable|email|unique:users,email',
-            'password' => 'required|string',
+            'password' => 'nullable|string',
         ]);
         // $otp = rand(1000, 9999);
         $tokenString = Str::random(40);
@@ -531,7 +531,9 @@ class AuthApiController extends Controller
             $user->user_mobile = $phone_no;
             $user->user_name = $r->user_name;
             $user->email = $r->email;
-            $user->password = bcrypt($r->password);
+            if ($r->filled('password')) {
+                $user->password = bcrypt($r->password);
+            }
             // $user->otp = $otp;
             $user->remember_token = $tokenString;
             $user->save();
@@ -562,7 +564,7 @@ class AuthApiController extends Controller
                     break;
                 default:
                     $endDate = now()->addMonth();
-            } 
+            }
 
             $subscription = UserSubscription::create([
               'user_id' => $user->id,
@@ -580,7 +582,7 @@ class AuthApiController extends Controller
             foreach ($planFeatures as $feature) {
                 UserSubscriptionFeature::create([
                     'user_subscription_id' => $subscription->id,
-                    'feature_id' => $feature->feature_id,                    
+                    'feature_id' => $feature->feature_id,
                     'used_value' => 0,
                     'unit' => $feature->unit,
                     'reset_period' => $plan->type,
@@ -605,11 +607,11 @@ class AuthApiController extends Controller
             $systemUserId = 35;
             // ✅ new user id
             $newUserId = $user->id;
-            
+
             // =======================================
             // 1. CHECK CONNECTION EXISTS
             // =======================================
-          
+
             $connectionExists = Connection::where(function ($q) use ($systemUserId, $newUserId) {
                 $q->where('user_id', $systemUserId)
                   ->where('friend_id', $newUserId);
@@ -617,7 +619,7 @@ class AuthApiController extends Controller
                 $q->where('user_id', $newUserId)
                   ->where('friend_id', $systemUserId);
             })->exists();
-            
+
             if (!$connectionExists) {
                 Connection::create([
                     'user_id' => $systemUserId,
@@ -625,7 +627,7 @@ class AuthApiController extends Controller
                     'connected_at' => now(),
                 ]);
             }
-            
+
            // =======================================
            // 2. CHECK CHAT EXISTS
            // =======================================
@@ -636,8 +638,8 @@ class AuthApiController extends Controller
                $q->where('sender_id', $newUserId)
                  ->where('receiver_id', $systemUserId);
            })->first();
-           
-           
+
+
            // =======================================
            // 3. CREATE CHAT IF NOT EXISTS
            // =======================================
@@ -647,8 +649,8 @@ class AuthApiController extends Controller
                    'receiver_id' => $newUserId,
                ]);
            }
-           
-           
+
+
            // =======================================
            // 4. CHECK WELCOME MESSAGE EXISTS
            // =======================================
@@ -656,8 +658,8 @@ class AuthApiController extends Controller
                ->where('sender_id', $systemUserId)
                ->where('message', 'Welcome to PathIdea 🚀')
                ->exists();
-           
-           
+
+
            // =======================================
            // 5. CREATE MESSAGE IF NOT EXISTS
            // =======================================
@@ -1023,7 +1025,7 @@ class AuthApiController extends Controller
             'name' => 'required|string',
             'user_name' => 'required|string|unique:users,user_name',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|string',
+            'password' => 'nullable|string',
             'mobile' => 'required|digits:10|unique:users,user_mobile',
             'id_token' => 'required|string',
         ]);
@@ -1058,7 +1060,9 @@ class AuthApiController extends Controller
             $user->user_mobile = $request->mobile;
             $user->user_name = $request->user_name;
             $user->email = $request->email;
-            $user->password = bcrypt($request->password);
+            if ($request->filled('password')) {
+                $user->password = bcrypt($request->password);
+            }
             $user->google_id = $firebaseUid;
             $user->remember_token = Str::random(40);
             $user->save();
@@ -1109,7 +1113,7 @@ class AuthApiController extends Controller
                 'end_date' => $endDate,
                 'is_active' => 1,
             ]);
-            
+
             $planFeatures = PlanFeature::where('plan_id', $plan->id)->get();
 
             foreach ($planFeatures as $feature) {
