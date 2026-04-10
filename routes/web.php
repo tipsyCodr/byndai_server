@@ -39,15 +39,17 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('plans', \App\Http\Controllers\Backend\PlanController::class, ['as' => 'admin']);
     Route::post('plans/{id}/features', [\App\Http\Controllers\Backend\PlanController::class, 'addFeature'])->name('admin.plans.addFeature');
     Route::delete('plans/{id}/features/{featureId}', [\App\Http\Controllers\Backend\PlanController::class, 'removeFeature'])->name('admin.plans.removeFeature');
-    
+
     Route::resource('features', \App\Http\Controllers\Backend\FeatureController::class, ['as' => 'admin']);
-    
+
     Route::prefix('subscriptions')->name('admin.subscriptions.')->group(function() {
         Route::get('/', [\App\Http\Controllers\Backend\SubscriptionManagementController::class, 'index'])->name('index');
         Route::get('/{id}', [\App\Http\Controllers\Backend\SubscriptionManagementController::class, 'show'])->name('show');
         Route::post('/usage/{id}/update', [\App\Http\Controllers\Backend\SubscriptionManagementController::class, 'updateUsage'])->name('updateUsage');
         Route::post('/{id}/update-badges', [\App\Http\Controllers\Backend\SubscriptionManagementController::class, 'updateBadges'])->name('updateBadges');
     });
+
+    Route::resource('users', \App\Http\Controllers\Backend\UserController::class, ['as' => 'admin'])->only(['index', 'update']);
 
     // Flyer Management
     Route::resource('flyer-categories', \App\Http\Controllers\Backend\FlyerCategoryController::class, ['as' => 'admin']);

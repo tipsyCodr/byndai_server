@@ -216,6 +216,12 @@
                             </a>
                         </li>
                         <li>
+                            <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                                <i data-lucide="users" style="margin-right: 1rem; width: 18px;"></i>
+                                User Management
+                            </a>
+                        </li>
+                        <li>
                             <a href="#" class="nav-link">
                                 <i data-lucide="settings" style="margin-right: 1rem; width: 18px;"></i>
                                 Settings
