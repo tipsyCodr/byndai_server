@@ -55,20 +55,20 @@
                         </td>
                         <td style="padding: 1.5rem 1rem; width: 180px;">
                             @if($user->bni_card_url)
-                                <a href="{{ $user->bni_card_url }}" target="_blank" style="display: inline-flex; align-items: center; gap: 0.5rem; color: var(--accent-primary); text-decoration: none;">
+                                <button onclick="openImageModal('{{ $user->bni_card_url }}', 'BNI ID Card - {{ $user->user_name }}')" style="background: none; border: none; color: var(--accent-primary); cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none; font-size: inherit;">
                                     <i data-lucide="image" style="width: 16px;"></i>
                                     View
-                                </a>
+                                </button>
                             @else
                                 <span style="color: var(--text-secondary);">Not uploaded</span>
                             @endif
                         </td>
                         <td style="padding: 1.5rem 1rem; width: 180px;">
                             @if($user->jci_card_url)
-                                <a href="{{ $user->jci_card_url }}" target="_blank" style="display: inline-flex; align-items: center; gap: 0.5rem; color: var(--accent-primary); text-decoration: none;">
+                                <button onclick="openImageModal('{{ $user->jci_card_url }}', 'JCI ID Card - {{ $user->user_name }}')" style="background: none; border: none; color: var(--accent-primary); cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none; font-size: inherit;">
                                     <i data-lucide="image" style="width: 16px;"></i>
                                     View
-                                </a>
+                                </button>
                             @else
                                 <span style="color: var(--text-secondary);">Not uploaded</span>
                             @endif
@@ -108,4 +108,50 @@
         </div>
     </div>
 </div>
+
+<!-- Image Preview Modal -->
+<div id="imageModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center;">
+    <div style="position: relative; max-width: 90vw; max-height: 90vh; background: var(--bg-primary); border-radius: 1rem; padding: 1rem; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 id="modalTitle" style="color: var(--text-primary); margin: 0; font-size: 1.25rem;"></h3>
+            <button onclick="closeImageModal()" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.5rem; padding: 0.25rem;">
+                <i data-lucide="x" style="width: 24px;"></i>
+            </button>
+        </div>
+        <div style="text-align: center;">
+            <img id="modalImage" src="" alt="ID Card" style="max-width: 100%; max-height: 70vh; border-radius: 0.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+        </div>
+    </div>
+</div>
+
+<script>
+lucide.createIcons();
+
+function openImageModal(imageUrl, title) {
+    document.getElementById('modalImage').src = imageUrl;
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('imageModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeImageModal() {
+    document.getElementById('imageModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+    document.getElementById('modalImage').src = '';
+}
+
+// Close modal when clicking outside
+document.getElementById('imageModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeImageModal();
+    }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && document.getElementById('imageModal').style.display === 'flex') {
+        closeImageModal();
+    }
+});
+</script>
 @endsection
