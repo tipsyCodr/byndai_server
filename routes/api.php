@@ -140,7 +140,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'BusinessInfo',
     ]);
 
-     Route::post('/view-profile', [
+    Route::post('/profile/id-card', [ProfileApiController::class, 'uploadIdCard']);
+    Route::get('/profile/id-card', [ProfileApiController::class, 'getIdCards']);
+
+    Route::post('/view-profile', [
         ProfileApiController::class,
         'viewProfile',
     ]);
@@ -844,7 +847,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     //Transaction api
     Route::post('/create-order', [TransactionApiController::class, 'createOrder']);
     Route::post('/verify-payment', [TransactionApiController::class, 'verifyPayment']);
-   
+
 
 
     // api for post end...

@@ -32,6 +32,13 @@ class ProfileApiController extends Controller
             $users_detail->profile_video = $this->getMediaUrl($users_detail->profile_video, 'profile_videos');
             $users_detail->profile_logo = $this->getMediaUrl($users_detail->profile_logo, 'profile_logos');
             $users_detail->profile_banner = $this->getMediaUrl($users_detail->profile_banner, 'profile_banners');
+
+            $user = Auth::user();
+            $users_detail->bni_id_card_image = $this->getMediaUrl($user->bni_id_card_image, 'id_cards');
+            $users_detail->jci_id_card_image = $this->getMediaUrl($user->jci_id_card_image, 'id_cards');
+            $users_detail->bni_member = optional($user->masterUser)->bni_member;
+            $users_detail->jci_member = optional($user->masterUser)->jci_member;
+
             $busi_info = BusinessInfo::with('user')
                 ->whereHas('user', function ($q) use ($users) {
                     $q->where('id', $users);
@@ -74,6 +81,50 @@ class ProfileApiController extends Controller
 
             return response()->json(['message' => 'Profile updated successfully', 'data' => ['users_detail' => $users_detail, 'business' => $busi_info]]);
         }
+    }
+
+    public function uploadIdCard(Request $request)
+    {
+        $user = Auth::user();
+
+        $request->validate([
+            'type' => 'required|in:bni,jci',
+            'id_card' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120',
+        ]);
+
+        $column = $request->type === 'bni' ? 'bni_id_card_image' : 'jci_id_card_image';
+
+        if (! empty($user->{$column})) {
+            $this->deleteMedia($user->{$column}, 'id_cards');
+        }
+
+        $file = $request->file('id_card');
+        $path = $file->storeAs('uploads/id_cards/'.$request->type, time().'_'.$file->getClientOriginalName(), 'public');
+        $user->{$column} = 'storage/'.$path;
+        $user->save();
+
+        return response()->json([
+            'status' => true,
+            'message' => ucfirst($request->type).' ID card uploaded successfully.',
+            'data' => [
+                $column => $this->getMediaUrl($user->{$column}, 'id_cards'),
+            ],
+        ]);
+    }
+
+    public function getIdCards(Request $request)
+    {
+        $user = Auth::user();
+
+        return response()->json([
+            'status' => true,
+            'data' => [
+                'bni_id_card_image' => $this->getMediaUrl($user->bni_id_card_image, 'id_cards'),
+                'jci_id_card_image' => $this->getMediaUrl($user->jci_id_card_image, 'id_cards'),
+                'bni_member' => optional($user->masterUser)->bni_member,
+                'jci_member' => optional($user->masterUser)->jci_member,
+            ],
+        ]);
     }
 
     public function UserLinks(Request $r)
@@ -237,7 +288,7 @@ class ProfileApiController extends Controller
             'message' => 'User profile card fetched successfully',
             'data' => $data,
         ], 200);
-    }    
+    }
 
     // public function usersNameProfileData($user_name)
     // {
@@ -367,7 +418,7 @@ class ProfileApiController extends Controller
 
 //     Log::info("===== PROFILE API END =====");
 
-   
+
 
 //     $responseData = [
 //     'status' => true,
@@ -487,7 +538,7 @@ public function usersNameProfileData($username)
 
         // Check same or not
         if ($authUserId == $profileId) {
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'same',
@@ -551,7 +602,7 @@ public function usersNameProfileData($username)
       try {
         // Auth se login user id
         $authUserId = auth()->id();
-        
+
 
         $featureId = getFeatureId('create-flyer');
 
@@ -589,9 +640,9 @@ public function usersNameProfileData($username)
             return response()->json([
                 'success' => true,
                 'message' => 'create flyer successfully',
-                
+
             ]);
-        
+
 
       } catch (\Exception $e) {
         return response()->json([
@@ -601,14 +652,14 @@ public function usersNameProfileData($username)
         ], 500);
       }
     }
-    
+
 
      public function showMiniWebsite()
     {
       try {
         // Auth se login user id
         $authUserId = auth()->id();
-        
+
 
         $featureId = getFeatureId('mini-website');
 
@@ -646,9 +697,9 @@ public function usersNameProfileData($username)
             return response()->json([
                 'success' => true,
                 'message' => 'send mini-website-link successfully',
-                
+
             ]);
-        
+
 
       } catch (\Exception $e) {
         return response()->json([
@@ -696,7 +747,7 @@ public function usersNameProfileData($username)
             if (Storage::disk('public')->exists($relativePath)) {
                 Storage::disk('public')->delete($relativePath);
             }
-        } 
+        }
         // Case 2: Path starts with 'uploads/' (but without storage/ prefix in DB)
         elseif (str_starts_with($path, 'uploads/')) {
             if (Storage::disk('public')->exists($path)) {

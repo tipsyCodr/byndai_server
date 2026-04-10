@@ -31,6 +31,8 @@ class User extends Authenticatable
         "remember_token",
         "google_id",
         "fcm_token",
+        "bni_id_card_image",
+        "jci_id_card_image",
     ];
 
     /**
