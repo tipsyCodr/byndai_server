@@ -20,7 +20,6 @@
         "razorpay/razorpay": "2.*",
         "spatie/laravel-permission": "^7.2",
         "thiagoalessio/tesseract_ocr": "^2.13",
-        "beyondcode/laravel-websockets": "^1.14",
         "pusher/pusher-php-server": "^7.2"
     },
     "require-dev": {

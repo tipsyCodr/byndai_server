@@ -1,6 +1,6 @@
-# Grid Backend Integration Guide
+# Bynd AI Backend Integration Guide
 
-This guide provides the necessary information to integrate the Grid backend API with your application.
+This guide provides the necessary information to integrate the Bynd AI backend API with your application.
 
 ## General Information
 

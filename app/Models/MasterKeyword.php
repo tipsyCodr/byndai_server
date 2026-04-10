@@ -11,9 +11,11 @@ class MasterKeyword extends Model
 
     public static function getUsersProfile(Request $r)
     {
-        $title = $r->title;
+        // Accept multiple parameter names: 'query', 'search', 'keywords', or 'title'
+        $title = $r->input('query') ?? $r->input('search') ?? $r->input('keywords') ?? $r->input('title');
         $query = MasterUserDetail::query();
-        if (!empty($title)) {
+
+        if (!empty(trim($title))) {
             $user_ids = MasterKeyword::where('keywords', 'LIKE', "%$title%")->pluck('user_id');
             if ($user_ids->isNotEmpty()) {
                 $query->whereIn('user_id', $user_ids);
