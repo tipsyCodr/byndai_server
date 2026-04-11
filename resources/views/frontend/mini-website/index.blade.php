@@ -18,7 +18,7 @@
           --accent-foreground: 0 0% 100%;
           --border: 220 16% 22%;
           --success: 158 64% 52%;
-          
+
           background: hsl(var(--background));
           color: hsl(var(--foreground));
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -34,21 +34,21 @@
         #profile-wrapper .text-foreground { color: hsl(var(--foreground)); }
         #profile-wrapper .text-primary { color: hsl(var(--primary)); }
         #profile-wrapper .text-muted-foreground { color: hsl(var(--muted-foreground)); }
-        
+
         #profile-wrapper .gradient-hero {
           background: linear-gradient(135deg, hsl(var(--primary) / 0.2), hsl(var(--accent) / 0.2));
         }
         #profile-wrapper .gradient-overlay-bottom {
           background: linear-gradient(to top, hsl(var(--background)) 0%, transparent 100%);
         }
-        
+
         #profile-wrapper .glass {
           background: hsl(var(--card) / 0.1);
           backdrop-filter: blur(24px);
           -webkit-backdrop-filter: blur(24px);
           border: 1px solid hsl(var(--border) / 0.5);
         }
-        
+
         /* Social grid identical to target */
         #profile-wrapper .social-link-item {
           display: flex; flex-direction: column; align-items: center; gap: 0.375rem; text-decoration: none;
@@ -68,7 +68,7 @@
           font-weight: 500; background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); transition: opacity 0.15s ease; text-decoration: none; border: none; outline: none; box-shadow: 0 0 20px hsl(217 91% 60% / 0.15);
         }
         #profile-wrapper .btn-primary:hover { opacity: 0.9; color: hsl(var(--primary-foreground)); text-decoration: none; box-shadow: 0 0 40px hsl(217 91% 60% / 0.3); }
-        
+
         #profile-wrapper .btn-secondary {
           display: flex; align-items: center; justify-content: center; gap: 0.5rem; width: 100%; padding: 1rem; border-radius: 1rem;
           font-weight: 500; background: hsl(var(--secondary)); color: hsl(var(--foreground)); transition: background 0.15s ease; text-decoration: none; border: none; outline: none;
@@ -87,13 +87,44 @@
         }
 
         /* Save Contact Floating Btn */
-        #profile-wrapper .save-contact-btn {
-          position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); z-index: 50; display: inline-flex; align-items: center; gap: 0.5rem;
-          padding: 0.75rem 1.25rem; border-radius: 9999px; background: hsl(var(--primary)); color: hsl(var(--primary-foreground));
-          font-weight: 500; font-size: 0.875rem; border: none; box-shadow: 0 0 20px hsl(217 91% 60% / 0.25), 0 4px 12px rgb(0 0 0 / 0.3); text-decoration: none;
-          animation: save-contact-enter 0.4s ease both; animation-delay: 0.5s;
+        #profile-wrapper .fixed-action-group {
+          position: fixed;
+          bottom: 1.5rem;
+          left: 50%;
+          transform: translateX(-50%);
+          display: flex;
+          gap: 0.75rem;
+          z-index: 50;
         }
-        #profile-wrapper .save-contact-btn:hover { transform: translateX(-50%) scale(1.05); color: hsl(var(--primary-foreground)); text-decoration: none; box-shadow: 0 0 30px hsl(217 91% 60% / 0.35); }
+        #profile-wrapper .fixed-action-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          min-width: 140px;
+          padding: 0.75rem 1rem;
+          border-radius: 9999px;
+          font-weight: 500;
+          font-size: 0.875rem;
+          text-decoration: none;
+          border: 1px solid transparent;
+          transition: transform 0.15s ease, opacity 0.15s ease;
+        }
+        #profile-wrapper .fixed-action-btn.save-contact {
+          background: hsl(var(--primary));
+          color: hsl(var(--primary-foreground));
+          border-color: transparent;
+        }
+        #profile-wrapper .fixed-action-btn.open-app {
+          background: hsl(var(--secondary));
+          color: hsl(var(--foreground));
+          border-color: hsl(var(--border));
+        }
+        #profile-wrapper .fixed-action-btn:hover {
+          opacity: 0.95;
+          transform: translateY(-1px);
+          text-decoration: none;
+        }
         @keyframes save-contact-enter {
           from { opacity: 0; transform: translateX(-50%) translateY(1rem); }
           to { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -119,7 +150,7 @@
         #profile-wrapper .text-center { text-align: center; }
         #profile-wrapper .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         #profile-wrapper .grid-socials { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.75rem; }
-        
+
         /* Profile Image Setup */
         .profile-avatar-container {
             position: relative;
@@ -176,7 +207,7 @@
                 top: 2rem;
             }
         }
-        
+
         /* Override global padding to prevent body background peeking */
         .profile-container {
             padding-bottom: 0 !important;
@@ -221,7 +252,7 @@
             -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
         }
         .badges-scroll-container::-webkit-scrollbar { display: none; }
-        
+
         .premium-badge {
             flex: 0 0 auto;
             display: flex;
@@ -263,7 +294,7 @@
             color: hsl(var(--muted-foreground));
             font-weight: 500;
         }
-        
+
         /* Specific Badge Gradients */
         .badge-pro {
             background: linear-gradient(135deg, #d4af37 0%, #f7e08a 50%, #b8860b 100%) !important;
@@ -442,7 +473,7 @@
             <img src="{{ $user->masterUser?->profile_pic ? asset('storage/' . $user->masterUser?->profile_pic) : 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&w=1920&q=80' }}"
                 alt="Cover" class="w-full h-full object-cover"/>
             <div class="absolute inset-x-0 bottom-0 h-32 gradient-overlay-bottom"></div>
-            
+
             <button type="button" class="absolute top-0 right-0 mt-3 me-3 btn btn-sm rounded-xl p-2" style="background: hsl(var(--background)/0.8); backdrop-filter: blur(4px); border: 1px solid hsl(var(--border)); color: hsl(var(--foreground)); z-index: 10;">
                 <i class="fas fa-share-nodes"></i>
             </button>
@@ -450,12 +481,12 @@
 
         <div class="container py-4">
             <div class="row custom-gutters justify-content-center">
-                
+
                 <!-- LEFT COLUMN: Profile & Sidebar -->
                 <div class="col-12 col-lg-5 col-xl-4 mb-4">
                     <div class="desktop-sticky">
                         <div class="glass rounded-2xl shadow-xl mb-4" style="margin-top: -6rem; padding-top: 1rem; position: relative;">
-                            
+
                             <!-- Avatar -->
                             <div class="profile-avatar-container" style="margin-top: -3rem;">
                                 <img src="{{ $user->masterUser?->profile_logo ? asset('storage/' . $user->masterUser?->profile_logo) : 'https://placehold.co/200x200' }}"
@@ -468,13 +499,13 @@
                             <!-- User Info -->
                             <div class="px-4 text-center mt-3 pb-4">
                                 <h1 class="text-2xl font-bold text-foreground mb-1">{{ $user->masterUser?->fname ?? $user->user_name }}</h1>
-                                
+
                                 @if($user->businesses && $user->businesses->count() > 0)
                                     <p class="text-xs font-semibold text-white mb-2">
                                         {{ $user->businesses->first()->legal_name }}
                                     </p>
                                 @endif
-                                
+
                                 <div class="mt-2 text-center d-flex flex-wrap justify-content-center" style="gap: 0.5rem;">
                                     @if ($user->masterUser?->desg)
                                         <span class="badge-pill">
@@ -557,7 +588,7 @@
                                 foreach ($allLinks as $linkData) {
                                     $rawName = strtolower($linkData['name']);
                                     $linkUrl = $linkData['url'];
-                                    
+
                                     // Formatting: Capital Case and replace _ with space
                                     $formattedLabel = ucwords(str_replace('_', ' ', $linkData['title']));
 
@@ -713,14 +744,14 @@
                             </div>
                         </div>
 
-                        
+
 
                     </div>
                 </div>
 
                 <!-- RIGHT COLUMN: Main Content -->
                 <div class="col-12 col-lg-7 col-xl-7">
-                    
+
                     <!-- Businesses Section -->
                         <section class="mb-4">
                             <div class="row g-3">
@@ -771,7 +802,7 @@
                                 @endforeach
                             </div>
                         </section>
-                    
+
 
                     <!-- Product Short Videos (Shorts) Section -->
                     @if(isset($videos) && $videos->count() > 0)
@@ -818,8 +849,8 @@
                                                     $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400"><rect width="400" height="400" fill="#1e293b"/><svg x="125" y="125" width="150" height="150" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg></svg>';
                                                     $imgSrc = 'data:image/svg+xml;base64,' . base64_encode($svg);
                                                     if ($image && !empty($image->product_images)) {
-                                                        $imgSrc = str_starts_with($image->product_images, 'uploads/') 
-                                                                    ? asset($image->product_images) 
+                                                        $imgSrc = str_starts_with($image->product_images, 'uploads/')
+                                                                    ? asset($image->product_images)
                                                                     : asset($image->product_images);
                                                     }
                                                 @endphp
@@ -835,7 +866,7 @@
                                                     ₹{{ $value->product_price }}
                                                 </div>
                                             </div>
-                                            
+
                                             <div class="text-yellow-400 text-sm mb-4">
                                                 <i class="fas fa-star"></i>
                                                 <i class="fas fa-star"></i>
@@ -844,7 +875,7 @@
                                                 <i class="fas fa-star"></i>
                                                 <span class="text-muted-foreground ms-1">5.0</span>
                                             </div>
-                                            
+
                                             @php
                                                 $links = $productLinks->where('prod_id', $value->id);
                                             @endphp
@@ -881,7 +912,7 @@
                                     <div class="d-flex align-items-center justify-content-between">
                                         <div class="d-flex align-items-center gap-2">
                                             <div style="width: 2.5rem; height: 2.5rem; border-radius: 50%; background: hsl(var(--secondary)); overflow: hidden;">
-                                                <img src="{{ $review->fromUser?->masterUser?->profile_logo ? asset('storage/' . $review->fromUser->masterUser->profile_logo) : 'https://placehold.co/100x100?text=' . urlencode(substr($review->reviewer_name ?? $review->fromUser?->masterUser?->fname ?? 'G', 0, 1)) }}" 
+                                                <img src="{{ $review->fromUser?->masterUser?->profile_logo ? asset('storage/' . $review->fromUser->masterUser->profile_logo) : 'https://placehold.co/100x100?text=' . urlencode(substr($review->reviewer_name ?? $review->fromUser?->masterUser?->fname ?? 'G', 0, 1)) }}"
                                                      class="w-full h-full object-cover" alt="User">
                                             </div>
                                             <div>
@@ -909,7 +940,7 @@
                     <!-- Review Form -->
                     <section class="mb-4">
                         <div class="glass rounded-2xl p-4">
-                            
+
                             <!-- Your Ratings header row -->
                             <div class="d-flex align-items-center justify-content-between mb-3">
                                 <h2 class="text-lg font-semibold text-foreground mb-0">Your Ratings</h2>
@@ -1089,7 +1120,7 @@
                         }
                     })();
                     </script>
-                    
+
                     <!-- Footer branding -->
                     <div class="text-center text-muted-foreground pb-5 mb-5 pt-2" style="font-size: 0.75rem;">
                         Powered by <span class="text-primary font-weight-bold">ByndAI</span>
@@ -1098,11 +1129,16 @@
                 </div>
             </div>
         </div>
-        
-        <!-- Fixed Save Contact Button -->
-        <a href="#" class="save-contact-btn">
-            <i class="fas fa-address-book"></i> Save Contact
-        </a>
+
+        <!-- Fixed Action Buttons -->
+        <div class="fixed-action-group">
+            <a href="javascript:void(0)" onclick="saveContact()" class="fixed-action-btn save-contact">
+                <i class="fas fa-address-book"></i> Save Contact
+            </a>
+            <a href="javascript:void(0)" onclick="openApp()" class="fixed-action-btn open-app">
+                <i class="fas fa-mobile-alt"></i> Open in App
+            </a>
+        </div>
 
         <!-- Video Modal - Layout Change for Scrolling -->
         @if(isset($videos) && $videos->count() > 0)
@@ -1142,7 +1178,7 @@
                     const slide = entry.target;
                     const wrapper = slide.querySelector('.player-wrapper');
                     const videoId = slide.getAttribute('data-video-id');
-                    
+
                     if (entry.isIntersecting) {
                         if (videoId) {
                             const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&enablejsapi=1&referrerpolicy=strict-origin-when-cross-origin`;
@@ -1163,10 +1199,10 @@
 
         function openVideo(index) {
             if (!shortsModal) return;
-            
+
             shortsModal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
-            
+
             setTimeout(() => {
                 const targetSlide = document.querySelector(`.video-slide[data-index="${index}"]`);
                 if (targetSlide) {
@@ -1178,10 +1214,10 @@
 
         function closeVideo() {
             if (!shortsModal) return;
-            
+
             shortsModal.style.display = 'none';
             document.body.style.overflow = '';
-            
+
             document.querySelectorAll('.video-slide .player-wrapper').forEach(wrapper => {
                 wrapper.innerHTML = '';
             });
@@ -1190,5 +1226,47 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closeVideo();
         });
+
+        function saveContact() {
+            var fullName = `{{ addslashes($user->masterUser?->fname ?? $user->user_name) }}`;
+            var title = `{{ addslashes($user->masterUser?->desg ?? '') }}`;
+            var org = `{{ addslashes(optional($user->businesses->first())->legal_name ?? '') }}`;
+            var email = `{{ addslashes(optional($user->businessInfo)->contact_email ?? $user->email) }}`;
+            var phone = `{{ addslashes($user->masterUser?->mobile_one ?? $user->user_mobile ?? '') }}`;
+            var url = `{{ url()->current() }}`;
+            var note = `Added from ByndAI profile`;
+
+            var vcard = `BEGIN:VCARD\nVERSION:3.0\nFN:${fullName}\nN:${fullName};;;\nORG:${org}\nTITLE:${title}\nEMAIL;TYPE=WORK:${email}\nTEL;TYPE=CELL:${phone}\nURL:${url}\nNOTE:${note}\nEND:VCARD`;
+            var isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+            var blob = new Blob([vcard], { type: 'text/vcard;charset=utf-8' });
+            var objectUrl = URL.createObjectURL(blob);
+            var anchor = document.createElement('a');
+            anchor.href = objectUrl;
+            anchor.download = 'contact.vcf';
+            anchor.target = '_blank';
+            anchor.style.display = 'none';
+            document.body.appendChild(anchor);
+            anchor.click();
+            document.body.removeChild(anchor);
+            setTimeout(function () {
+                URL.revokeObjectURL(objectUrl);
+            }, 100);
+
+            if (isMobile) {
+                setTimeout(function () {
+                    window.location.href = objectUrl;
+                }, 100);
+            }
+        }
+
+        function openApp() {
+            var start = Date.now();
+            window.location.href = "intent://app.byndai.in/u/username#Intent;scheme=https;package=com.pathidea.byndai;end;";
+            setTimeout(function () {
+                if (Date.now() - start < 2000) {
+                    window.location.href = "https://play.google.com/store/apps/details?id=com.pathidea.byndai";
+                }
+            }, 1500);
+        }
     </script>
 @endsection
