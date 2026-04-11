@@ -99,7 +99,7 @@ class UserController extends Controller
 
             // 6. Delete Links & Reviews
             UserLink::where('user_id', $user->id)->delete();
-            UserReview::where('user_id', $user->id)->delete();
+            UserReview::where('to_user_id', $user->id)->orWhere('from_user_id', $user->id)->delete();
 
             // 7. Delete Events created by user & their images
             $events = MasterEvent::where('created_by', $user->id)->get();
