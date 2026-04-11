@@ -88,6 +88,21 @@
             padding: 1.5rem;
             z-index: 1000;
             transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar nav {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 1.5rem;
+            /* Hide scrollbar for Chrome, Safari and Opera */
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none;  /* IE and Edge */
+        }
+
+        .sidebar nav::-webkit-scrollbar {
+            display: none;
         }
 
         .main-content {
@@ -194,6 +209,13 @@
                                 Flyer Management
                             </a>
                         </li>
+                        <li>
+                            <a href="{{ route('admin.events.index') }}"
+                                class="nav-link {{ request()->routeIs('admin.events.*') ? 'active' : '' }}">
+                                <i data-lucide="calendar" style="margin-right: 1rem; width: 18px;"></i>
+                                Event Management
+                            </a>
+                        </li>
                         <li style="margin-top: 1.5rem; margin-bottom: 0.5rem;">
                             <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.05em; padding-left: 1rem;">Subscription Mgmt</span>
                         </li>
@@ -230,7 +252,7 @@
                     </ul>
                 </nav>
 
-                <div class="logout-area" style="position: absolute; bottom: 1.5rem; width: calc(100% - 3rem);">
+                <div class="logout-area" style="margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--glass-border);">
                     <form action="{{ route('logout') }}" method="POST">
                         @csrf
                         <button type="submit"

@@ -54,6 +54,10 @@ Route::middleware(['auth'])->group(function () {
     // Flyer Management
     Route::resource('flyer-categories', \App\Http\Controllers\Backend\FlyerCategoryController::class, ['as' => 'admin']);
     Route::resource('flyers', \App\Http\Controllers\Backend\FlyerController::class, ['as' => 'admin']);
+
+    // Event Management
+    Route::resource('events', \App\Http\Controllers\Backend\EventController::class, ['as' => 'admin'])->only(['index', 'destroy']);
+    Route::post('events/{id}/toggle-status', [\App\Http\Controllers\Backend\EventController::class, 'toggleStatus'])->name('admin.events.toggle-status');
 });
 
 Route::get('/product/{id}', [IndexController::class, 'product'])->name('single-product');
