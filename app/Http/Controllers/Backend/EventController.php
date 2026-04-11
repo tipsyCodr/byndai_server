@@ -39,27 +39,39 @@ class EventController extends Controller
      */
     public function destroy($id)
     {
-        $event = MasterEvent::with('images')->findOrFail($id);
+        try {
+            $event = MasterEvent::with('images')->findOrFail($id);
 
-        // Delete all associated images physical files
-        foreach ($event->images as $image) {
-            $this->deleteMedia($image->event_img_path);
+            \DB::beginTransaction();
+
+            // Delete all associated images physical files
+            if ($event->images) {
+                foreach ($event->images as $image) {
+                    $this->deleteMedia($image->event_img_path);
+                }
+            }
+
+            // Delete total folder if it exists in storage
+            $folderTitle = preg_replace('/[^a-zA-Z0-9_-]/', '_', $event->title);
+            $folderPath = "event/{$folderTitle}";
+            if (Storage::disk('public')->exists($folderPath)) {
+                Storage::disk('public')->deleteDirectory($folderPath);
+            }
+
+            // Delete image records from database
+            MasterEventImage::where('event_id', $id)->delete();
+
+            // Delete the event record
+            $event->delete();
+
+            \DB::commit();
+
+            return redirect()->route('admin.events.index')->with('success', 'Event and all associated media deleted successfully.');
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Admin Event Deletion Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error deleting event: ' . $e->getMessage());
         }
-
-        // Delete total folder if it exists in storage
-        $folderTitle = preg_replace('/[^a-zA-Z0-9_-]/', '_', $event->title);
-        $folderPath = "event/{$folderTitle}";
-        if (Storage::disk('public')->exists($folderPath)) {
-            Storage::disk('public')->deleteDirectory($folderPath);
-        }
-
-        // Delete image records from database
-        MasterEventImage::where('event_id', $id)->delete();
-
-        // Delete the event record
-        $event->delete();
-
-        return redirect()->route('admin.events.index')->with('success', 'Event and associated data deleted successfully.');
     }
 
     /**
