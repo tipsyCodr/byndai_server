@@ -49,7 +49,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{id}/update-badges', [\App\Http\Controllers\Backend\SubscriptionManagementController::class, 'updateBadges'])->name('updateBadges');
     });
 
-    Route::resource('users', \App\Http\Controllers\Backend\UserController::class, ['as' => 'admin'])->only(['index', 'update']);
+    Route::resource('users', \App\Http\Controllers\Backend\UserController::class, ['as' => 'admin'])->only(['index', 'update', 'destroy']);
 
     // Flyer Management
     Route::resource('flyer-categories', \App\Http\Controllers\Backend\FlyerCategoryController::class, ['as' => 'admin']);

@@ -23,6 +23,12 @@
         </div>
     @endif
 
+    @if(session('error'))
+        <div style="margin-bottom: 1.5rem; padding: 1rem 1.25rem; border-radius: 1rem; background: rgba(239, 68, 68, 0.12); color: #fecaca; border: 1px solid rgba(239, 68, 68, 0.25);">
+            {{ session('error') }}
+        </div>
+    @endif
+
     <div class="premium-glass" style="padding: 0; overflow: hidden; border-radius: 1.5rem;">
         <table style="width: 100%; border-collapse: collapse; text-align: left;">
             <thead>
@@ -89,6 +95,14 @@
                         <td style="padding: 1.5rem 1rem; text-align: right; width: 140px;">
                                 <button type="submit" class="gradient-btn" style="font-size: 0.85rem; padding: 0.65rem 1rem; width: 100%;">
                                     Save
+                                </button>
+                            </form>
+                            <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this user? This will permanently remove all their data, subscriptions, links, and events.')" style="margin-top: 0.75rem;">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171; width: 100%; border-radius: 0.8rem; padding: 0.65rem; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.85rem;">
+                                    <i data-lucide="user-minus" style="width: 16px; margin-right: 0.5rem;"></i>
+                                    Delete User
                                 </button>
                             </form>
                         </td>
