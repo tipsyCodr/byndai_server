@@ -15,6 +15,7 @@ return new class extends Migration
         $this->ensureFeatureIdColumns();
         $this->backfillFeatureIds();
         $this->relaxLegacyFeatureColumns();
+        $this->normalizeForeignKeyColumnTypes();
 
         $this->replaceForeignKey('plan_features', 'plan_id', 'subscription_plans', 'id', 'cascade');
         $this->replaceForeignKey('user_subscriptions', 'plan_id', 'subscription_plans', 'id', 'cascade');
@@ -97,6 +98,30 @@ return new class extends Migration
 
         if (Schema::hasTable('user_subscription_features') && Schema::hasColumn('user_subscription_features', 'limit_value')) {
             DB::statement('ALTER TABLE user_subscription_features MODIFY limit_value VARCHAR(255) NULL');
+        }
+    }
+
+    private function normalizeForeignKeyColumnTypes(): void
+    {
+        $columns = [
+            ['plan_features', 'plan_id', 'BIGINT UNSIGNED NOT NULL'],
+            ['plan_features', 'feature_id', 'BIGINT UNSIGNED NULL'],
+            ['user_subscriptions', 'user_id', 'BIGINT UNSIGNED NOT NULL'],
+            ['user_subscriptions', 'plan_id', 'BIGINT UNSIGNED NOT NULL'],
+            ['user_subscription_features', 'user_subscription_id', 'BIGINT UNSIGNED NOT NULL'],
+            ['user_subscription_features', 'feature_id', 'BIGINT UNSIGNED NULL'],
+            ['transactions', 'user_id', 'BIGINT UNSIGNED NULL'],
+            ['transactions', 'plan_id', 'BIGINT UNSIGNED NULL'],
+            ['transactions', 'subscription_id', 'BIGINT UNSIGNED NULL'],
+        ];
+
+        foreach ($columns as [$table, $column, $definition]) {
+            if (!Schema::hasTable($table) || !Schema::hasColumn($table, $column)) {
+                continue;
+            }
+
+            $this->dropForeignKeysForColumn($table, $column);
+            DB::statement("ALTER TABLE {$table} MODIFY {$column} {$definition}");
         }
     }
 
