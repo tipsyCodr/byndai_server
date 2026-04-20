@@ -44,4 +44,10 @@ return [
         'default_peid' => env('SAAKSHI_DEFAULT_PEID'),
     ],
 
+    'razorpay' => [
+        'key' => env('RAZORPAY_KEY'),
+        'secret' => env('RAZORPAY_SECRET'),
+    ],
+
+
 ];
