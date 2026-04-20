@@ -24,18 +24,46 @@ class TransactionApiController extends Controller
 {
    public function createOrder(Request $request)
    {
-      $plan = SubscriptionPlan::findOrFail($request->plan_id);
+      $validated = $request->validate([
+          'plan_id' => 'required|integer|exists:subscription_plans,id',
+      ]);
 
       $authId = Auth::id(); // user id
 
-      $amount = $plan->price * 100; // paisa
+      $plan = SubscriptionPlan::where('id', $validated['plan_id'])
+          ->where('status', 1)
+          ->where('is_free', false)
+          ->first();
+
+      if (! $plan || $plan->price <= 0) {
+          return response()->json([
+              'status' => false,
+              'message' => 'Selected plan is not available for payment'
+          ], 422);
+      }
+
+      $activeSamePlan = UserSubscription::where('user_id', $authId)
+          ->where('plan_id', $plan->id)
+          ->where('is_active', 1)
+          ->where('end_date', '>=', now())
+          ->exists();
+
+      if ($activeSamePlan) {
+          return response()->json([
+              'status' => false,
+              'message' => 'This plan is already active'
+          ], 409);
+      }
+
+      $amount = (int) round((float) $plan->price * 100); // paisa
 
       $api = new Api(config('services.razorpay.key'), config('services.razorpay.secret'));
 
       $order = $api->order->create([
           'amount' => $amount,
           'currency' => 'INR',
-          'receipt' => 'rcpt_'.$request->user_id.'_'.time()
+          'receipt' => 'rcpt_'.$authId.'_'.time(),
+          'payment_capture' => true,
       ]);
 
       // DB me save (pending)
@@ -43,21 +71,35 @@ class TransactionApiController extends Controller
           'user_id' => $authId,
           'plan_id' => $plan->id,
           'payment_gateway' => 'razorpay',
+          'payment_method' => 'online',
           'gateway_order_id' => $order['id'],
           'amount' => $plan->price,
+          'currency' => 'INR',
           'status' => 'pending'
       ]);
 
       return response()->json([
+          'status' => true,
           'order_id' => $order['id'],
           'key' => config('services.razorpay.key'),
-          'transaction_id' => $transaction->id
+          'transaction_id' => $transaction->id,
+          'amount' => $amount,
+          'currency' => 'INR',
       ]);
    }
 
    public function verifyPayment(Request $request)
    {
-       $transaction = Transaction::findOrFail($request->transaction_id);
+       $validated = $request->validate([
+           'transaction_id' => 'required|integer|exists:transactions,id',
+           'razorpay_order_id' => 'required|string',
+           'razorpay_payment_id' => 'required|string',
+           'razorpay_signature' => 'required|string',
+       ]);
+
+       $transaction = Transaction::where('id', $validated['transaction_id'])
+           ->where('user_id', Auth::id())
+           ->firstOrFail();
 
        // ✅ Already processed check
         if ($transaction->status === 'success') {
@@ -78,17 +120,25 @@ class TransactionApiController extends Controller
                 'message' => 'Already processed'
             ]);
         }
+       if ($validated['razorpay_order_id'] !== $transaction->gateway_order_id) {
+           return response()->json([
+               'status' => false,
+               'message' => 'Payment order does not match this transaction'
+           ], 400);
+       }
+
        // Signature verify
        $api = new Api(config('services.razorpay.key'), config('services.razorpay.secret'));
 
         try {
             $attributes = [
-                'razorpay_order_id' => $request->razorpay_order_id,
-                'razorpay_payment_id' => $request->razorpay_payment_id,
-                'razorpay_signature' => $request->razorpay_signature,
+                'razorpay_order_id' => $validated['razorpay_order_id'],
+                'razorpay_payment_id' => $validated['razorpay_payment_id'],
+                'razorpay_signature' => $validated['razorpay_signature'],
             ];
 
             $api->utility->verifyPaymentSignature($attributes);
+            $payment = $api->payment->fetch($validated['razorpay_payment_id']);
 
         } catch (\Exception $e) {
             $transaction->update(['status' => 'failed']);
@@ -97,15 +147,45 @@ class TransactionApiController extends Controller
                 'status' => false,
                 'message' => 'Payment verification failed'
             ], 400);
-        }     
+        }
+
+        $expectedAmount = (int) round((float) $transaction->amount * 100);
+        $expectedCurrency = $transaction->currency ?: 'INR';
+        $paymentStatus = $payment['status'] ?? null;
+        $paymentCaptured = (bool) ($payment['captured'] ?? false);
+
+        if (($payment['order_id'] ?? null) !== $transaction->gateway_order_id) {
+            $transaction->update(['status' => 'failed']);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Razorpay payment is not linked to this order'
+            ], 400);
+        }
+
+        if ((int) ($payment['amount'] ?? 0) !== $expectedAmount || ($payment['currency'] ?? null) !== $expectedCurrency) {
+            $transaction->update(['status' => 'failed']);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Paid amount does not match the selected plan'
+            ], 400);
+        }
+
+        if ($paymentStatus !== 'captured' && ! $paymentCaptured) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Payment is not captured yet'
+            ], 400);
+        }
    
         // SUCCESS
         $transaction->update([
            'status' => 'success',
-           'gateway_payment_id' => $request->razorpay_payment_id,
-           'gateway_signature' => $request->razorpay_signature,
+           'gateway_payment_id' => $validated['razorpay_payment_id'],
+           'gateway_signature' => $validated['razorpay_signature'],
            'paid_at' => now(),
-           'raw_response' => json_encode($request->all())
+           'raw_response' => $payment->toArray()
         ]);
    
        // 👉 SUBSCRIPTION UPDATE
