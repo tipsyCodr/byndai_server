@@ -128,7 +128,7 @@
 <script>
     function deleteSubscription(id, userName) {
         document.getElementById('deleteMessage').innerText = `Are you sure you want to delete the subscription for "${userName}"? This action cannot be undone.`;
-        document.getElementById('deleteForm').action = `/admin/subscriptions/${id}`;
+        document.getElementById('deleteForm').action = '{{ url('subscriptions') }}' + '/' + id;
         document.getElementById('deleteModal').style.display = 'flex';
     }
 
