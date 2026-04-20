@@ -61,6 +61,18 @@ class TransactionApiController extends Controller
 
        // ✅ Already processed check
         if ($transaction->status === 'success') {
+            $hasSubscription = UserSubscription::where('user_id', $transaction->user_id)
+                ->where('plan_id', $transaction->plan_id)
+                ->where('payment_id', $transaction->gateway_payment_id)
+                ->exists();
+
+            if (! $hasSubscription && ! $this->activatePlan($transaction)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Payment verified, but subscription activation failed'
+                ], 500);
+            }
+
             return response()->json([
                 'status' => true,
                 'message' => 'Already processed'
@@ -97,13 +109,18 @@ class TransactionApiController extends Controller
         ]);
    
        // 👉 SUBSCRIPTION UPDATE
-       $this->activatePlan($transaction);
+       if (! $this->activatePlan($transaction)) {
+           return response()->json([
+               'status' => false,
+               'message' => 'Payment verified, but subscription activation failed'
+           ], 500);
+       }
    
        return response()->json(['status' => true]);
     }
 
    // ACTIVATE PLAN
-   private function activatePlan($transaction)
+   private function activatePlan($transaction): bool
    {
      DB::beginTransaction();
 
@@ -130,8 +147,9 @@ class TransactionApiController extends Controller
                ->first();
 
            if ($existing) {
+               $transaction->update(['subscription_id' => $existing->id]);
                DB::commit();
-               return;
+               return true;
            }
 
            // ✅ Start & End date
@@ -151,11 +169,13 @@ class TransactionApiController extends Controller
                'plan_id' => $plan->id,
                'payment_status' => 'paid',
                'payment_id' => $transaction->gateway_payment_id,
-               'payment_method' => 'razorpay',
+               'payment_method' => 'online',
                'start_date' => $startDate,
                'end_date' => $endDate,
                'is_active' => 1,
            ]);
+
+           $transaction->update(['subscription_id' => $subscription->id]);
 
            // ✅ Copy plan features
            $planFeatures = PlanFeature::where('plan_id',      $plan->id)->get();
@@ -220,9 +240,15 @@ class TransactionApiController extends Controller
            }
 
            DB::commit();
+           return true;
       } catch (\Exception $e) {
           DB::rollBack();
-          Log::error('Subscription activation failed: ' .   $e->getMessage());
+          Log::error('Subscription activation failed: ' .   $e->getMessage(), [
+              'transaction_id' => $transaction->id,
+              'user_id' => $transaction->user_id,
+              'plan_id' => $transaction->plan_id,
+          ]);
+          return false;
       }
    }
    
