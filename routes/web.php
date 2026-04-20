@@ -44,7 +44,12 @@ Route::middleware(['auth'])->group(function () {
 
     Route::prefix('subscriptions')->name('admin.subscriptions.')->group(function() {
         Route::get('/', [\App\Http\Controllers\Backend\SubscriptionManagementController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Backend\SubscriptionManagementController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Backend\SubscriptionManagementController::class, 'store'])->name('store');
         Route::get('/{id}', [\App\Http\Controllers\Backend\SubscriptionManagementController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [\App\Http\Controllers\Backend\SubscriptionManagementController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [\App\Http\Controllers\Backend\SubscriptionManagementController::class, 'update'])->name('update');
+        Route::delete('/{id}', [\App\Http\Controllers\Backend\SubscriptionManagementController::class, 'destroy'])->name('destroy');
         Route::post('/usage/{id}/update', [\App\Http\Controllers\Backend\SubscriptionManagementController::class, 'updateUsage'])->name('updateUsage');
         Route::post('/{id}/update-badges', [\App\Http\Controllers\Backend\SubscriptionManagementController::class, 'updateBadges'])->name('updateBadges');
     });

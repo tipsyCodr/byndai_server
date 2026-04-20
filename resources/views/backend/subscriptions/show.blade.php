@@ -52,7 +52,7 @@
     }
 </style>
 <div class="container">
-    <div class="header-area" style="margin-bottom: 3rem; display: flex; justify-content: space-between; align-items: flex-end;">
+    <div class="header-area" style="margin-bottom: 3rem; display: flex; justify-content: space-between; align-items: flex-start;">
         <div>
             <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
                 <a href="{{ route('admin.subscriptions.index') }}" style="color: var(--text-secondary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
@@ -63,23 +63,35 @@
             <h1 class="gradient-text" style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem;">Usage Stats: {{ $subscription->user->user_name ?? 'User' }}</h1>
             <p style="color: var(--text-secondary); font-size: 1.1rem;">Monitoring feature consumption for <strong>{{ $subscription->plan->name ?? 'Plan' }}</strong></p>
         </div>
-        <div class="premium-glass" style="padding: 1rem 1.5rem; border-radius: 1rem; text-align: right;">
-            <div style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.3rem;">Subscription Status</div>
-            @if($subscription->isActive())
-                <strong style="color: #4ade80;">ACTIVE</strong>
-            @else
-                <strong style="color: #f87171;">EXPIRED</strong>
-            @endif
+        <div style="display: flex; flex-direction: column; gap: 1rem; align-items: flex-end;">
+            <div class="premium-glass" style="padding: 1rem 1.5rem; border-radius: 1rem; text-align: right;">
+                <div style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.3rem;">Subscription Status</div>
+                @if($subscription->isActive())
+                    <strong style="color: #4ade80;">ACTIVE</strong>
+                @else
+                    <strong style="color: #f87171;">EXPIRED</strong>
+                @endif
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <a href="{{ route('admin.subscriptions.edit', $subscription->id) }}" style="padding: 0.6rem 1rem; border-radius: 0.6rem; font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3);">
+                    <i data-lucide="edit-2" style="width: 14px;"></i>
+                    Edit
+                </a>
+                <button onclick="deleteSubscription({{ $subscription->id }}, '{{ $subscription->user->user_name }}')" style="padding: 0.6rem 1rem; border-radius: 0.6rem; font-size: 0.85rem; background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <i data-lucide="trash-2" style="width: 14px;"></i>
+                    Delete
+                </button>
+            </div>
         </div>
     </div>
-    
+
     <div class="header-area" style="margin-bottom: 2rem;">
         <div class="premium-glass" style="padding: 2rem; border-radius: 1.5rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                 <h3 style="font-size: 1.3rem; font-weight: 700;">Managed Badges</h3>
                 <span style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Public Profile Badges</span>
             </div>
-            
+
             <form action="{{ route('admin.subscriptions.updateBadges', $subscription->id) }}" method="POST" style="display: flex; gap: 2rem; align-items: center;">
                 @csrf
                 <div style="display: flex; align-items: center; gap: 0.8rem;">
@@ -97,7 +109,7 @@
                     </label>
                     <span style="font-weight: 600;">BNI Badge</span>
                 </div>
-                
+
                 <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0; margin-left: auto;">
                     <i data-lucide="info" style="width: 14px; display: inline-block; vertical-align: middle;"></i>
                     Toggling will automatically save and update the user's public profile.
@@ -122,7 +134,7 @@
                 $percentage = $isUnlimited ? 0 : min(100, ($usf->used_value / max(1, $limit)) * 100);
                 $progressColor = $percentage > 90 ? '#f87171' : ($percentage > 70 ? '#fbbf24' : '#4ade80');
             @endphp
-            
+
             <div class="premium-glass" style="padding: 2.5rem; border-radius: 2rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                     <h3 style="font-size: 1.2rem; font-weight: 700;">{{ $usf->feature->feature }}</h3>
@@ -145,7 +157,7 @@
                 <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; margin-bottom: 0.5rem;">
                     <div style="width: {{ $isUnlimited ? '0' : $percentage }}%; height: 100%; background: {{ $progressColor }}; box-shadow: 0 0 10px {{ $progressColor }}44; border-radius: 10px; transition: 0.6s cubic-bezier(0.4, 0, 0.2, 1);"></div>
                 </div>
-                
+
                 @if(!$isUnlimited)
                     <div style="text-align: right; font-size: 0.75rem; color: var(--text-secondary);">
                         {{ number_format($percentage, 0) }}% Used
@@ -162,23 +174,44 @@
         <button onclick="closeModal()" style="position: absolute; top: 1.5rem; right: 1.5rem; background: none; border: none; color: var(--text-secondary); cursor: pointer;">
             <i data-lucide="x" style="width: 24px;"></i>
         </button>
-        
+
         <h2 class="gradient-text" style="font-size: 1.8rem; margin-bottom: 2rem;">Override Usage</h2>
         <p id="featureName" style="color: var(--text-secondary); margin-bottom: 1.5rem;"></p>
-        
+
         <form action="{{ route('admin.subscriptions.updateUsage', $subscription->id) }}" method="POST">
             @csrf
             <input type="hidden" name="feature_id" id="modalFeatureId">
-            
+
             <div class="form-group" style="margin-bottom: 2rem;">
                 <label style="display: block; margin-bottom: 1rem; color: var(--text-secondary);">Adjust Current Value</label>
                 <input type="number" name="used_value" id="modalUsedValue" class="form-control" style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); padding: 1rem; border-radius: 0.8rem; color: white;" required min="0">
             </div>
-            
+
             <button type="submit" class="gradient-btn" style="width: 100%; padding: 1.2rem; border-radius: 1rem; font-size: 1.1rem;">
                 Apply Changes
             </button>
         </form>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center; padding: 2rem;">
+    <div class="premium-glass" style="max-width: 450px; width: 100%; padding: 2.5rem; border-radius: 2rem; position: relative;">
+        <h2 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--text-primary);">Confirm Delete</h2>
+        <p id="deleteMessage" style="color: var(--text-secondary); margin-bottom: 2rem;"></p>
+
+        <div style="display: flex; gap: 1rem;">
+            <button onclick="closeDeleteModal()" style="flex: 1; padding: 0.8rem; border-radius: 0.6rem; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: var(--text-primary); cursor: pointer; font-weight: 600;">
+                Cancel
+            </button>
+            <form id="deleteForm" method="POST" style="flex: 1;">
+                @csrf
+                @method('DELETE')
+                <button type="submit" style="width: 100%; padding: 0.8rem; border-radius: 0.6rem; background: #ef4444; border: none; color: white; cursor: pointer; font-weight: 600;">
+                    Delete Subscription
+                </button>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -197,9 +230,21 @@
         document.getElementById('usageModal').style.display = 'none';
     }
 
+    function deleteSubscription(id, userName) {
+        document.getElementById('deleteMessage').innerText = `Are you sure you want to delete the subscription for "${userName}"? This action cannot be undone.`;
+        document.getElementById('deleteForm').action = `/admin/subscriptions/${id}`;
+        document.getElementById('deleteModal').style.display = 'flex';
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').style.display = 'none';
+    }
+
     window.onclick = function(event) {
-        const modal = document.getElementById('usageModal');
-        if (event.target == modal) closeModal();
+        const usageModal = document.getElementById('usageModal');
+        const deleteModal = document.getElementById('deleteModal');
+        if (event.target == usageModal) closeModal();
+        if (event.target == deleteModal) closeDeleteModal();
     }
 </script>
 @endsection
