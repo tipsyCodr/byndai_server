@@ -30,7 +30,7 @@ class TransactionApiController extends Controller
 
       $amount = $plan->price * 100; // paisa
 
-      $api = new Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
+      $api = new Api(config('services.razorpay.key'), config('services.razorpay.secret'));
 
       $order = $api->order->create([
           'amount' => $amount,
@@ -50,7 +50,7 @@ class TransactionApiController extends Controller
 
       return response()->json([
           'order_id' => $order['id'],
-          'key' => env('RAZORPAY_KEY'),
+          'key' => config('services.razorpay.key'),
           'transaction_id' => $transaction->id
       ]);
    }
@@ -67,7 +67,7 @@ class TransactionApiController extends Controller
             ]);
         }
        // Signature verify
-       $api = new Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
+       $api = new Api(config('services.razorpay.key'), config('services.razorpay.secret'));
 
         try {
             $attributes = [
