@@ -17,7 +17,9 @@ class PlanController extends Controller
     public function index()
     {
         $plans = SubscriptionPlan::with('features.feature')->orderBy('price')->get();
-        return view('backend.plans.index', compact('plans'));
+        $allFeatures = Feature::orderBy('feature')->get();
+
+        return view('backend.plans.index', compact('plans', 'allFeatures'));
     }
 
     /**
@@ -27,16 +29,26 @@ class PlanController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:100',
-            'type' => 'required|in:monthly,yearly,lifetime',
+            'type' => 'required|in:daily,weekly,monthly,quarterly,yearly',
             'price' => 'required|numeric|min:0',
             'is_free' => 'required|boolean',
             'status' => 'required|in:0,1',
+            'currency' => 'nullable|in:INR',
+            'description' => 'nullable|string',
+            'features' => 'nullable|array',
+            'features.*.enabled' => 'nullable|boolean',
+            'features.*.value' => 'nullable|string|max:100',
+            'features.*.unit' => 'nullable|string|max:50',
         ]);
 
-        $data = $request->all();
+        $data = $request->only(['name', 'type', 'price', 'is_free', 'status', 'currency', 'description']);
+        $data['currency'] = $data['currency'] ?: 'INR';
+        $data['price'] = (bool) $data['is_free'] ? 0 : $data['price'];
         $data['slug'] = Str::slug($request->name) . '-' . uniqid();
 
-        SubscriptionPlan::create($data);
+        $plan = SubscriptionPlan::create($data);
+
+        $this->syncFeatureQuotas($plan, $request->input('features', []));
 
         return redirect()->route('admin.plans.index')
             ->with('success', 'Subscription plan created successfully.');
@@ -61,13 +73,24 @@ class PlanController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:100',
-            'type' => 'required|in:monthly,yearly,lifetime',
+            'type' => 'required|in:daily,weekly,monthly,quarterly,yearly',
             'price' => 'required|numeric|min:0',
             'is_free' => 'required|boolean',
             'status' => 'required|in:0,1',
+            'currency' => 'nullable|in:INR',
+            'description' => 'nullable|string',
+            'features' => 'nullable|array',
+            'features.*.enabled' => 'nullable|boolean',
+            'features.*.value' => 'nullable|string|max:100',
+            'features.*.unit' => 'nullable|string|max:50',
         ]);
 
-        $plan->update($request->all());
+        $data = $request->only(['name', 'type', 'price', 'is_free', 'status', 'currency', 'description']);
+        $data['currency'] = $data['currency'] ?: 'INR';
+        $data['price'] = (bool) $data['is_free'] ? 0 : $data['price'];
+
+        $plan->update($data);
+        $this->syncFeatureQuotas($plan, $request->input('features', []));
 
         return redirect()->route('admin.plans.index')
             ->with('success', 'Subscription plan updated successfully.');
@@ -111,5 +134,33 @@ class PlanController extends Controller
     {
         PlanFeature::where('plan_id', $id)->where('feature_id', $featureId)->delete();
         return back()->with('success', 'Feature removed from plan.');
+    }
+
+    private function syncFeatureQuotas(SubscriptionPlan $plan, array $features): void
+    {
+        foreach ($features as $featureId => $featureData) {
+            if (! Feature::whereKey($featureId)->exists()) {
+                continue;
+            }
+
+            $enabled = (bool) ($featureData['enabled'] ?? false);
+            $value = trim((string) ($featureData['value'] ?? ''));
+            $unit = trim((string) ($featureData['unit'] ?? ''));
+
+            if (! $enabled) {
+                PlanFeature::where('plan_id', $plan->id)
+                    ->where('feature_id', $featureId)
+                    ->delete();
+                continue;
+            }
+
+            PlanFeature::updateOrCreate(
+                ['plan_id' => $plan->id, 'feature_id' => $featureId],
+                [
+                    'value' => $value !== '' ? $value : '-1',
+                    'unit' => $unit !== '' ? $unit : null,
+                ]
+            );
+        }
     }
 }
