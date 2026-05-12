@@ -31,6 +31,7 @@ class PlanController extends Controller
             'name' => 'required|string|max:100',
             'type' => 'required|in:daily,weekly,monthly,quarterly,yearly',
             'price' => 'required|numeric|min:0',
+            'regular_price' => 'nullable|numeric|min:0',
             'is_free' => 'required|boolean',
             'status' => 'required|in:0,1',
             'currency' => 'nullable|in:INR',
@@ -41,7 +42,7 @@ class PlanController extends Controller
             'features.*.unit' => 'nullable|string|max:50',
         ]);
 
-        $data = $request->only(['name', 'type', 'price', 'is_free', 'status', 'currency', 'description']);
+        $data = $request->only(['name', 'type', 'price', 'regular_price', 'is_free', 'status', 'currency', 'description']);
         $data['currency'] = $data['currency'] ?: 'INR';
         $data['price'] = (bool) $data['is_free'] ? 0 : $data['price'];
         $data['slug'] = Str::slug($request->name) . '-' . uniqid();
@@ -75,6 +76,7 @@ class PlanController extends Controller
             'name' => 'required|string|max:100',
             'type' => 'required|in:daily,weekly,monthly,quarterly,yearly',
             'price' => 'required|numeric|min:0',
+            'regular_price' => 'nullable|numeric|min:0',
             'is_free' => 'required|boolean',
             'status' => 'required|in:0,1',
             'currency' => 'nullable|in:INR',
@@ -85,7 +87,7 @@ class PlanController extends Controller
             'features.*.unit' => 'nullable|string|max:50',
         ]);
 
-        $data = $request->only(['name', 'type', 'price', 'is_free', 'status', 'currency', 'description']);
+        $data = $request->only(['name', 'type', 'price', 'regular_price', 'is_free', 'status', 'currency', 'description']);
         $data['currency'] = $data['currency'] ?: 'INR';
         $data['price'] = (bool) $data['is_free'] ? 0 : $data['price'];
 
