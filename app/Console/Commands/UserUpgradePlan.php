@@ -52,10 +52,21 @@ class UserUpgradePlan extends Command
         try {
             DB::beginTransaction();
 
-            // ✅ Step 1: Deactivate old active subscriptions
-            UserSubscription::where('user_id', $userId)
+            // ✅ Find the latest subscription to queue after
+            $latestSub = UserSubscription::where('user_id', $userId)
                 ->where('is_active', 1)
-                ->update(['is_active' => 0]);
+                ->orderBy('end_date', 'desc')
+                ->first();
+
+            // ✅ Start & End date (Queue after latest expires, or NOW if none)
+            $startDate = ($latestSub && $latestSub->end_date > now()) ? $latestSub->end_date : now();
+
+            $endDate = match ($plan->type) {
+                'monthly' => $startDate->copy()->addMonth(),
+                'yearly'  => $startDate->copy()->addYear(),
+                'weekly'  => $startDate->copy()->addWeek(),
+                default   => $startDate->copy()->addMonth(),
+            };
 
             // ✅ Step 2: Create new subscription
             $subscription = UserSubscription::create([
@@ -64,8 +75,8 @@ class UserUpgradePlan extends Command
                 'payment_status' => 'paid',
                 'payment_id' => $paymentId,
                 'payment_method' => $method,
-                'start_date' => now(),
-                'end_date' => now()->addMonth(), // Default to 1 month, you can customize this based on $plan->type
+                'start_date' => $startDate,
+                'end_date' => $endDate,
                 'is_active' => 1,
             ]);
 

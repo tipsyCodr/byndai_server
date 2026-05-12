@@ -215,33 +215,27 @@ class TransactionApiController extends Controller
 
            if ($currentPaid && $currentPaid->end_date->lt(now()))      {
                $currentPaid->update(['is_active' => 0]);
-           }
-
            // New plan
            $plan = SubscriptionPlan::findOrFail     ($transaction->plan_id);
 
-           // ✅ Duplicate plan prevention
-           $existing = UserSubscription::where('user_id', $userId)
-               ->where('plan_id', $plan->id)
-               ->where('is_active', 1)
-               ->first();
 
-           if ($existing) {
-               $transaction->update(['subscription_id' => $existing->id]);
-               DB::commit();
-               return true;
-           }
+            // ✅ Find the latest subscription to queue after
+            $latestSub = UserSubscription::where('user_id', $userId)
+                ->where('is_active', 1)
+                ->orderBy('end_date', 'desc')
+                ->first();
 
-           // ✅ Start & End date
-           $startDate = now();
-           switch ($plan->type) {
-               case 'daily': $endDate = now()->addDay(); break;
-               case 'weekly': $endDate = now()->addWeek(); break;
-               case 'monthly': $endDate = now()->addMonth(); break;
-               case 'quarterly': $endDate = now()->addMonths(3); break;
-               case 'yearly': $endDate = now()->addYear(); break;
-               default: $endDate = now()->addMonth();
-           }
+            // ✅ Start & End date (Queue after latest expires, or NOW if none)
+            $startDate = ($latestSub && $latestSub->end_date > now()) ? $latestSub->end_date : now();
+
+            switch ($plan->type) {
+                case 'daily': $endDate = $startDate->copy()->addDay(); break;
+                case 'weekly': $endDate = $startDate->copy()->addWeek(); break;
+                case 'monthly': $endDate = $startDate->copy()->addMonth(); break;
+                case 'quarterly': $endDate = $startDate->copy()->addMonths(3); break;
+                case 'yearly': $endDate = $startDate->copy()->addYear(); break;
+                default: $endDate = $startDate->copy()->addMonth();
+            }
 
            // ✅ Create new subscription
            $subscription = UserSubscription::create([
@@ -270,11 +264,6 @@ class TransactionApiController extends Controller
                ]);
            }
 
-           // ✅ Deactivate old plans only after new plan creation
-           UserSubscription::where('user_id', $userId)
-               ->where('is_active', 1)
-               ->where('id', '!=', $subscription->id)
-               ->update(['is_active' => 0]);
 
            // ✅ Activate free plan if no other active plans
            $activeCount = UserSubscription::where('user_id',      $userId)
