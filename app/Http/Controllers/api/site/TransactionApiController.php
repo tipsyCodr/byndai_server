@@ -202,40 +202,41 @@ class TransactionApiController extends Controller
    // ACTIVATE PLAN
    private function activatePlan($transaction): bool
    {
-     DB::beginTransaction();
+      DB::beginTransaction();
 
       try {
            $userId = $transaction->user_id;
 
            // Paid plan expired check
-           $currentPaid = UserSubscription::where('user_id',      $userId)
+           $currentPaid = UserSubscription::where('user_id', $userId)
                ->where('is_active', 1)
                ->where('plan_id', '!=', $transaction->plan_id)
                ->first();
 
-           if ($currentPaid && $currentPaid->end_date->lt(now()))      {
+           if ($currentPaid && $currentPaid->end_date && $currentPaid->end_date->lt(now())) {
                $currentPaid->update(['is_active' => 0]);
+           }
+
            // New plan
-           $plan = SubscriptionPlan::findOrFail     ($transaction->plan_id);
+           $plan = SubscriptionPlan::findOrFail($transaction->plan_id);
 
+           // ✅ Find the latest subscription to queue after
+           $latestSub = UserSubscription::where('user_id', $userId)
+               ->where('is_active', 1)
+               ->orderBy('end_date', 'desc')
+               ->first();
 
-            // ✅ Find the latest subscription to queue after
-            $latestSub = UserSubscription::where('user_id', $userId)
-                ->where('is_active', 1)
-                ->orderBy('end_date', 'desc')
-                ->first();
+           // ✅ Start & End date (Queue after latest expires, or NOW if none)
+           $startDate = ($latestSub && $latestSub->end_date && $latestSub->end_date > now()) ? $latestSub->end_date : now();
 
-            // ✅ Start & End date (Queue after latest expires, or NOW if none)
-            $startDate = ($latestSub && $latestSub->end_date > now()) ? $latestSub->end_date : now();
-
-            switch ($plan->type) {
-                case 'daily': $endDate = $startDate->copy()->addDay(); break;
-                case 'weekly': $endDate = $startDate->copy()->addWeek(); break;
-                case 'monthly': $endDate = $startDate->copy()->addMonth(); break;
-                case 'quarterly': $endDate = $startDate->copy()->addMonths(3); break;
-                case 'yearly': $endDate = $startDate->copy()->addYear(); break;
-                default: $endDate = $startDate->copy()->addMonth();
-            }
+           switch ($plan->type) {
+               case 'daily': $endDate = $startDate->copy()->addDay(); break;
+               case 'weekly': $endDate = $startDate->copy()->addWeek(); break;
+               case 'monthly': $endDate = $startDate->copy()->addMonth(); break;
+               case 'quarterly': $endDate = $startDate->copy()->addMonths(3); break;
+               case 'yearly': $endDate = $startDate->copy()->addYear(); break;
+               default: $endDate = $startDate->copy()->addMonth();
+           }
 
            // ✅ Create new subscription
            $subscription = UserSubscription::create([
@@ -252,7 +253,7 @@ class TransactionApiController extends Controller
            $transaction->update(['subscription_id' => $subscription->id]);
 
            // ✅ Copy plan features
-           $planFeatures = PlanFeature::where('plan_id',      $plan->id)->get();
+           $planFeatures = PlanFeature::where('plan_id', $plan->id)->get();
            foreach ($planFeatures as $feature) {
                UserSubscriptionFeature::create([
                    'user_subscription_id' => $subscription->id,
@@ -264,9 +265,8 @@ class TransactionApiController extends Controller
                ]);
            }
 
-
            // ✅ Activate free plan if no other active plans
-           $activeCount = UserSubscription::where('user_id',      $userId)
+           $activeCount = UserSubscription::where('user_id', $userId)
                ->where('is_active', 1)
                ->count();
 
@@ -312,7 +312,7 @@ class TransactionApiController extends Controller
            return true;
       } catch (\Exception $e) {
           DB::rollBack();
-          Log::error('Subscription activation failed: ' .   $e->getMessage(), [
+          Log::error('Subscription activation failed: ' . $e->getMessage(), [
               'transaction_id' => $transaction->id,
               'user_id' => $transaction->user_id,
               'plan_id' => $transaction->plan_id,
