@@ -16,6 +16,7 @@ class SubscriptionPlan extends Model
         'type', 
         'is_free', 
         'price', 
+        'regular_price',
         'currency', 
         'status'
     ];
@@ -26,6 +27,7 @@ class SubscriptionPlan extends Model
     protected $casts = [
         'is_free' => 'boolean',
         'price' => 'decimal:2',
+        'regular_price' => 'decimal:2',
         'status' => 'integer',
         'type' => 'string', // kyunki ye enum hai 
     ];

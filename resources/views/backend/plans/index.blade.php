@@ -85,7 +85,10 @@
                 <h2 style="font-size: 1.8rem; font-weight: 700; margin-bottom: 0.5rem;">{{ $plan->name }}</h2>
                 <p style="color: var(--text-secondary); min-height: 2.8rem; margin-bottom: 1.5rem;">{{ $plan->description ?: 'No description added yet.' }}</p>
 
-                <div style="margin-bottom: 2rem;">
+                <div style="margin-bottom: 2rem; display: flex; align-items: baseline; gap: 0.8rem;">
+                    @if($plan->regular_price > 0 && $plan->regular_price > $plan->price)
+                        <span style="font-size: 1.1rem; color: var(--text-secondary); text-decoration: line-through;">{{ $plan->currency ?: 'INR' }} {{ number_format($plan->regular_price, 2) }}</span>
+                    @endif
                     <span style="font-size: 2.2rem; font-weight: 800;" class="gradient-text">{{ $plan->currency ?: 'INR' }} {{ number_format($plan->price, 2) }}</span>
                     <span style="color: var(--text-secondary);">/ {{ $plan->type }}</span>
                 </div>
@@ -154,10 +157,15 @@
                 </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.2rem;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.2rem;">
                 <div class="form-group" style="margin-bottom: 1.2rem;">
-                    <label style="display: block; margin-bottom: 0.6rem; color: var(--text-secondary); font-size: 0.9rem; font-weight: 500;">Price</label>
+                    <label style="display: block; margin-bottom: 0.6rem; color: var(--text-secondary); font-size: 0.9rem; font-weight: 500;">Sale Price</label>
                     <input type="number" name="price" id="priceInput" min="0" step="0.01" style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); padding: 0.8rem; border-radius: 0.5rem; color: white; font-size: 1rem;" placeholder="500" required>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1.2rem;">
+                    <label style="display: block; margin-bottom: 0.6rem; color: var(--text-secondary); font-size: 0.9rem; font-weight: 500;">Regular Price (Non-sale)</label>
+                    <input type="number" name="regular_price" id="regularPriceInput" min="0" step="0.01" style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); padding: 0.8rem; border-radius: 0.5rem; color: white; font-size: 1rem;" placeholder="999">
                 </div>
 
                 <div class="form-group" style="margin-bottom: 1.2rem;">
@@ -251,6 +259,7 @@
             document.getElementById('nameInput').value = plan.name || '';
             document.getElementById('typeInput').value = plan.type || 'monthly';
             document.getElementById('priceInput').value = plan.price || 0;
+            document.getElementById('regularPriceInput').value = plan.regular_price || '';
             document.getElementById('currencyInput').value = plan.currency || 'INR';
             document.getElementById('isFreeInput').checked = plan.is_free == 1;
             document.getElementById('statusInput').value = plan.status ?? 1;

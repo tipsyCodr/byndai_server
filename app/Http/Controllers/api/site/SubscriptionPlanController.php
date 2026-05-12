@@ -27,6 +27,7 @@ class SubscriptionPlanController extends Controller
             'name' => 'required|string|max:100',
             'type' => 'required|in:daily,weekly,monthly,quarterly,yearly',
             'price' => 'nullable|numeric',
+            'regular_price' => 'nullable|numeric',
         ]);
 
         $plan = SubscriptionPlan::create([
@@ -36,6 +37,7 @@ class SubscriptionPlanController extends Controller
             'type' => $request->type,
             'is_free' => $request->is_free ?? false,
             'price' => $request->price ?? 0,
+            'regular_price' => $request->regular_price ?? 0,
             'currency' => $request->currency ?? 'INR',
             'status' => $request->status ?? 1,
         ]);
@@ -83,6 +85,7 @@ class SubscriptionPlanController extends Controller
             'type' => $request->type ?? $plan->type,
             'is_free' => $request->is_free ?? $plan->is_free,
             'price' => $request->price ?? $plan->price,
+            'regular_price' => $request->regular_price ?? $plan->regular_price,
             'currency' => $request->currency ?? $plan->currency,
             'status' => $request->status ?? $plan->status,
         ]);
