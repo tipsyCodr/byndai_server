@@ -36,7 +36,8 @@ public function mySubscription(Request $request)
     $subscription = UserSubscription::with(['plan', 'features'])
         ->where('user_id', $user->id)
         ->where('is_active', 1)
-        ->latest()
+        ->where('start_date', '<=', now())
+        ->where('end_date', '>=', now())
         ->first();
 
       Log::info('📦 1.Subscription Data:', [
@@ -84,9 +85,41 @@ public function mySubscription(Request $request)
         ];
     });
 
+    // ✅ Queued plans check
+    $upcoming = UserSubscription::with('plan')
+        ->where('user_id', $user->id)
+        ->where('is_active', 1)
+        ->where('start_date', '>', now())
+        ->orderBy('start_date', 'asc')
+        ->get();
+
     return response()->json([
         'status' => true,
-        'data' => $subscription
+        'data' => $subscription,
+        'upcoming' => [
+            'has_upcoming' => $upcoming->isNotEmpty(),
+            'count' => $upcoming->count(),
+            'next_plan' => $upcoming->first(),
+            'all_queued' => $upcoming
+        ]
+    ]);
+}
+
+public function getQueuedSubscriptions(Request $request)
+{
+    $user = $request->user();
+    $queued = UserSubscription::with(['plan', 'features'])
+        ->where('user_id', $user->id)
+        ->where('is_active', 1)
+        ->where('start_date', '>', now())
+        ->orderBy('start_date', 'asc')
+        ->get();
+
+    return response()->json([
+        'status' => true,
+        'has_queued' => $queued->isNotEmpty(),
+        'count' => $queued->count(),
+        'data' => $queued
     ]);
 }
 
@@ -200,7 +233,8 @@ public function mySubscription(Request $request)
         $subscription = UserSubscription::with(['plan', 'features'])
             ->where('user_id', $userId)
             ->where('is_active', 1)
-            ->latest()
+            ->where('start_date', '<=', now())
+            ->where('end_date', '>=', now())
             ->first();
 
         if (!$subscription) {
@@ -226,8 +260,8 @@ public function mySubscription(Request $request)
         $activeSubscription = UserSubscription::with('plan')
             ->where('user_id', $user->id)
             ->where('is_active', 1)
+            ->where('start_date', '<=', now())
             ->where('end_date', '>=', now())
-            ->latest()
             ->first();
 
         $isPro = false;
@@ -254,8 +288,8 @@ public function mySubscription(Request $request)
         $activeSubscription = UserSubscription::with('plan')
             ->where('user_id', $userId)
             ->where('is_active', 1)
+            ->where('start_date', '<=', now())
             ->where('end_date', '>=', now())
-            ->latest()
             ->first();
 
         $isPro = false;
@@ -419,35 +453,23 @@ public function mySubscription(Request $request)
                ]);
            }
 
-           // ✅ Check active subscription
-           $activeSub = UserSubscription::where('user_id', $userId)
+           // ✅ Find the latest subscription to queue after
+           $latestSub = UserSubscription::where('user_id', $userId)
                ->where('is_active', 1)
+               ->orderBy('end_date', 'desc')
                ->first();
 
-           // 🚫 SAME PLAN DOUBLE BUY BLOCK
-           if ($activeSub && $activeSub->plan_id == $newPlanId) {
-               return response()->json([
-                   'status' => false,
-                   'message' => 'User already subscribed to this plan'
-               ]);
-           }
-
-           // ✅ Step 1: old subscription deactivate
-           if ($activeSub) {
-               $activeSub->update(['is_active' => 0]);
-           }
-
-           // ✅ Step 2: duration logic
-           $startDate = now();
+           // ✅ Step 2: duration logic (Starts after latest expires, or NOW if none)
+           $startDate = ($latestSub && $latestSub->end_date > now()) ? $latestSub->end_date : now();
 
            $endDate = match ($plan->type) {
-               'monthly' => now()->addMonth(),
-               'yearly' => now()->addYear(),
-               'weekly' => now()->addWeek(),
-               default => now()->addMonth(),
+               'monthly' => $startDate->copy()->addMonth(),
+               'yearly'  => $startDate->copy()->addYear(),
+               'weekly'  => $startDate->copy()->addWeek(),
+               default   => $startDate->copy()->addMonth(),
            };
 
-           // ✅ Step 3: create new subscription
+           // ✅ Step 3: create new subscription (Queued)
            $subscription = UserSubscription::create([
                'user_id' => $userId,
                'plan_id' => $plan->id,
@@ -459,10 +481,7 @@ public function mySubscription(Request $request)
                'is_active' => 1,
            ]);
 
-           // ❌ IMPORTANT: NO DELETE (tu naya row chahta hai)
-           // so skip delete
-
-           // ✅ Step 4: fresh features insert (NEW ROWS ALWAYS)
+           // ✅ Step 4: fresh features insert
            foreach ($plan->features as $feature) {
                UserSubscriptionFeature::create([
                    'user_subscription_id' => $subscription->id,
@@ -478,7 +497,7 @@ public function mySubscription(Request $request)
 
            return response()->json([
                'status' => true,
-               'message' => 'Plan upgraded successfully 🚀',
+               'message' => 'Plan purchased and queued successfully 🚀',
                'data' => $subscription->load('plan', 'features')
            ]);
 

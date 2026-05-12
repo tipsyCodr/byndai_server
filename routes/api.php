@@ -836,6 +836,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     ]);
     // api call  register user page
     Route::get('user/subscription', [UserSubscriptionController::class, 'mySubscription']);
+    Route::get('user/queued-subscriptions', [UserSubscriptionController::class, 'getQueuedSubscriptions']);
     Route::post('/assign-free-subscription', [UserSubscriptionController::class, 'assignFreeSubscription']);
     // Extra
     Route::get('/subscription/{id}', [UserSubscriptionFeatureController::class, 'getBySubscription']);
