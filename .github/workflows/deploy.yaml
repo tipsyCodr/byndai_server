@@ -17,6 +17,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
+            whoami
             sudo -u byndai-app bash -c '
               source ~/.nvm/nvm.sh
               cd /home/byndai-app/htdocs/app.byndai.in
