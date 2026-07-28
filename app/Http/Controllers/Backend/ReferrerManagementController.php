@@ -244,4 +244,21 @@ class ReferrerManagementController extends Controller
 
         return back()->with('success', 'Global Referral settings updated successfully.');
     }
+
+    public function resetPassword(Request $request, Referrer $referrer)
+    {
+        $validated = $request->validate([
+            'password' => 'required|string|min:6|confirmed',
+        ]);
+
+        if (! $referrer->user) {
+            return back()->withErrors(['password' => 'User account associated with this referrer was not found.']);
+        }
+
+        $referrer->user->update([
+            'password' => \Illuminate\Support\Facades\Hash::make($validated['password']),
+        ]);
+
+        return back()->with('success', "Password for {$referrer->full_name} updated successfully.");
+    }
 }

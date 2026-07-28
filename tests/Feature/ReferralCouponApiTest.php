@@ -164,4 +164,17 @@ class ReferralCouponApiTest extends TestCase
             'status' => 'approved',
         ]);
     }
+
+    public function test_admin_can_reset_referrer_password()
+    {
+        $admin = User::factory()->create();
+
+        $response = $this->actingAs($admin)->post("/admin/referrers/{$this->referrer->id}/reset-password", [
+            'password' => 'newsecret123',
+            'password_confirmation' => 'newsecret123',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('newsecret123', $this->referrer->fresh()->user->password));
+    }
 }

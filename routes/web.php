@@ -78,6 +78,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{referrer}/toggle-active', [\App\Http\Controllers\Backend\ReferrerManagementController::class, 'toggleActive'])->name('toggle-active');
         Route::post('/{referrer}/coupon', [\App\Http\Controllers\Backend\ReferrerManagementController::class, 'updateCoupon'])->name('update-coupon');
         Route::post('/{referrer}/regenerate-code', [\App\Http\Controllers\Backend\ReferrerManagementController::class, 'regenerateCode'])->name('regenerate-code');
+        Route::post('/{referrer}/reset-password', [\App\Http\Controllers\Backend\ReferrerManagementController::class, 'resetPassword'])->name('reset-password');
     });
 });
 

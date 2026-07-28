@@ -96,12 +96,31 @@
             <button type="submit" class="gradient-btn" style="width: 100%; margin-bottom: 1rem;">Update Coupon Rules</button>
         </form>
 
-        <form action="{{ route('admin.referrers.regenerate-code', $referrer->id) }}" method="POST">
+        <form action="{{ route('admin.referrers.regenerate-code', $referrer->id) }}" method="POST" style="margin-bottom: 1.5rem;">
             @csrf
             <button type="submit" style="width: 100%; background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 0.6rem; padding: 0.6rem; cursor: pointer; font-weight: 600;">
                 Regenerate Random Code
             </button>
         </form>
+
+        <!-- Admin Reset Password Section -->
+        <div style="border-top: 1px solid var(--glass-border); padding-top: 1rem;">
+            <h4 style="margin-bottom: 0.8rem; font-size: 1rem; color: #a855f7;">Reset User Password</h4>
+            <form action="{{ route('admin.referrers.reset-password', $referrer->id) }}" method="POST">
+                @csrf
+                <div style="margin-bottom: 0.8rem;">
+                    <label style="display: block; margin-bottom: 0.3rem; font-size: 0.8rem;">New Password</label>
+                    <input type="password" name="password" required minlength="6" placeholder="Enter new password" style="width: 100%; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--glass-border); border-radius: 0.6rem; padding: 0.5rem; color: white;">
+                </div>
+                <div style="margin-bottom: 0.8rem;">
+                    <label style="display: block; margin-bottom: 0.3rem; font-size: 0.8rem;">Confirm New Password</label>
+                    <input type="password" name="password_confirmation" required minlength="6" placeholder="Confirm new password" style="width: 100%; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--glass-border); border-radius: 0.6rem; padding: 0.5rem; color: white;">
+                </div>
+                <button type="submit" class="gradient-btn" style="width: 100%; padding: 0.5rem; font-size: 0.85rem;">
+                    Reset Password
+                </button>
+            </form>
+        </div>
     </div>
 </div>
 

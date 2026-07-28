@@ -181,6 +181,15 @@
         </div>
     </div>
 
+    <!-- Payout Schedule Notice -->
+    <div style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 1rem; padding: 1rem 1.5rem; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.8rem; color: #93c5fd;">
+        <i data-lucide="calendar" style="width: 1.5rem; height: 1.5rem; flex-shrink: 0; color: #60a5fa;"></i>
+        <div>
+            <strong style="color: #ffffff; font-size: 0.95rem;">Payout Schedule Notice:</strong>
+            <span style="font-size: 0.9rem; margin-left: 0.3rem;">All earned referral commissions are processed and paid out on a <strong>weekly basis</strong>.</span>
+        </div>
+    </div>
+
     <!-- Stats Grid -->
     <div class="grid-stats">
         <div class="stat-card">

@@ -135,6 +135,7 @@ class ReferrerApiController extends Controller
             'referrer_status' => $referrer->status,
             'is_active' => (bool) $referrer->is_active,
             'coupon_code' => $coupon ? $coupon->code : null,
+            'payout_notice' => 'All earned referral commissions are processed and paid out on a weekly basis.',
             'total_plans_sold' => $totalSales,
             'total_revenue' => $totalRevenue,
             'total_commission_earned' => $totalCommissionEarned,
@@ -166,6 +167,31 @@ class ReferrerApiController extends Controller
         return response()->json([
             'status' => true,
             'data' => $sales,
+        ]);
+    }
+
+    /**
+     * Fetch referrer payouts history (paginated).
+     */
+    public function payouts(Request $request)
+    {
+        $user = Auth::user();
+        $referrer = $user->referrer;
+
+        if (! $referrer) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Referrer account not found for this user.',
+            ], 404);
+        }
+
+        $payouts = \App\Models\CommissionPayout::where('referrer_id', $referrer->id)
+            ->orderBy('paid_at', 'desc')
+            ->paginate($request->input('per_page', 15));
+
+        return response()->json([
+            'status' => true,
+            'data' => $payouts,
         ]);
     }
 }

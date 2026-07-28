@@ -854,6 +854,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Referrer API
     Route::get('/referrer/dashboard', [\App\Http\Controllers\api\site\ReferrerApiController::class, 'dashboard']);
     Route::get('/referrer/sales', [\App\Http\Controllers\api\site\ReferrerApiController::class, 'sales']);
+    Route::get('/referrer/payouts', [\App\Http\Controllers\api\site\ReferrerApiController::class, 'payouts']);
 
 
 
