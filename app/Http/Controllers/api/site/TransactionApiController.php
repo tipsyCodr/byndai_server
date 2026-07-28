@@ -19,13 +19,53 @@ use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification;
 use Razorpay\Api\Api;
+use App\Services\ReferralService;
+use App\Notifications\ReferralCommissionEarnedNotification;
 
 class TransactionApiController extends Controller
 {
+   public function applyCoupon(Request $request)
+   {
+       $validated = $request->validate([
+           'coupon_code' => 'required|string',
+           'plan_id' => 'required|integer|exists:subscription_plans,id',
+       ]);
+
+       $plan = SubscriptionPlan::where('id', $validated['plan_id'])
+           ->where('status', 1)
+           ->where('is_free', false)
+           ->firstOrFail();
+
+       $result = app(ReferralService::class)->validateCoupon($validated['coupon_code'], (float) $plan->price);
+
+       if (! $result['valid']) {
+           return response()->json([
+               'status' => false,
+               'coupon_applied' => false,
+               'coupon_validation_status' => 'invalid',
+               'message' => $result['message']
+           ], 422);
+       }
+
+       return response()->json([
+           'status' => true,
+           'message' => 'Coupon applied successfully',
+           'coupon_applied' => true,
+           'coupon_validation_status' => 'valid',
+           'coupon_code' => $result['coupon']->code,
+           'referrer_name' => $result['referrer']->full_name ?? null,
+           'original_price' => $result['original_price'],
+           'discount_amount' => $result['discount_amount'],
+           'final_amount' => $result['final_amount'],
+           'payable_amount' => $result['final_amount'],
+       ]);
+   }
+
    public function createOrder(Request $request)
    {
       $validated = $request->validate([
           'plan_id' => 'required|integer|exists:subscription_plans,id',
+          'coupon_code' => 'nullable|string',
       ]);
 
       $authId = Auth::id(); // user id
@@ -55,7 +95,37 @@ class TransactionApiController extends Controller
           ], 409);
       }
 
-      $amount = (int) round((float) $plan->price * 100); // paisa
+      $originalPrice = (float) $plan->price;
+      $discountAmount = 0.00;
+      $finalPrice = $originalPrice;
+      $couponId = null;
+      $referrerId = null;
+      $referrerName = null;
+      $couponApplied = false;
+      $couponValidationStatus = 'not_provided';
+
+      if (! empty($validated['coupon_code'])) {
+          $couponResult = app(ReferralService::class)->validateCoupon($validated['coupon_code'], $originalPrice);
+
+          if (! $couponResult['valid']) {
+              return response()->json([
+                  'status' => false,
+                  'coupon_applied' => false,
+                  'coupon_validation_status' => 'invalid',
+                  'message' => $couponResult['message']
+              ], 422);
+          }
+
+          $discountAmount = $couponResult['discount_amount'];
+          $finalPrice = $couponResult['final_amount'];
+          $couponId = $couponResult['coupon']->id;
+          $referrerId = $couponResult['referrer']->id;
+          $referrerName = $couponResult['referrer']->full_name ?? null;
+          $couponApplied = true;
+          $couponValidationStatus = 'valid';
+      }
+
+      $amount = (int) round($finalPrice * 100); // paisa
 
       $api = new Api(config('services.razorpay.key'), config('services.razorpay.secret'));
 
@@ -73,18 +143,30 @@ class TransactionApiController extends Controller
           'payment_gateway' => 'razorpay',
           'payment_method' => 'online',
           'gateway_order_id' => $order['id'],
-          'amount' => $plan->price,
+          'amount' => $finalPrice,
           'currency' => 'INR',
+          'coupon_id' => $couponId,
+          'referrer_id' => $referrerId,
+          'discount_amount' => $discountAmount,
           'status' => 'pending'
       ]);
 
       return response()->json([
           'status' => true,
+          'message' => 'Order created successfully',
           'order_id' => $order['id'],
           'key' => config('services.razorpay.key'),
           'transaction_id' => $transaction->id,
           'amount' => $amount,
           'currency' => 'INR',
+          'original_price' => $originalPrice,
+          'discount_amount' => $discountAmount,
+          'final_amount' => $finalPrice,
+          'payable_amount' => $finalPrice,
+          'coupon_applied' => $couponApplied,
+          'coupon_validation_status' => $couponValidationStatus,
+          'coupon_code' => $validated['coupon_code'] ?? null,
+          'referrer_name' => $referrerName,
       ]);
    }
 
@@ -195,7 +277,15 @@ class TransactionApiController extends Controller
                'message' => 'Payment verified, but subscription activation failed'
            ], 500);
        }
-   
+
+       // 👉 REFERRAL SALE TRACKING & COMMISSION NOTIFICATION
+       if ($transaction->coupon_id && $transaction->referrer_id) {
+           $sale = app(ReferralService::class)->recordReferralSale($transaction);
+           if ($sale && $sale->referrer && $sale->referrer->user) {
+               $sale->referrer->user->notify(new ReferralCommissionEarnedNotification($sale));
+           }
+       }
+
        return response()->json(['status' => true]);
     }
 

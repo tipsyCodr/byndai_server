@@ -243,6 +243,33 @@
                                 User Management
                             </a>
                         </li>
+                        <li style="margin-top: 1.5rem; margin-bottom: 0.5rem;">
+                            <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.05em; padding-left: 1rem;">Affiliate & Referrers</span>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.referrers.index') }}" class="nav-link {{ request()->routeIs('admin.referrers.*') ? 'active' : '' }}">
+                                <i data-lucide="users-round" style="margin-right: 1rem; width: 18px;"></i>
+                                Referrer Management
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.referrers.sales') }}" class="nav-link {{ request()->routeIs('admin.referrers.sales') ? 'active' : '' }}">
+                                <i data-lucide="shopping-bag" style="margin-right: 1rem; width: 18px;"></i>
+                                Referral Sales
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.referrers.payouts') }}" class="nav-link {{ request()->routeIs('admin.referrers.payouts') ? 'active' : '' }}">
+                                <i data-lucide="wallet" style="margin-right: 1rem; width: 18px;"></i>
+                                Payouts
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.referrers.reports') }}" class="nav-link {{ request()->routeIs('admin.referrers.reports') ? 'active' : '' }}">
+                                <i data-lucide="pie-chart" style="margin-right: 1rem; width: 18px;"></i>
+                                Referral Reports
+                            </a>
+                        </li>
                         <li>
                             <a href="#" class="nav-link">
                                 <i data-lucide="settings" style="margin-right: 1rem; width: 18px;"></i>

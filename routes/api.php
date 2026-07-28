@@ -846,6 +846,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/leads-helper', [LeadController::class, 'helperFunctionTest']);
 
     //Transaction api
+    Route::post('/apply-coupon', [TransactionApiController::class, 'applyCoupon']);
     Route::post('/create-order', [TransactionApiController::class, 'createOrder']);
     Route::post('/verify-payment', [TransactionApiController::class, 'verifyPayment']);
 

@@ -98,4 +98,10 @@ class User extends Authenticatable
       return $this->hasMany(UserSubscription::class, 'user_id');
     }
 
+    public function referrer()
+    {
+        return $this->hasOne(Referrer::class, 'user_id', 'id');
+    }
+
 }
+

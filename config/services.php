@@ -45,9 +45,24 @@ return [
     ],
 
     'razorpay' => [
-        'key' => env('RAZORPAY_KEY'),
+        'key'    => env('RAZORPAY_KEY'),
         'secret' => env('RAZORPAY_SECRET'),
     ],
 
+    // AI provider — change AI_DRIVER in .env to switch (ollama|openai)
+    'ai' => [
+        'driver' => env('AI_DRIVER', 'ollama'),
+    ],
+
+    'openai' => [
+        'key'   => env('OPENAI_API_KEY'),
+        'model' => env('OPENAI_MODEL', 'gpt-4o'),
+        'url'   => env('OPENAI_BASE_URL', 'https://api.openai.com/v1'),
+    ],
+
+    'ollama' => [
+        'url'   => env('OLLAMA_URL', 'http://localhost:11434'),
+        'model' => env('OLLAMA_MODEL', 'gemma4:e4b'),
+    ],
 
 ];

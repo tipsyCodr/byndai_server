@@ -32,6 +32,9 @@ class Transaction extends Model
         'gateway_signature',
         'amount',
         'currency',
+        'coupon_id',
+        'referrer_id',
+        'discount_amount',
         'status',
         'raw_response',
         'receipt_no',
@@ -84,5 +87,15 @@ class Transaction extends Model
     public function subscription()
     {
         return $this->belongsTo(Subscription::class);
+    }
+
+    public function coupon()
+    {
+        return $this->belongsTo(ReferralCoupon::class, 'coupon_id');
+    }
+
+    public function referrer()
+    {
+        return $this->belongsTo(Referrer::class, 'referrer_id');
     }
 }
