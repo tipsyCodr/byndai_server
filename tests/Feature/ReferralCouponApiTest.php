@@ -137,4 +137,31 @@ class ReferralCouponApiTest extends TestCase
             'status' => 'pending',
         ]);
     }
+
+    public function test_auto_approve_setting_approves_registration()
+    {
+        \App\Models\ReferralSetting::set('auto_approve_referrers', '1');
+
+        $file = \Illuminate\Http\UploadedFile::fake()->image('aadhaar.jpg');
+
+        $response = $this->postJson('/api/referrer/register', [
+            'full_name' => 'Auto Approved Referrer',
+            'email' => 'autoapproved@example.com',
+            'user_mobile' => '1122334455',
+            'password' => 'secret123',
+            'password_confirmation' => 'secret123',
+            'address' => '456 Test Street',
+            'aadhaar_photo' => $file,
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'status' => true,
+            ]);
+
+        $this->assertDatabaseHas('referrers', [
+            'full_name' => 'Auto Approved Referrer',
+            'status' => 'approved',
+        ]);
+    }
 }

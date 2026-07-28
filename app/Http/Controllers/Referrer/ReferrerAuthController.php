@@ -76,19 +76,26 @@ class ReferrerAuthController extends Controller
                 $path = $request->file('aadhaar_photo')->store('aadhaar_cards', 'public');
             }
 
+            $autoApprove = \App\Models\ReferralSetting::get('auto_approve_referrers', '0') === '1';
+            $status = $autoApprove ? 'approved' : 'pending';
+
             $referrer = Referrer::create([
                 'user_id' => $user->id,
                 'full_name' => $validated['full_name'],
                 'address' => $validated['address'],
                 'aadhaar_photo' => $path,
-                'status' => 'pending',
+                'status' => $status,
                 'is_active' => true,
             ]);
 
-            // Pre-generate coupon code for when approved
+            // Pre-generate coupon code
             $this->referralService->ensureReferrerCoupon($referrer);
 
-            return redirect()->route('referrer.login')->with('success', 'Registration submitted successfully! Your account is pending admin approval.');
+            $message = $autoApprove
+                ? 'Registration completed! Your referrer account is active.'
+                : 'Registration submitted successfully! Your account is pending admin approval.';
+
+            return redirect()->route('referrer.login')->with('success', $message);
         });
     }
 

@@ -43,13 +43,18 @@ class ReferralService
             return $referrer->coupon;
         }
 
+        $discountType = \App\Models\ReferralSetting::get('default_discount_type', 'percentage');
+        $discountValue = (float) \App\Models\ReferralSetting::get('default_discount_value', 10.00);
+        $commissionType = \App\Models\ReferralSetting::get('default_commission_type', 'percentage');
+        $commissionValue = (float) \App\Models\ReferralSetting::get('default_commission_value', 10.00);
+
         return ReferralCoupon::create([
             'referrer_id' => $referrer->id,
             'code' => $this->generateUniqueCode($referrer->full_name),
-            'discount_type' => 'percentage',
-            'discount_value' => 10.00,
-            'commission_type' => 'percentage',
-            'commission_value' => 10.00,
+            'discount_type' => $discountType,
+            'discount_value' => $discountValue,
+            'commission_type' => $commissionType,
+            'commission_value' => $commissionValue,
             'is_active' => true,
         ]);
     }

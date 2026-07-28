@@ -212,4 +212,36 @@ class ReferrerManagementController extends Controller
 
         return back()->with('success', "Payout of ₹{$payout->amount} recorded successfully.");
     }
+
+    public function settings()
+    {
+        $settings = [
+            'auto_approve_referrers' => \App\Models\ReferralSetting::get('auto_approve_referrers', '0'),
+            'default_discount_type' => \App\Models\ReferralSetting::get('default_discount_type', 'percentage'),
+            'default_discount_value' => \App\Models\ReferralSetting::get('default_discount_value', '10.00'),
+            'default_commission_type' => \App\Models\ReferralSetting::get('default_commission_type', 'percentage'),
+            'default_commission_value' => \App\Models\ReferralSetting::get('default_commission_value', '10.00'),
+        ];
+
+        return view('backend.referrers.settings', compact('settings'));
+    }
+
+    public function updateGlobalSettings(Request $request)
+    {
+        $validated = $request->validate([
+            'auto_approve_referrers' => 'nullable|boolean',
+            'default_discount_type' => 'required|in:percentage,fixed',
+            'default_discount_value' => 'required|numeric|min:0',
+            'default_commission_type' => 'required|in:percentage,fixed',
+            'default_commission_value' => 'required|numeric|min:0',
+        ]);
+
+        \App\Models\ReferralSetting::set('auto_approve_referrers', $request->boolean('auto_approve_referrers') ? '1' : '0');
+        \App\Models\ReferralSetting::set('default_discount_type', $validated['default_discount_type']);
+        \App\Models\ReferralSetting::set('default_discount_value', $validated['default_discount_value']);
+        \App\Models\ReferralSetting::set('default_commission_type', $validated['default_commission_type']);
+        \App\Models\ReferralSetting::set('default_commission_value', $validated['default_commission_value']);
+
+        return back()->with('success', 'Global Referral settings updated successfully.');
+    }
 }

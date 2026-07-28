@@ -16,6 +16,9 @@
         <a href="{{ route('admin.referrers.reports') }}" class="gradient-btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; background: linear-gradient(135deg, #f59e0b, #d97706);">
             <i data-lucide="bar-chart-2"></i> Reports
         </a>
+        <a href="{{ route('admin.referrers.settings') }}" class="gradient-btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; background: linear-gradient(135deg, #8b5cf6, #6d28d9);">
+            <i data-lucide="settings"></i> Global Settings
+        </a>
     </div>
 </div>
 

@@ -69,20 +69,27 @@ class ReferrerApiController extends Controller
                 $path = $request->file('aadhaar_photo')->store('aadhaar_cards', 'public');
             }
 
+            $autoApprove = \App\Models\ReferralSetting::get('auto_approve_referrers', '0') === '1';
+            $status = $autoApprove ? 'approved' : 'pending';
+
             $referrer = Referrer::create([
                 'user_id' => $user->id,
                 'full_name' => $validated['full_name'],
                 'address' => $validated['address'],
                 'aadhaar_photo' => $path,
-                'status' => 'pending',
+                'status' => $status,
                 'is_active' => true,
             ]);
 
             $this->referralService->ensureReferrerCoupon($referrer);
 
+            $message = $autoApprove
+                ? 'Referrer account registered and approved successfully!'
+                : 'Referrer application submitted successfully! Pending admin approval.';
+
             return response()->json([
                 'status' => true,
-                'message' => 'Referrer application submitted successfully! Pending admin approval.',
+                'message' => $message,
                 'referrer' => [
                     'id' => $referrer->id,
                     'full_name' => $referrer->full_name,

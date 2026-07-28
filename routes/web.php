@@ -71,7 +71,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/payouts', [\App\Http\Controllers\Backend\ReferrerManagementController::class, 'payouts'])->name('payouts');
         Route::post('/payouts', [\App\Http\Controllers\Backend\ReferrerManagementController::class, 'storePayout'])->name('store-payout');
         Route::get('/reports', [\App\Http\Controllers\Backend\ReferralReportController::class, 'index'])->name('reports');
-        Route::get('/reports/export', [\App\Http\Controllers\Backend\ReferralReportController::class, 'exportReport'])->name('export-report');
+        Route::get('/settings', [\App\Http\Controllers\Backend\ReferrerManagementController::class, 'settings'])->name('settings');
+        Route::post('/settings', [\App\Http\Controllers\Backend\ReferrerManagementController::class, 'updateGlobalSettings'])->name('update-settings');
         Route::get('/{referrer}', [\App\Http\Controllers\Backend\ReferrerManagementController::class, 'show'])->name('show');
         Route::post('/{referrer}/status', [\App\Http\Controllers\Backend\ReferrerManagementController::class, 'updateStatus'])->name('update-status');
         Route::post('/{referrer}/toggle-active', [\App\Http\Controllers\Backend\ReferrerManagementController::class, 'toggleActive'])->name('toggle-active');
