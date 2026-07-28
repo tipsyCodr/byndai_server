@@ -168,13 +168,26 @@ class ReferralCouponApiTest extends TestCase
     public function test_admin_can_reset_referrer_password()
     {
         $admin = User::factory()->create();
-
-        $response = $this->actingAs($admin)->post("/admin/referrers/{$this->referrer->id}/reset-password", [
-            'password' => 'newsecret123',
-            'password_confirmation' => 'newsecret123',
+        $targetUser = User::factory()->create();
+        $targetReferrer = Referrer::create([
+            'user_id' => $targetUser->id,
+            'full_name' => 'Target Referrer',
+            'status' => 'approved',
+            'is_active' => true,
         ]);
 
+        $response = $this->actingAs($admin)
+            ->withSession(['_token' => 'testtoken'])
+            ->from("/admin/referrers/{$targetReferrer->id}")
+            ->post("/admin/referrers/{$targetReferrer->id}/reset-password", [
+                '_token' => 'testtoken',
+                'password' => 'newsecret123',
+                'password_confirmation' => 'newsecret123',
+            ]);
+
         $response->assertSessionHasNoErrors();
-        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('newsecret123', $this->referrer->fresh()->user->password));
+        $response->assertRedirect("/admin/referrers/{$targetReferrer->id}");
+        $updatedUser = User::find($targetUser->id);
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('newsecret123', $updatedUser->password));
     }
 }

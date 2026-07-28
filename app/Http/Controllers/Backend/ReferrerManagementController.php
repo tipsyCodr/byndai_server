@@ -251,11 +251,13 @@ class ReferrerManagementController extends Controller
             'password' => 'required|string|min:6|confirmed',
         ]);
 
-        if (! $referrer->user) {
+        $user = $referrer->user ?? \App\Models\User::find($referrer->user_id);
+
+        if (! $user) {
             return back()->withErrors(['password' => 'User account associated with this referrer was not found.']);
         }
 
-        $referrer->user->update([
+        \Illuminate\Support\Facades\DB::table('users')->where('id', $user->id)->update([
             'password' => \Illuminate\Support\Facades\Hash::make($validated['password']),
         ]);
 
