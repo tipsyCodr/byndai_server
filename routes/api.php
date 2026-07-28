@@ -48,6 +48,7 @@ Route::post('/check-mobile', [AuthApiController::class, 'checkMobile']);
 Route::post('/check-sms-delivery', [AuthApiController::class, 'checkSmsDelivery']);
 Route::post('/reset-pin-otp', [AuthApiController::class, 'resetPinOtp']);
 Route::get('/users/list', [AuthApiController::class, 'listUsers']);
+Route::post('/referrer/register', [\App\Http\Controllers\api\site\ReferrerApiController::class, 'register']);
 Route::post('/users/filter-list', [AuthApiController::class, 'filterListUsers']);
 Route::post('/regenerate-otp/{phone}', [
     AuthApiController::class,
@@ -849,6 +850,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/apply-coupon', [TransactionApiController::class, 'applyCoupon']);
     Route::post('/create-order', [TransactionApiController::class, 'createOrder']);
     Route::post('/verify-payment', [TransactionApiController::class, 'verifyPayment']);
+
+    // Referrer API
+    Route::get('/referrer/dashboard', [\App\Http\Controllers\api\site\ReferrerApiController::class, 'dashboard']);
+    Route::get('/referrer/sales', [\App\Http\Controllers\api\site\ReferrerApiController::class, 'sales']);
 
 
 

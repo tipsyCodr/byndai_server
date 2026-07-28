@@ -107,4 +107,34 @@ class ReferralCouponApiTest extends TestCase
                 'coupon_validation_status' => 'invalid',
             ]);
     }
+
+    public function test_existing_user_can_register_as_referrer()
+    {
+        $existingUser = User::factory()->create([
+            'email' => 'normaluser@example.com',
+            'user_mobile' => '9988776655',
+        ]);
+
+        $file = \Illuminate\Http\UploadedFile::fake()->image('aadhaar.jpg');
+
+        $response = $this->postJson('/api/referrer/register', [
+            'full_name' => 'Existing User',
+            'email' => 'normaluser@example.com',
+            'user_mobile' => '9988776655',
+            'password' => 'secret123',
+            'password_confirmation' => 'secret123',
+            'address' => '123 Test Street',
+            'aadhaar_photo' => $file,
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'status' => true,
+            ]);
+
+        $this->assertDatabaseHas('referrers', [
+            'user_id' => $existingUser->id,
+            'status' => 'pending',
+        ]);
+    }
 }

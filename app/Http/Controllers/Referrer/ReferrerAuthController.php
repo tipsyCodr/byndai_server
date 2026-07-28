@@ -38,25 +38,37 @@ class ReferrerAuthController extends Controller
     {
         $validated = $request->validate([
             'full_name' => 'required|string|max:255',
-            'user_mobile' => 'required|string|max:15|unique:users,user_mobile',
-            'email' => 'required|email|max:255|unique:users,email',
+            'user_mobile' => 'required|string|max:15',
+            'email' => 'required|email|max:255',
             'password' => 'required|string|min:6|confirmed',
             'address' => 'required|string|max:1000',
             'aadhaar_photo' => 'required|image|mimes:jpeg,png,jpg,webp|max:4096',
         ]);
 
         return DB::transaction(function () use ($request, $validated) {
-            $user = User::create([
-                'user_name' => $validated['full_name'],
-                'user_mobile' => $validated['user_mobile'],
-                'email' => $validated['email'],
-                'password' => Hash::make($validated['password']),
-                'status' => '1',
-            ]);
+            $user = User::where('email', $validated['email'])
+                ->orWhere('user_mobile', $validated['user_mobile'])
+                ->first();
+
+            if ($user) {
+                if (Referrer::where('user_id', $user->id)->exists()) {
+                    return back()->withErrors(['email' => 'A referrer account already exists for this email address or mobile number.'])->withInput();
+                }
+            } else {
+                $user = User::create([
+                    'user_name' => $validated['full_name'],
+                    'user_mobile' => $validated['user_mobile'],
+                    'email' => $validated['email'],
+                    'password' => Hash::make($validated['password']),
+                    'status' => '1',
+                ]);
+            }
 
             // Ensure Referrer role exists and assign
             Role::firstOrCreate(['name' => 'Referrer', 'guard_name' => 'web']);
-            $user->assignRole('Referrer');
+            if (! $user->hasRole('Referrer')) {
+                $user->assignRole('Referrer');
+            }
 
             // Handle Aadhaar upload
             $path = null;
