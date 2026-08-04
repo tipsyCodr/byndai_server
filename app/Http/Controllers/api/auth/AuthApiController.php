@@ -527,7 +527,7 @@ class AuthApiController extends Controller
             ->delete();
         DB::beginTransaction();
         try {
-            $user = new User;
+            $user = new User();
             $user->user_mobile = $phone_no;
             $user->user_name = $r->user_name;
             $user->email = $r->email;
@@ -590,7 +590,7 @@ class AuthApiController extends Controller
                 ]);
             }
 
-            $master = new MasterUserDetail;
+            $master = new MasterUserDetail();
             $master->fname = $r->name;
             $master->mobile_one = $phone_no;
             $master->email_one = $r->email;
@@ -628,51 +628,51 @@ class AuthApiController extends Controller
                 ]);
             }
 
-           // =======================================
-           // 2. CHECK CHAT EXISTS
-           // =======================================
-           $chat = Chat::where(function ($q) use ($systemUserId, $newUserId) {
-               $q->where('sender_id', $systemUserId)
-                 ->where('receiver_id', $newUserId);
-           })->orWhere(function ($q) use ($systemUserId, $newUserId) {
-               $q->where('sender_id', $newUserId)
-                 ->where('receiver_id', $systemUserId);
-           })->first();
+            // =======================================
+            // 2. CHECK CHAT EXISTS
+            // =======================================
+            $chat = Chat::where(function ($q) use ($systemUserId, $newUserId) {
+                $q->where('sender_id', $systemUserId)
+                  ->where('receiver_id', $newUserId);
+            })->orWhere(function ($q) use ($systemUserId, $newUserId) {
+                $q->where('sender_id', $newUserId)
+                  ->where('receiver_id', $systemUserId);
+            })->first();
 
 
-           // =======================================
-           // 3. CREATE CHAT IF NOT EXISTS
-           // =======================================
-           if (!$chat) {
-               $chat = Chat::create([
-                   'sender_id' => $systemUserId,
-                   'receiver_id' => $newUserId,
-               ]);
-           }
+            // =======================================
+            // 3. CREATE CHAT IF NOT EXISTS
+            // =======================================
+            if (!$chat) {
+                $chat = Chat::create([
+                    'sender_id' => $systemUserId,
+                    'receiver_id' => $newUserId,
+                ]);
+            }
 
 
-           // =======================================
-           // 4. CHECK WELCOME MESSAGE EXISTS
-           // =======================================
-           $welcomeMessage = ChatMessage::where('chat_id', $chat->id)
-               ->where('sender_id', $systemUserId)
-               ->where('message', 'Welcome to PathIdea 🚀')
-               ->exists();
+            // =======================================
+            // 4. CHECK WELCOME MESSAGE EXISTS
+            // =======================================
+            $welcomeMessage = ChatMessage::where('chat_id', $chat->id)
+                ->where('sender_id', $systemUserId)
+                ->where('message', 'Welcome to ByndAI 🚀')
+                ->exists();
 
 
-           // =======================================
-           // 5. CREATE MESSAGE IF NOT EXISTS
-           // =======================================
-           if (!$welcomeMessage) {
-               ChatMessage::create([
-                   'chat_id'        => $chat->id,
-                   'sender_id'      => $systemUserId,
-                   'message'        => 'Welcome to PathIdea 🚀',
-                   'is_read'        => 0,
-                   'is_deleted'     => 0,
-                   'is_delivered'   => 1,
-               ]);
-           }
+            // =======================================
+            // 5. CREATE MESSAGE IF NOT EXISTS
+            // =======================================
+            if (!$welcomeMessage) {
+                ChatMessage::create([
+                    'chat_id'        => $chat->id,
+                    'sender_id'      => $systemUserId,
+                    'message'        => 'Welcome to ByndAI 🚀',
+                    'is_read'        => 0,
+                    'is_deleted'     => 0,
+                    'is_delivered'   => 1,
+                ]);
+            }
 
             return response()->json(
                 [
@@ -835,7 +835,7 @@ class AuthApiController extends Controller
         $detail = MasterUserDetail::where('user_id', $user->id)->first();
 
         if (! $detail) {
-            $detail = new MasterUserDetail;
+            $detail = new MasterUserDetail();
             $detail->user_id = $user->id;
         }
 
@@ -964,7 +964,7 @@ class AuthApiController extends Controller
                 ], 500);
             }
 
-            $factory = (new \Kreait\Firebase\Factory)->withServiceAccount($serviceAccountPath);
+            $factory = (new \Kreait\Firebase\Factory())->withServiceAccount($serviceAccountPath);
             $auth = $factory->createAuth();
             $verifiedToken = $auth->verifyIdToken($request->id_token);
             $firebaseUid = $verifiedToken->claims()->get('sub');
@@ -1041,7 +1041,7 @@ class AuthApiController extends Controller
                 ], 500);
             }
 
-            $factory = (new \Kreait\Firebase\Factory)->withServiceAccount($serviceAccountPath);
+            $factory = (new \Kreait\Firebase\Factory())->withServiceAccount($serviceAccountPath);
             $auth = $factory->createAuth();
             $verifiedToken = $auth->verifyIdToken($request->id_token);
             $firebaseUid = $verifiedToken->claims()->get('sub');
@@ -1056,7 +1056,7 @@ class AuthApiController extends Controller
 
             DB::beginTransaction();
 
-            $user = new User;
+            $user = new User();
             $user->user_mobile = $request->mobile;
             $user->user_name = $request->user_name;
             $user->email = $request->email;
@@ -1067,7 +1067,7 @@ class AuthApiController extends Controller
             $user->remember_token = Str::random(40);
             $user->save();
 
-            $master = new MasterUserDetail;
+            $master = new MasterUserDetail();
             $master->fname = $request->name;
             $master->mobile_one = $request->mobile;
             $master->email_one = $request->email;
