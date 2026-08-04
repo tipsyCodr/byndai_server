@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\api\site;
 
 use App\Http\Controllers\Controller;
+use App\Models\Chat;
+use App\Models\ChatMessage;
 use App\Models\Connection;
 use App\Models\ConnectionRequest;
 use App\Models\MasterUserDetail;
@@ -544,12 +546,42 @@ class ConnectionApiController extends Controller
         $friends = $query->paginate($perPage);
 
         // response format
-        $data = $friends->map(function ($detail) {
+        $data = $friends->map(function ($detail) use ($userId) {
+            $chat = Chat::where(function ($q) use ($userId, $detail) {
+                $q->where('sender_id', $userId)->where('receiver_id', $detail->user_id);
+            })->orWhere(function ($q) use ($userId, $detail) {
+                $q->where('sender_id', $detail->user_id)->where('receiver_id', $userId);
+            })->first();
+
+            $lastMessage = null;
+            $unreadCount = 0;
+            $updatedAtFormatted = null;
+
+            if ($chat) {
+                $lastMsgObj = ChatMessage::where('chat_id', $chat->id)
+                    ->where('is_deleted', 0)
+                    ->latest()
+                    ->first();
+
+                if ($lastMsgObj) {
+                    $lastMessage = $lastMsgObj->message;
+                    $updatedAtFormatted = $lastMsgObj->created_at ? $lastMsgObj->created_at->format('h:i A') : null;
+                }
+
+                $unreadCount = ChatMessage::where('chat_id', $chat->id)
+                    ->where('sender_id', '!=', $userId)
+                    ->where('is_read', 0)
+                    ->count();
+            }
+
             return [
                 'friend_id' => $detail->user_id,
                 'fname' => $detail->fname,
                 'user_name' => $detail->user->user_name ?? null,
                 'profile_pic' => $detail->profile_pic,
+                'last_message' => $lastMessage,
+                'unread_count' => $unreadCount,
+                'updated_at_formatted' => $updatedAtFormatted,
             ];
         });
 
