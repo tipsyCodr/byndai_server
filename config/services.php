@@ -65,4 +65,10 @@ return [
         'model' => env('OLLAMA_MODEL', 'gemma4:e4b'),
     ],
 
+    // FCM HTTP v1 — uses service account for OAuth2 (legacy server key is dead since Jul 2024)
+    'fcm' => [
+        'project_id'           => env('FCM_PROJECT_ID'),
+        'service_account_path' => env('FCM_SERVICE_ACCOUNT_PATH', storage_path('app/firebase/service-account.json')),
+    ],
+
 ];

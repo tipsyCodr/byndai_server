@@ -7,6 +7,8 @@ use App\Models\Chat;
 use App\Models\ChatMessage;
 use App\Models\MessageAttachment;
 use App\Models\MessageLike;
+use App\Models\User;
+use App\Services\FcmService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -48,6 +50,33 @@ class ChatApiController extends Controller
             }
         }
         $message->load('attachments', 'sender');
+
+        // ── FCM HTTP v1 push notification ──────────────────────────────────
+        try {
+            $chat       = Chat::find($data['chat_id']);
+            $receiverId = ($chat->sender_id === $senderId) ? $chat->receiver_id : $chat->sender_id;
+            $receiver   = User::find($receiverId);
+
+            if ($receiver && $receiver->fcm_token) {
+                $sender = Auth::user();
+                FcmService::sendPush(
+                    fcmToken: $receiver->fcm_token,
+                    title:    $sender->name ?? 'New Message',
+                    body:     $message->message ?? '📎 Attachment',
+                    data:     [
+                        'type'        => 'chat',
+                        'chat_id'     => (string) $data['chat_id'],
+                        'sender_id'   => (string) $senderId,
+                        'sender_name' => $sender->name ?? '',
+                    ]
+                );
+            }
+        } catch (\Throwable $e) {
+            // Non-fatal — log but don't fail the request
+            \Illuminate\Support\Facades\Log::warning('FCM push failed in sendMessages: ' . $e->getMessage());
+        }
+        // ──────────────────────────────────────────────────────────────────
+
         return response()->json(['status' => true, 'message' => 'Message sent', 'data' => $message]);
     }
     public function getMessages($chatId)

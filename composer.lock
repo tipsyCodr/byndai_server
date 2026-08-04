@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e6ec31eb0d3bdeb45d09263c0852b6eb",
+    "content-hash": "47618577145c1da1f94a6e3712e6ac3b",
     "packages": [
         {
             "name": "beste/clock",
@@ -980,29 +980,30 @@
         },
         {
             "name": "google/auth",
-            "version": "v1.50.1",
+            "version": "v1.53.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/google-auth-library-php.git",
-                "reference": "870c17ee3a1d73338d39a9ffa77a700ba77f5a83"
+                "reference": "d677d0b0c4bd52ab222a85df8e74e0d491c0cc5a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/google-auth-library-php/zipball/870c17ee3a1d73338d39a9ffa77a700ba77f5a83",
-                "reference": "870c17ee3a1d73338d39a9ffa77a700ba77f5a83",
+                "url": "https://api.github.com/repos/googleapis/google-auth-library-php/zipball/d677d0b0c4bd52ab222a85df8e74e0d491c0cc5a",
+                "reference": "d677d0b0c4bd52ab222a85df8e74e0d491c0cc5a",
                 "shasum": ""
             },
             "require": {
                 "firebase/php-jwt": "^6.0||^7.0",
-                "guzzlehttp/guzzle": "^7.4.5",
-                "guzzlehttp/psr7": "^2.4.5",
+                "guzzlehttp/guzzle": "^7.8.2||^8.0",
+                "guzzlehttp/psr7": "^2.6.3||^3.0",
                 "php": "^8.1",
                 "psr/cache": "^2.0||^3.0",
+                "psr/http-client": "^1.0",
                 "psr/http-message": "^1.1||^2.0",
                 "psr/log": "^2.0||^3.0"
             },
             "require-dev": {
-                "guzzlehttp/promises": "^2.0",
+                "guzzlehttp/promises": "^2.0.3||^3.0",
                 "kelvinmo/simplejwt": "^1.1.0",
                 "phpseclib/phpseclib": "^3.0.35",
                 "phpspec/prophecy-phpunit": "^2.1",
@@ -1036,9 +1037,9 @@
             "support": {
                 "docs": "https://cloud.google.com/php/docs/reference/auth/latest",
                 "issues": "https://github.com/googleapis/google-auth-library-php/issues",
-                "source": "https://github.com/googleapis/google-auth-library-php/tree/v1.50.1"
+                "source": "https://github.com/googleapis/google-auth-library-php/tree/v1.53.0"
             },
-            "time": "2026-03-18T20:03:29+00:00"
+            "time": "2026-07-22T22:36:10+00:00"
         },
         {
             "name": "google/cloud-core",
