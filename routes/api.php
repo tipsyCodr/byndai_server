@@ -90,6 +90,11 @@ Route::post('/gpt-ocr', [PostApiController::class, 'gptOcr']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
 
+    // ── AI Chatbot (mobile API) ──────────────────────────────────────────────
+    Route::post('/ai/chat', [\App\AI\Controllers\AiChatApiController::class, 'chat']);
+    Route::post('/ai/chat/stream', [\App\AI\Controllers\AiChatApiController::class, 'stream']);
+    // ────────────────────────────────────────────────────────────────────────
+
     Route::get('/leads', [LeadController::class, 'index']);
     Route::post('/leads', [LeadController::class, 'store']);
     Route::get('/leads/{id}', [LeadController::class, 'show']);
