@@ -51,12 +51,12 @@ return [
 
     // AI provider — change AI_DRIVER in .env to switch (ollama|openai)
     'ai' => [
-        'driver' => env('AI_DRIVER', 'ollama'),
+        'driver' => env('AI_DRIVER', (env('OPENAI_API_KEY') || env('OPENAI_API_SECRET_KEY')) ? 'openai' : 'ollama'),
     ],
 
     'openai' => [
-        'key'   => env('OPENAI_API_KEY'),
-        'model' => env('OPENAI_MODEL', 'gpt-4o'),
+        'key'   => env('OPENAI_API_KEY', env('OPENAI_API_SECRET_KEY')),
+        'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
         'url'   => env('OPENAI_BASE_URL', 'https://api.openai.com/v1'),
     ],
 

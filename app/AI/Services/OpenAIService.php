@@ -13,7 +13,7 @@ class OpenAIService implements AIService
 
     public function __construct()
     {
-        $this->apiKey  = config('services.openai.key', '');
+        $this->apiKey  = config('services.openai.key') ?: env('OPENAI_API_SECRET_KEY') ?: env('OPENAI_API_KEY', '');
         $this->model   = config('services.openai.model', 'gpt-4o');
         $this->baseUrl = config('services.openai.url', 'https://api.openai.com/v1');
     }
