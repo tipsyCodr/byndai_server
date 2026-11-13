@@ -124,9 +124,7 @@ class AiChatApiController extends Controller
             'content' => $messageText,
         ]);
 
-        $systemPrompt = "You are a helpful AI assistant for ByndAI, a professional networking app. "
-            . "Help users with networking tips, managing leads, business connections, profile setup, "
-            . "and general app usage. Be concise and professional.";
+        $systemPrompt = $this->buildSystemPrompt($user);
 
         $messages = [
             ['role' => 'system', 'content' => $systemPrompt],
@@ -179,9 +177,7 @@ class AiChatApiController extends Controller
             'content' => $messageText,
         ]);
 
-        $systemPrompt = "You are a helpful AI assistant for ByndAI, a professional networking app. "
-            . "Help users with networking tips, managing leads, business connections, profile setup, "
-            . "and general app usage. Be concise and professional.";
+        $systemPrompt = $this->buildSystemPrompt($user);
 
         $messages = [
             ['role' => 'system', 'content' => $systemPrompt],
@@ -339,5 +335,33 @@ class AiChatApiController extends Controller
             'user_id' => $userId,
             'title' => $title,
         ]);
+    }
+
+    /**
+     * Builds dynamic system prompt incorporating user's business details
+     */
+    protected function buildSystemPrompt($user): string
+    {
+        $prompt = "You are a helpful AI assistant for ByndAI, a professional networking app. "
+            . "Help users with networking tips, managing leads, business connections, profile setup, "
+            . "and general app usage. Be concise and professional.";
+
+        try {
+            $business = \App\Models\BusinessInfo::with('industry')->where('user_id', $user->id)->first();
+            if ($business) {
+                $prompt .= "\n\nUser's Business Information:\n"
+                    . "- Business/Legal Name: " . ($business->legal_name ?? 'N/A') . "\n"
+                    . "- Industry: " . ($business->industry->name ?? 'N/A') . "\n"
+                    . "- Description: " . ($business->description ?? 'N/A') . "\n"
+                    . "- Website: " . ($business->website_url ?? 'N/A') . "\n"
+                    . "- Address: " . ($business->address ?? 'N/A') . "\n"
+                    . "- Contact Email: " . ($business->contact_email ?? 'N/A') . "\n"
+                    . "When the user mentions '@business' or asks about their business, use these details to give targeted, personalized recommendations and answers.";
+            }
+        } catch (\Throwable $e) {
+            // Ignore if business table or columns unavailable
+        }
+
+        return $prompt;
     }
 }
