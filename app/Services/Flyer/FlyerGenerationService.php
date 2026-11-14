@@ -114,8 +114,8 @@ class FlyerGenerationService
             'branding_options' => $brandingOptions,
         ]);
 
-        // Dispatch background job
-        GenerateFlyerJob::dispatch($generation->id);
+        // Dispatch background job (runs after response so client gets ID immediately without needing daemon queue worker)
+        GenerateFlyerJob::dispatchAfterResponse($generation->id);
 
         return $generation;
     }
@@ -140,7 +140,7 @@ class FlyerGenerationService
             'error_message' => null,
         ]);
 
-        GenerateFlyerJob::dispatch($generation->id);
+        GenerateFlyerJob::dispatchAfterResponse($generation->id);
 
         return $generation;
     }

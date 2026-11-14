@@ -41,6 +41,12 @@
                 </div>
 
                 <div style="margin-bottom: 2rem;">
+                    <label style="display: block; color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.8rem; font-weight: 600;">OpenAI API Secret Key (Optional Override)</label>
+                    <input type="password" name="openai_api_key" placeholder="{{ !empty($settings['openai_api_key']) ? '••••••••••••••••••••••••' : 'sk-proj-...' }}" class="form-control" style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); padding: 0.9rem 1.2rem; border-radius: 0.8rem; color: #fff;">
+                    <small style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.4rem; display: block;">If left empty, system uses OPENAI_API_KEY from server .env file.</small>
+                </div>
+
+                <div style="margin-bottom: 2rem;">
                     <label style="display: block; color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.8rem; font-weight: 600;">OpenAI Image Generation Model</label>
                     <select name="openai_model" class="form-control" style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); padding: 0.9rem 1.2rem; border-radius: 0.8rem; color: #fff;">
                         <option value="gpt-image-2.6-flare" {{ $settings['openai_model'] == 'gpt-image-2.6-flare' ? 'selected' : '' }}>gpt-image-2.6-flare (Recommended Default)</option>

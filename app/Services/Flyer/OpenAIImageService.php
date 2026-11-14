@@ -15,7 +15,10 @@ class OpenAIImageService
 
     public function __construct()
     {
-        $this->apiKey = config('services.openai.key') ?: env('OPENAI_API_SECRET_KEY') ?: env('OPENAI_API_KEY', '');
+        $this->apiKey = config('services.openai.key')
+            ?: env('OPENAI_API_SECRET_KEY')
+            ?: env('OPENAI_API_KEY')
+            ?: (string) AiFlyerSetting::get('openai_api_key', '');
         $this->baseUrl = config('services.openai.url', 'https://api.openai.com/v1');
     }
 
@@ -27,7 +30,11 @@ class OpenAIImageService
     public function generate(string $prompt, string $aspectRatio = '1:1', ?string $requestedModel = null): array
     {
         if (empty($this->apiKey)) {
-            throw new \Exception("OpenAI API key is not configured on the server.");
+            $this->apiKey = (string) AiFlyerSetting::get('openai_api_key', '');
+        }
+
+        if (empty($this->apiKey)) {
+            throw new \Exception("OpenAI API key is not configured on the server. Please configure it in .env or AI Flyer Settings.");
         }
 
         $model = $requestedModel ?: AiFlyerSetting::get('openai_model', 'gpt-image-2.6-flare');

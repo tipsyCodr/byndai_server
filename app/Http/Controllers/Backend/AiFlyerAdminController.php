@@ -25,9 +25,13 @@ class AiFlyerAdminController extends Controller
                 'default_aspect_ratio' => 'required|in:1:1,4:5,9:16',
                 'max_saved_flyers_per_user' => 'required|integer|min:1|max:100',
                 'daily_generation_limit_per_user' => 'required|integer|min:1|max:100',
+                'openai_api_key' => 'nullable|string',
             ]);
 
             foreach ($validated as $key => $val) {
+                if ($key === 'openai_api_key' && empty($val)) {
+                    continue; // do not overwrite with empty
+                }
                 AiFlyerSetting::set($key, (string) $val);
             }
 
@@ -41,6 +45,7 @@ class AiFlyerAdminController extends Controller
             'default_aspect_ratio' => AiFlyerSetting::get('default_aspect_ratio', '1:1'),
             'max_saved_flyers_per_user' => AiFlyerSetting::get('max_saved_flyers_per_user', '10'),
             'daily_generation_limit_per_user' => AiFlyerSetting::get('daily_generation_limit_per_user', '5'),
+            'openai_api_key' => AiFlyerSetting::get('openai_api_key', ''),
         ];
 
         return view('backend.ai_flyers.settings', compact('settings'));

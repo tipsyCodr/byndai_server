@@ -30,6 +30,15 @@ class AiFlyerApiController extends Controller
      */
     public function todayOccasions(Request $request): JsonResponse
     {
+        // Auto-seed if empty
+        if (Occasion::count() === 0) {
+            try {
+                (new \Database\Seeders\AiFlyerSeeder())->run();
+            } catch (\Throwable $e) {
+                // ignore
+            }
+        }
+
         $dateParam = $request->query('date');
         $date = $dateParam ? Carbon::parse($dateParam)->format('m-d') : Carbon::today()->format('m-d');
         $year = $dateParam ? (int) Carbon::parse($dateParam)->format('Y') : (int) Carbon::today()->format('Y');
@@ -38,14 +47,15 @@ class AiFlyerApiController extends Controller
             ->forDate($date, $year)
             ->get();
 
-        // If no occasion today, also fetch the next upcoming 3 occasions as recommendations
-        $upcoming = [];
-        if ($occasions->isEmpty()) {
-            $upcoming = Occasion::active()
-                ->where('date', '>=', $date)
-                ->orderBy('date', 'asc')
-                ->limit(3)
-                ->get();
+        // If no occasion today, also fetch the next upcoming 5 occasions as recommendations
+        $upcoming = Occasion::active()
+            ->where('date', '>=', $date)
+            ->orderBy('date', 'asc')
+            ->limit(5)
+            ->get();
+
+        if ($upcoming->isEmpty()) {
+            $upcoming = Occasion::active()->limit(5)->get();
         }
 
         $quota = $request->user() ? $this->generationService->checkUserQuota($request->user()) : null;
@@ -56,7 +66,7 @@ class AiFlyerApiController extends Controller
             'data' => [
                 'date' => $date,
                 'has_occasion_today' => $occasions->isNotEmpty(),
-                'occasions' => $occasions,
+                'occasions' => $occasions->isNotEmpty() ? $occasions : $upcoming,
                 'upcoming_recommendations' => $upcoming,
                 'quota' => $quota,
             ],
@@ -174,13 +184,32 @@ class AiFlyerApiController extends Controller
      */
     public function generate(Request $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
+        $input = $request->all();
+
+        // Normalize language
+        if (isset($input['language'])) {
+            $lang = strtolower(trim($input['language']));
+            if ($lang === 'english' || $lang === 'en') {
+                $input['language'] = 'en';
+            } elseif ($lang === 'hindi' || $lang === 'hi') {
+                $input['language'] = 'hi';
+            } elseif (str_contains($lang, 'hindi') && str_contains($lang, 'english') || $lang === 'bilingual') {
+                $input['language'] = 'bilingual';
+            }
+        }
+
+        // Support branding_toggles key from frontend
+        if (!isset($input['branding_options']) && isset($input['branding_toggles'])) {
+            $input['branding_options'] = $input['branding_toggles'];
+        }
+
+        $validator = Validator::make($input, [
             'type' => 'required|in:occasion,special,custom',
             'category' => 'required|string|max:100',
             'occasion_id' => 'nullable|exists:occasions,id',
             'language' => 'required|in:en,hi,bilingual',
-            'design_style' => 'required|string|in:Modern,Minimal,Premium,Corporate,Traditional,Festive',
-            'aspect_ratio' => 'required|string|in:1:1,4:5,9:16',
+            'design_style' => 'required|string',
+            'aspect_ratio' => 'required|string',
             'custom_prompt' => 'nullable|string|max:1000',
             'branding_options' => 'nullable|array',
         ]);
@@ -188,7 +217,7 @@ class AiFlyerApiController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'status' => false,
-                'message' => 'Validation error',
+                'message' => 'Validation error: ' . $validator->errors()->first(),
                 'errors' => $validator->errors(),
             ], 422);
         }
