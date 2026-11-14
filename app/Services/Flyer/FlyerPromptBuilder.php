@@ -75,11 +75,11 @@ class FlyerPromptBuilder
             $customAddition = "Specific creative request: " . trim($customPrompt) . ".";
         }
 
-        // Full AI prompt
-        $fullPrompt = "Professional high-end commercial graphic flyer background artwork. Theme: {$subject}. "
+        // Full AI prompt with seamlessly painted greeting text
+        $fullPrompt = "Professional high-end commercial graphic flyer artwork. Theme: {$subject}. "
             . "Style: {$stylePrompt} {$aspectRatioGuidance} {$colorGuidance} {$customAddition} "
-            . "COMPOSITION REQUIREMENT: Create a stunning central visual motif. Keep the upper 15% and bottom 20% of the canvas clean, uncluttered, and suitable for typographic overlays. "
-            . "NO distorted logos, NO messy gibberish text, ultra-sharp 8k resolution, cinematic lighting, masterwork commercial illustration.";
+            . "TYPOGRAPHY REQUIREMENT: Beautifully paint and integrate the greeting headline '{$headline}' as stunning, elegant 3D artistic typography seamlessly into the upper or central portion of the artwork. The lettering should look celebratory, radiant, and naturally blended into the atmosphere of the scene. "
+            . "COMPOSITION REQUIREMENT: Leave the bottom 16% of the canvas clean, uncluttered, and subtle with a gentle grounding fade. Do NOT draw any phone numbers, addresses, social icons, or random logos in the artwork. Ultra-sharp 8k resolution, cinematic lighting, masterwork commercial illustration.";
 
         return [
             'prompt' => $fullPrompt,

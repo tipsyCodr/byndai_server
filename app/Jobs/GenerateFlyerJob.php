@@ -67,18 +67,10 @@ class GenerateFlyerJob implements ShouldQueue
             $user = $generation->user;
             $brandKit = BrandKit::where('user_id', $user->id)->first();
 
-            $composedPath = $compositionService->compose(
-                $rawPath,
-                $user,
-                $brandKit,
-                $generation->headline ?: $generation->category,
-                $generation->subheadline ?: '',
-                $generation->branding_options ?: []
-            );
-
-            // 3. Mark Completed
+            // The raw AI image contains the seamless painted headline.
+            // Flutter app handles the responsive, interactive branding footer overlay.
             $generation->update([
-                'image_path' => $composedPath,
+                'image_path' => $rawPath,
                 'status' => 'completed',
             ]);
 
