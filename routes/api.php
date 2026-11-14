@@ -869,10 +869,21 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // api for post end...
 
 
-    // Flyer API
+    // Flyer API (Legacy)
     Route::get('/flyers', [\App\Http\Controllers\api\FlyerApiController::class, 'index']);
     Route::get('/flyers/upcoming', [\App\Http\Controllers\api\FlyerApiController::class, 'upcoming']);
     Route::get('/flyers/category/{id}', [\App\Http\Controllers\api\FlyerApiController::class, 'show']);
+
+    // AI Flyer Generator API
+    Route::get('/flyers/occasions/today', [\App\Http\Controllers\api\AiFlyerApiController::class, 'todayOccasions']);
+    Route::get('/flyers/categories', [\App\Http\Controllers\api\AiFlyerApiController::class, 'categories']);
+    Route::post('/flyers/generate', [\App\Http\Controllers\api\AiFlyerApiController::class, 'generate']);
+    Route::get('/flyers/history', [\App\Http\Controllers\api\AiFlyerApiController::class, 'history']);
+    Route::get('/flyers/brand-kit', [\App\Http\Controllers\api\AiFlyerApiController::class, 'getBrandKit']);
+    Route::post('/flyers/brand-kit', [\App\Http\Controllers\api\AiFlyerApiController::class, 'updateBrandKit']);
+    Route::get('/flyers/{id}', [\App\Http\Controllers\api\AiFlyerApiController::class, 'show']);
+    Route::post('/flyers/{id}/regenerate', [\App\Http\Controllers\api\AiFlyerApiController::class, 'regenerate']);
+    Route::delete('/flyers/{id}', [\App\Http\Controllers\api\AiFlyerApiController::class, 'destroy']);
 
     Route::post('/logout', [AuthApiController::class, 'logout']);
 

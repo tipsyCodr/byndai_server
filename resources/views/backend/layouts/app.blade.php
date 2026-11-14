@@ -210,6 +210,13 @@
                             </a>
                         </li>
                         <li>
+                            <a href="{{ route('admin.ai-flyers.settings') }}"
+                                class="nav-link {{ request()->routeIs('admin.ai-flyers.*') ? 'active' : '' }}">
+                                <i data-lucide="sparkles" style="margin-right: 1rem; width: 18px; color: #6366f1;"></i>
+                                AI Flyer Studio
+                            </a>
+                        </li>
+                        <li>
                             <a href="{{ route('admin.events.index') }}"
                                 class="nav-link {{ request()->routeIs('admin.events.*') ? 'active' : '' }}">
                                 <i data-lucide="calendar" style="margin-right: 1rem; width: 18px;"></i>

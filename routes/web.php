@@ -60,6 +60,17 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('flyer-categories', \App\Http\Controllers\Backend\FlyerCategoryController::class, ['as' => 'admin']);
     Route::resource('flyers', \App\Http\Controllers\Backend\FlyerController::class, ['as' => 'admin']);
 
+    // AI Flyer Studio Management
+    Route::prefix('ai-flyers')->name('admin.ai-flyers.')->group(function () {
+        Route::match(['get', 'post'], '/settings', [\App\Http\Controllers\Backend\AiFlyerAdminController::class, 'settings'])->name('settings');
+        Route::get('/occasions', [\App\Http\Controllers\Backend\AiFlyerAdminController::class, 'occasions'])->name('occasions');
+        Route::post('/occasions', [\App\Http\Controllers\Backend\AiFlyerAdminController::class, 'storeOccasion'])->name('occasions.store');
+        Route::put('/occasions/{id}', [\App\Http\Controllers\Backend\AiFlyerAdminController::class, 'updateOccasion'])->name('occasions.update');
+        Route::delete('/occasions/{id}', [\App\Http\Controllers\Backend\AiFlyerAdminController::class, 'destroyOccasion'])->name('occasions.destroy');
+        Route::get('/monitoring', [\App\Http\Controllers\Backend\AiFlyerAdminController::class, 'monitoring'])->name('monitoring');
+        Route::post('/cleanup', [\App\Http\Controllers\Backend\AiFlyerAdminController::class, 'triggerCleanup'])->name('cleanup');
+    });
+
     // Event Management
     Route::resource('events', \App\Http\Controllers\Backend\EventController::class, ['as' => 'admin'])->only(['index', 'destroy']);
     Route::post('events/{id}/toggle-status', [\App\Http\Controllers\Backend\EventController::class, 'toggleStatus'])->name('admin.events.toggle-status');
