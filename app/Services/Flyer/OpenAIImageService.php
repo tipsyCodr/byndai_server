@@ -59,16 +59,24 @@ class OpenAIImageService
             throw new \Exception("OpenAI Image Generation failed: " . $result['error']);
         }
 
-        $imageUrl = $result['url'];
+        $imageBytes = null;
+        if (!empty($result['url'])) {
+            // Download image binary
+            $downloadResponse = Http::timeout(60)->get($result['url']);
+            if ($downloadResponse->failed()) {
+                throw new \Exception("Failed to download generated image from OpenAI.");
+            }
+            $imageBytes = $downloadResponse->body();
+        } elseif (!empty($result['b64'])) {
+            $imageBytes = base64_decode($result['b64']);
+        }
 
-        // Download image binary
-        $downloadResponse = Http::timeout(60)->get($imageUrl);
-        if ($downloadResponse->failed()) {
-            throw new \Exception("Failed to download generated image from OpenAI.");
+        if (empty($imageBytes)) {
+            throw new \Exception("No image binary received from OpenAI.");
         }
 
         $fileName = 'flyers/raw/' . Str::uuid() . '.png';
-        Storage::disk('public')->put($fileName, $downloadResponse->body());
+        Storage::disk('public')->put($fileName, $imageBytes);
 
         return [
             'raw_path' => $fileName,
@@ -86,10 +94,8 @@ class OpenAIImageService
                 'size' => $size,
             ];
 
-            // dall-e-3 supports quality parameter
             if ($model === 'dall-e-3' || str_contains($model, 'dall-e')) {
                 $payload['quality'] = $quality;
-                $payload['response_format'] = 'url';
             }
 
             $response = Http::withToken($this->apiKey)
@@ -98,8 +104,12 @@ class OpenAIImageService
 
             if ($response->successful()) {
                 $url = $response->json('data.0.url');
+                $b64 = $response->json('data.0.b64_json');
                 if ($url) {
                     return ['success' => true, 'url' => $url];
+                }
+                if ($b64) {
+                    return ['success' => true, 'b64' => $b64];
                 }
             }
 
