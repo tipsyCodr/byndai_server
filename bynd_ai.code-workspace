@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "D:/Development/App/Flutter/bynd_ai"
+		},
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"java.configuration.updateBuildConfiguration": "interactive"
+	}
+}

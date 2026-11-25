@@ -534,10 +534,42 @@ class ConnectionApiController extends Controller
         }
 
         // ✅ Sort
+        $order = strtolower($order) === 'asc' ? 'asc' : 'desc';
         if ($sortBy == 'user_name') {
             $query->join('users', 'master_user_details.user_id', '=', 'users.id')
                 ->orderBy('users.user_name', $order)
                 ->select('master_user_details.*');
+        } elseif ($sortBy == 'updated_at') {
+            $latestMsgSub = DB::table('chat_messages')
+                ->join('chats', 'chat_messages.chat_id', '=', 'chats.id')
+                ->where('chat_messages.is_deleted', 0)
+                ->where(function ($q) use ($userId) {
+                    $q->where(function ($q2) use ($userId) {
+                        $q2->where('chats.sender_id', $userId)
+                            ->whereColumn('chats.receiver_id', 'master_user_details.user_id');
+                    })->orWhere(function ($q2) use ($userId) {
+                        $q2->where('chats.receiver_id', $userId)
+                            ->whereColumn('chats.sender_id', 'master_user_details.user_id');
+                    });
+                })
+                ->selectRaw('MAX(chat_messages.created_at)');
+
+            $connectedAtSub = DB::table('connections')
+                ->where(function ($q) use ($userId) {
+                    $q->where(function ($q2) use ($userId) {
+                        $q2->where('connections.user_id', $userId)
+                            ->whereColumn('connections.friend_id', 'master_user_details.user_id');
+                    })->orWhere(function ($q2) use ($userId) {
+                        $q2->where('connections.friend_id', $userId)
+                            ->whereColumn('connections.user_id', 'master_user_details.user_id');
+                    });
+                })
+                ->selectRaw('MAX(COALESCE(connections.connected_at, connections.updated_at))');
+
+            $query->orderByRaw(
+                'COALESCE((' . $latestMsgSub->toSql() . '), (' . $connectedAtSub->toSql() . '), master_user_details.updated_at) ' . $order,
+                array_merge($latestMsgSub->getBindings(), $connectedAtSub->getBindings())
+            );
         } else {
             $query->orderBy($sortBy, $order);
         }

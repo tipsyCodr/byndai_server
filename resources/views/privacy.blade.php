@@ -74,7 +74,7 @@
     </header>
 
     <!-- Hero Banner -->
-    <div class="relative overflow-hidden bg-gradient-to-b from-sky-50 via-white to-slate-50 border-b border-slate-200/70 pt-12 pb-16">
+    <div class="relative overflow-hidden bg-linear-to-b from-sky-50 via-white to-slate-50 border-b border-slate-200/70 pt-12 pb-16">
         <div class="absolute inset-0 pointer-events-none opacity-40">
             <div class="absolute -top-24 -left-20 w-96 h-96 bg-sky-200/50 rounded-full blur-3xl"></div>
             <div class="absolute top-1/2 right-0 w-80 h-80 bg-amber-200/40 rounded-full blur-3xl"></div>
