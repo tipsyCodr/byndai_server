@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api\site;
 
 use App\Http\Controllers\Controller;
+use App\Models\BlockedUser;
 use App\Models\Chat;
 use App\Models\ChatMessage;
 use App\Models\Connection;
@@ -577,8 +578,18 @@ class ConnectionApiController extends Controller
         // ✅ Pagination
         $friends = $query->paginate($perPage);
 
+        $pageFriendIds = $friends->pluck('user_id')->toArray();
+        $blockedByMeIds = BlockedUser::where('blocker_id', $userId)
+            ->whereIn('blocked_id', $pageFriendIds)
+            ->pluck('blocked_id')
+            ->flip();
+        $blockedByOtherIds = BlockedUser::where('blocked_id', $userId)
+            ->whereIn('blocker_id', $pageFriendIds)
+            ->pluck('blocker_id')
+            ->flip();
+
         // response format
-        $data = $friends->map(function ($detail) use ($userId) {
+        $data = $friends->map(function ($detail) use ($userId, $blockedByMeIds, $blockedByOtherIds) {
             $chat = Chat::where(function ($q) use ($userId, $detail) {
                 $q->where('sender_id', $userId)->where('receiver_id', $detail->user_id);
             })->orWhere(function ($q) use ($userId, $detail) {
@@ -614,6 +625,8 @@ class ConnectionApiController extends Controller
                 'last_message' => $lastMessage,
                 'unread_count' => $unreadCount,
                 'updated_at_formatted' => $updatedAtFormatted,
+                'is_blocked_by_me' => $blockedByMeIds->has($detail->user_id),
+                'is_blocked_by_other' => $blockedByOtherIds->has($detail->user_id),
             ];
         });
 

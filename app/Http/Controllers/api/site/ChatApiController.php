@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api\site;
 
 use App\Http\Controllers\Controller;
+use App\Models\BlockedUser;
 use App\Models\Chat;
 use App\Models\ChatMessage;
 use App\Models\MessageAttachment;
@@ -27,6 +28,16 @@ class ChatApiController extends Controller
     {
         $data = $r->validate(['chat_id' => 'required|exists:chats,id', 'message' => 'nullable|string', 'attachments.*' => 'file|mimes:jpg,jpeg,png|max:10240', 'reply_to_id' => 'nullable|exists:chat_messages,id']);
         $senderId = Auth::id();
+        $chat = Chat::findOrFail($data['chat_id']);
+        $receiverId = ($chat->sender_id === $senderId) ? $chat->receiver_id : $chat->sender_id;
+
+        if (BlockedUser::isBlockedBetween($senderId, $receiverId)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Cannot send message. User is blocked.',
+            ], 403);
+        }
+
         $message = ChatMessage::create(['chat_id' => $data['chat_id'], 'sender_id' => $senderId, 'message' => $data['message'] ?? null, 'reply_to_id' => $data['reply_to_id'] ?? null]);
 
         $attachments = [];
@@ -53,23 +64,23 @@ class ChatApiController extends Controller
 
         // ── FCM HTTP v1 push notification ──────────────────────────────────
         try {
-            $chat       = Chat::find($data['chat_id']);
-            $receiverId = ($chat->sender_id === $senderId) ? $chat->receiver_id : $chat->sender_id;
-            $receiver   = User::find($receiverId);
+            if (!BlockedUser::isBlockedBy($receiverId, $senderId)) {
+                $receiver = User::find($receiverId);
 
-            if ($receiver && $receiver->fcm_token) {
-                $sender = Auth::user();
-                FcmService::sendPush(
-                    fcmToken: $receiver->fcm_token,
-                    title:    $sender->name ?? 'New Message',
-                    body:     $message->message ?? '📎 Attachment',
-                    data:     [
-                        'type'        => 'chat',
-                        'chat_id'     => (string) $data['chat_id'],
-                        'sender_id'   => (string) $senderId,
-                        'sender_name' => $sender->name ?? '',
-                    ]
-                );
+                if ($receiver && $receiver->fcm_token) {
+                    $sender = Auth::user();
+                    FcmService::sendPush(
+                        fcmToken: $receiver->fcm_token,
+                        title:    $sender->name ?? 'New Message',
+                        body:     $message->message ?? '📎 Attachment',
+                        data:     [
+                            'type'        => 'chat',
+                            'chat_id'     => (string) $data['chat_id'],
+                            'sender_id'   => (string) $senderId,
+                            'sender_name' => $sender->name ?? '',
+                        ]
+                    );
+                }
             }
         } catch (\Throwable $e) {
             // Non-fatal — log but don't fail the request
@@ -113,6 +124,40 @@ class ChatApiController extends Controller
         }
         $message->update(['is_deleted' => 1]);
         return response()->json(['status' => true, 'message' => 'Message deleted successfully']);
+    }
+
+    public function blockUser(Request $r)
+    {
+        $data = $r->validate([
+            'blocked_id' => 'required|integer|exists:users,id',
+        ]);
+
+        $blockerId = Auth::id();
+        $blockedId = (int) $data['blocked_id'];
+
+        if ($blockerId === $blockedId) {
+            return response()->json(['status' => false, 'message' => 'Cannot block yourself'], 400);
+        }
+
+        BlockedUser::firstOrCreate([
+            'blocker_id' => $blockerId,
+            'blocked_id' => $blockedId,
+        ]);
+
+        return response()->json(['status' => true, 'message' => 'User blocked successfully']);
+    }
+
+    public function unblockUser(Request $r)
+    {
+        $data = $r->validate([
+            'blocked_id' => 'required|integer|exists:users,id',
+        ]);
+
+        BlockedUser::where('blocker_id', Auth::id())
+            ->where('blocked_id', (int) $data['blocked_id'])
+            ->delete();
+
+        return response()->json(['status' => true, 'message' => 'User unblocked successfully']);
     }
     private function detectFileType($file)
     {

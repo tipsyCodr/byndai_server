@@ -300,6 +300,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         ChatApiController::class,
         'deleteMessage',
     ]);
+    Route::post('/chat/block', [ChatApiController::class, 'blockUser']);
+    Route::post('/chat/unblock', [ChatApiController::class, 'unblockUser']);
 
     Route::get('/restrictions', [
         RestrictionApiController::class,
